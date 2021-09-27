@@ -1,0 +1,56 @@
+choice
+	prompt "PHYTEC phyCORE-AM64xx based boards"
+	optional
+
+config TARGET_PHYCORE_AM64XX_A53
+	bool "PHYTEC phyCORE-AM64xx (A53 processor)"
+	select ARM64
+	select SOC_K3_AM642
+	imply BOARD
+	imply SPL_BOARD
+
+config TARGET_PHYCORE_AM64XX_R5
+	bool "PHYTEC phyCORE-AM64xx (R5 processor)"
+	select CPU_V7R
+	select SYS_THUMB_BUILD
+	select K3_LOAD_SYSFW
+	select SOC_K3_AM642
+	select RAM
+	select SPL_RAM
+	select K3_DDRSS
+	imply SYS_K3_SPL_ATF
+
+endchoice
+
+if TARGET_PHYCORE_AM64XX_A53
+
+config SYS_BOARD
+       default "phycore_am64xx"
+
+config SYS_VENDOR
+       default "phytec"
+
+config SYS_CONFIG_NAME
+       default "phycore_am64xx"
+
+source "board/ti/common/Kconfig"
+
+endif
+
+if TARGET_PHYCORE_AM64XX_R5
+
+config SYS_BOARD
+       default "phycore_am64xx"
+
+config SYS_VENDOR
+       default "phytec"
+
+config SYS_CONFIG_NAME
+       default "phycore_am64xx"
+
+config SPL_LDSCRIPT
+	default "arch/arm/mach-omap2/u-boot-spl.lds"
+
+source "board/ti/common/Kconfig"
+
+endif
