@@ -988,12 +988,14 @@ dtb-$(CONFIG_SOC_K3_AM642) += k3-am642-evm.dtb \
 			      k3-am642-r5-evm.dtb \
 			      k3-am642-sk.dtb \
 			      k3-am642-r5-sk.dtb \
-			      k3-am642-evm-nand.dtbo
-
+			      k3-am642-evm-nand.dtbo \
+			      k3-am642-phycore-som.dtb \
+			      k3-am642-phycore-som-r5.dtb
 dtb-$(CONFIG_SOC_K3_AM625) += k3-am625-sk.dtb \
 			      k3-am625-r5-sk.dtb \
 			      k3-am625-phycore-som.dtb \
 			      k3-am625-phycore-som-r5.dtb
+
 
 dtb-$(CONFIG_ARCH_MEDIATEK) += \
 	mt7622-rfb.dtb \

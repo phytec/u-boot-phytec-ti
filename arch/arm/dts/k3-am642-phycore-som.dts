@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2021 PHYTEC America, LLC - https://www.phytec.com
+ */
+
+/dts-v1/;
+
+#include "k3-am642.dtsi"
+#include "k3-am64-phycore-som.dtsi"
+
+/ {
+	model = "PHYTEC phyCORE-AM64x";
+	compatible =  "phytec,am642-phycore-som", "ti,am642";
+
+	chosen {
+		bootargs = "console=ttyS2,115200n8 earlycon=ns16550a,mmio32,0x02800000";
+		stdout-path = &main_uart0;
+		tick-timer = &timer1;
+	};
+
+	aliases {
+		ethernet0 = &cpsw3g;
+	};
+};
+
+&main_pmx0 {
+	main_mmc1_pins_default: main-mmc1-pins-default {
+		pinctrl-single,pins = <
+			AM64X_IOPAD(0x027c, PIN_INPUT_PULLUP, 0)	/* (K18) MMC1_DAT3 */
+			AM64X_IOPAD(0x0280, PIN_INPUT_PULLUP, 0)	/* (K19) MMC1_DAT2 */
+			AM64X_IOPAD(0x0284, PIN_INPUT_PULLUP, 0)	/* (L21) MMC1_DAT1 */
+			AM64X_IOPAD(0x0288, PIN_INPUT_PULLUP, 0)	/* (K21) MMC1_DAT0 */
+			AM64X_IOPAD(0x028c, PIN_INPUT_PULLDOWN, 0)	/* (L20) MMC1_CLK */
+			AM64X_IOPAD(0x0290, PIN_INPUT, 0)		/* MMC1_CLKLB */
+			AM64X_IOPAD(0x0294, PIN_INPUT_PULLUP, 0)	/* (J19) MMC1_CMD */
+			AM64X_IOPAD(0x0298, PIN_INPUT, 0)		/* (D19) MMC1_SDCD */
+		>;
+	};
+
+	main_uart0_pins_default: main-uart0-pins-default {
+		pinctrl-single,pins = <
+			AM64X_IOPAD(0x0230, PIN_INPUT, 0)	/* (D15) UART0_RXD */
+			AM64X_IOPAD(0x0234, PIN_OUTPUT, 0)	/* (C16) UART0_TXD */
+		>;
+	};
+
+	main_usb0_pins_default: main-usb0-pins-default {
+		pinctrl-single,pins = <
+			AM64X_IOPAD(0x02a8, PIN_OUTPUT, 0)	/* (E19) USB0_DRVVBUS */
+		>;
+	};
+};
+
+&main_uart0 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&main_uart0_pins_default>;
+};
+
+&sdhci1 {
+	status = "okay";
+	pinctrl-names = "default";
+	bus-width = <4>;
+	pinctrl-0 = <&main_mmc1_pins_default>;
+	ti,driver-strength-ohm = <50>;
+	disable-wp;
+};
+
+&usbss0 {
+	status = "okay";
+	ti,vbus-divider;
+	ti,usb2-only;
+};
+
+&usb0 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&main_usb0_pins_default>;
+	dr_mode = "host";
+	maximum-speed = "high-speed";
+};
