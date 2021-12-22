@@ -202,7 +202,12 @@ u32 spl_mmc_boot_mode(const u32 boot_device)
 {
 	switch (boot_device) {
 	case BOOT_DEVICE_MMC1:
-		return MMCSD_MODE_EMMCBOOT;
+		if (IS_ENABLED(CONFIG_SUPPORT_EMMC_BOOT))
+			return MMCSD_MODE_EMMCBOOT;
+		else if (IS_ENABLED(CONFIG_SPL_FS_FAT))
+			return MMCSD_MODE_FS;
+		else
+			return MMCSD_MODE_RAW;
 
 	case BOOT_DEVICE_MMC2:
 		return MMCSD_MODE_FS;
