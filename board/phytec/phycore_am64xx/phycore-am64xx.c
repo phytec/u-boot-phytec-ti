@@ -59,3 +59,20 @@ void spl_board_init(void)
 	writel(val, CTRLMMR_USB0_PHY_CTRL);
 }
 #endif
+
+int board_late_init(void)
+{
+	u32 boot_device = get_boot_device();
+	switch (boot_device) {
+	case BOOT_DEVICE_MMC1:
+		env_set_ulong("mmcdev", 0);
+		env_set("bootpart", "0:2");
+		break;
+	case BOOT_DEVICE_MMC2:
+		env_set_ulong("mmcdev", 1);
+		env_set("bootpart", "1:2");
+		break;
+	};
+
+	return 0;
+}
