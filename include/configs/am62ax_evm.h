@@ -13,6 +13,8 @@
 #include <environment/ti/mmc.h>
 #include <environment/ti/k3_dfu.h>
 
+#define CONFIG_SYS_BOOTM_LEN		SZ_64M
+
 /* DDR Configuration */
 #define CONFIG_SYS_SDRAM_BASE1		0x880000000
 
