@@ -93,6 +93,7 @@
 /* Incorporate settings into the U-Boot environment */
 #define CONFIG_EXTRA_ENV_SETTINGS					\
 	DEFAULT_LINUX_BOOT_ENV						\
+	DEFAULT_FIT_TI_ARGS						\
 	DEFAULT_MMC_TI_ARGS						\
 	EXTRA_ENV_AM62A7_BOARD_SETTINGS					\
 	EXTRA_ENV_AM62A7_BOARD_SETTINGS_MMC				\
