@@ -141,3 +141,11 @@
 	status = "okay";
 	u-boot,dm-spl;
 };
+
+&main_pktdma {
+	ti,sci = <&dm_tifs>;
+};
+
+&main_bcdma {
+	ti,sci = <&dm_tifs>;
+};
