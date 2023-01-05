@@ -452,6 +452,7 @@ static const struct udevice_id k3_dsp_ids[] = {
 	{ .compatible = "ti,j721e-c66-dsp", .data = (ulong)&c66_data, },
 	{ .compatible = "ti,j721e-c71-dsp", .data = (ulong)&c71_data, },
 	{ .compatible = "ti,j721s2-c71-dsp", .data = (ulong)&c71_data, },
+	{ .compatible = "ti,am62a-c7xv-dsp", .data = (ulong)&c71_data, },
 	{}
 };
 
