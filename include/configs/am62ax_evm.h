@@ -11,6 +11,7 @@
 #include <linux/sizes.h>
 #include <config_distro_bootcmd.h>
 #include <environment/ti/mmc.h>
+#include <environment/ti/k3_rproc.h>
 #include <environment/ti/k3_dfu.h>
 
 #define CONFIG_SYS_BOOTM_LEN		SZ_64M
@@ -90,6 +91,15 @@
 		"${bootdir}/${name_fit}\0"				\
 	"partitions=" PARTS_DEFAULT
 
+#if defined(CONFIG_TARGET_AM62A7_A53_EVM)
+#if defined(DEFAULT_RPROCS)
+#undef DEFAULT_RPROCS
+#endif
+#define DEFAULT_RPROCS	""						\
+		"0 /lib/firmware/am62a-mcu-r5f0_0-fw "			\
+		"1 /lib/firmware/am62a-c71_0-fw "
+#endif
+
 /* Incorporate settings into the U-Boot environment */
 #define CONFIG_EXTRA_ENV_SETTINGS					\
 	DEFAULT_LINUX_BOOT_ENV						\
@@ -97,6 +107,7 @@
 	DEFAULT_MMC_TI_ARGS						\
 	EXTRA_ENV_AM62A7_BOARD_SETTINGS					\
 	EXTRA_ENV_AM62A7_BOARD_SETTINGS_MMC				\
+	EXTRA_ENV_RPROC_SETTINGS
 
 /* Now for the remaining common defines */
 #include <configs/ti_armv7_common.h>
