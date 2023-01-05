@@ -28,7 +28,7 @@ CONFIG_SPL_LOAD_FIT=y
 CONFIG_SPL_LOAD_FIT_ADDRESS=0x81000000
 CONFIG_SPL_LOAD_FIT_APPLY_OVERLAY=y
 CONFIG_SPL_FIT_IMAGE_POST_PROCESS=y
-CONFIG_BOOTCOMMAND="run findfdt; run envboot; run init_${boot}; if test ${boot_fit} -eq 1; then run get_fit_${boot}; run get_overlaystring; run run_fit; else; run get_kern_${boot}; run get_fdt_${boot}; run get_overlay_${boot}; run run_kern; fi;"
+CONFIG_BOOTCOMMAND="run findfdt; run envboot; run init_${boot}; run boot_rprocs; if test ${boot_fit} -eq 1; then run get_fit_${boot}; run get_overlaystring; run run_fit; else; run get_kern_${boot}; run get_fdt_${boot}; run get_overlay_${boot}; run run_kern; fi;"
 CONFIG_SPL_SYS_MALLOC_SIMPLE=y
 CONFIG_SPL_STACK_R=y
 CONFIG_SPL_SEPARATE_BSS=y
@@ -50,6 +50,8 @@ CONFIG_SPL_YMODEM_SUPPORT=y
 # CONFIG_CMD_I2C is not set
 # CONFIG_CMD_TIME is not set
 # CONFIG_CMD_EXT4_WRITE is not set
+CONFIG_MISC=y
+CONFIG_CMD_REMOTEPROC=y
 CONFIG_OF_CONTROL=y
 CONFIG_SPL_OF_CONTROL=y
 CONFIG_SPL_MULTI_DTB_FIT=y
@@ -100,6 +102,8 @@ CONFIG_DM_REGULATOR_GPIO=y
 CONFIG_SPL_DM_REGULATOR_GPIO=y
 CONFIG_K3_SYSTEM_CONTROLLER=y
 CONFIG_REMOTEPROC_TI_K3_ARM64=y
+CONFIG_REMOTEPROC_TI_K3_R5F=y
+CONFIG_REMOTEPROC_TI_K3_DSP=y
 CONFIG_DM_RESET=y
 CONFIG_RESET_TI_SCI=y
 CONFIG_DM_SERIAL=y
