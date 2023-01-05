@@ -115,6 +115,10 @@
 	u-boot,dm-spl;
 };
 
+&sdhci0 {
+	u-boot,dm-spl;
+};
+
 &sdhci1 {
 	u-boot,dm-spl;
 };
