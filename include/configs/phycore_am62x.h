@@ -70,7 +70,7 @@
 	"finduuid=part uuid ${boot} ${mmcdev}:${bootpart} uuid\0" \
 	"args_mmc=run finduuid;setenv bootargs console=${console} " \
 		"${optargs} " \
-		"root=PARTUUID=${uuid} rw " \
+		"root=/dev/mmcblk${mmcdev}p${bootpart} rw " \
 		"rootfstype=${mmcrootfstype}\0" \
 	"init_mmc=run args_all args_mmc\0" \
 	"get_fdt_mmc=load mmc ${mmcdev}:${bootpart} ${fdtaddr} ${bootdir}/${name_fdt}\0" \
