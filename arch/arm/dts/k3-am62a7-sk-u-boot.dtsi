@@ -184,3 +184,11 @@
 		u-boot,dm-spl;
 	};
 };
+
+&usbss0 {
+	u-boot,dm-spl;
+};
+
+&usb0 {
+	u-boot,dm-spl;
+};
