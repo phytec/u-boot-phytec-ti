@@ -50,3 +50,24 @@ int board_fit_config_name_match(const char *name)
 	return -1;
 }
 #endif
+
+#define CTRLMMR_USB0_PHY_CTRL	0x43004008
+#define CTRLMMR_USB1_PHY_CTRL	0x43004018
+#define CORE_VOLTAGE		0x80000000
+
+#if defined(CONFIG_SPL_BOARD_INIT)
+void spl_board_init(void)
+{
+	u32 val;
+
+	/* Set USB0 PHY core voltage to 0.85V */
+	val = readl(CTRLMMR_USB0_PHY_CTRL);
+	val &= ~(CORE_VOLTAGE);
+	writel(val, CTRLMMR_USB0_PHY_CTRL);
+
+	/* Set USB1 PHY core voltage to 0.85V */
+	val = readl(CTRLMMR_USB1_PHY_CTRL);
+	val &= ~(CORE_VOLTAGE);
+	writel(val, CTRLMMR_USB1_PHY_CTRL);
+}
+#endif
