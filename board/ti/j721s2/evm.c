@@ -22,7 +22,9 @@
 #include <spl.h>
 #include <asm/arch/sys_proto.h>
 #include <dm.h>
+#include <mmc.h>
 #include <dm/uclass-internal.h>
+#include <dm/root.h>
 
 #include "../common/board_detect.h"
 
@@ -338,3 +340,37 @@ int board_late_init(void)
 void spl_board_init(void)
 {
 }
+
+/* Support for the various EVM / SK families */
+#if defined(CONFIG_SPL_OF_LIST) && defined(CONFIG_TI_I2C_BOARD_DETECT)
+void do_dt_magic(void)
+{
+	int ret, rescan;
+
+	do_board_detect();
+
+	/*
+	 * Board detection has been done.
+	 * Let us see if another dtb wouldn't be a better match
+	 * for our board
+	 */
+	if (IS_ENABLED(CONFIG_CPU_V7R)) {
+		ret = fdtdec_resetup(&rescan);
+		if (!ret && rescan) {
+			dm_uninit();
+			dm_init_and_scan(true);
+		}
+	}
+}
+#endif
+
+#ifdef CONFIG_SPL_BUILD
+void board_init_f(ulong dummy)
+{
+	k3_spl_init();
+#if defined(CONFIG_SPL_OF_LIST) && defined(CONFIG_TI_I2C_BOARD_DETECT)
+	do_dt_magic();
+#endif
+	k3_mem_init();
+}
+#endif
