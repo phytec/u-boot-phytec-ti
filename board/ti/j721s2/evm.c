@@ -313,7 +313,8 @@ int board_late_init(void)
 	if (IS_ENABLED(CONFIG_TI_I2C_BOARD_DETECT)) {
 		setup_board_eeprom_env();
 		setup_serial();
-		probe_daughtercards();
+		if (board_is_j721s2_som())
+			probe_daughtercards();
 	}
 
 	return 0;
