@@ -140,6 +140,14 @@
 		"run get_fdt_usb;"					\
 		"run run_kern\0"
 
+#ifdef CONFIG_TARGET_AM625_A53_EVM
+#define EXTRA_ENV_AM625_BOARD_SETTINGS_MTD				\
+	"mtdids=" CONFIG_MTDIDS_DEFAULT "\0"				\
+	"mtdparts=" CONFIG_MTDPARTS_DEFAULT "\0"
+#else
+#define EXTRA_ENV_AM625_BOARD_SETTINGS_MTD
+#endif
+
 #define EXTRA_ENV_AM625_BOARD_SETTINGS_OSPI_NAND			\
 	"nbootpart=ospi.rootfs\0"					\
 	"nbootvolume=ubi0:rootfs\0"					\
