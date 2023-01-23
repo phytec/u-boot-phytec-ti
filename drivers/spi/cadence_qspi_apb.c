@@ -327,7 +327,14 @@ static int cadence_qspi_set_protocol(struct cadence_spi_platdata *plat,
 {
 	int ret;
 
-	plat->dtr = op->data.dtr && op->cmd.dtr && op->addr.dtr;
+	/*
+	 * For an op to be DTR, cmd phase along with every other non-empty
+	 * phase should have dtr field set to 1. If an op phase has zero
+	 * nbytes, ignore its dtr field; otherwise, check its dtr field.
+	 */
+	plat->dtr = op->cmd.dtr &&
+		    (!op->addr.nbytes || op->addr.dtr) &&
+		    (!op->data.nbytes || op->data.dtr);
 
 	ret = cadence_qspi_buswidth_to_inst_type(op->cmd.buswidth);
 	if (ret < 0)
