@@ -28,6 +28,8 @@
 
 #define board_is_j784s4_evm()	board_ti_k3_is("J784S4-EVM")
 
+#define board_is_am69_sk()	board_ti_k3_is("AM69-SK")
+
 DECLARE_GLOBAL_DATA_PTR;
 
 int board_init(void)
@@ -142,6 +144,8 @@ static void setup_board_eeprom_env(void)
 
 	if (board_is_j784s4_evm())
 		name = "j784s4";
+	else if (board_is_am69_sk())
+		name = "am69-sk";
 	else
 		printf("Unidentified board claims %s in eeprom header\n",
 		       board_ti_get_name());
