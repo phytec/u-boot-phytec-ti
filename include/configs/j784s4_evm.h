@@ -66,8 +66,12 @@
 /* U-Boot general configuration */
 #define EXTRA_ENV_J784S4_BOARD_SETTINGS					\
 	"default_device_tree=" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0"	\
-	"findfdt="							\
-		"setenv name_fdt ${default_device_tree};"		\
+	"findfdt="                                                      \
+		"setenv name_fdt ${default_device_tree};"               \
+		"if test $board_name = am69-sk; then "           \
+			"setenv name_fdt k3-am69-sk.dtb; fi;" \
+		"if test $board_name = j784s4; then "                    \
+			"setenv name_fdt k3-j784s4-evm.dtb; fi;" \
 		"setenv fdtfile ${name_fdt}\0"				\
 	"name_kern=Image\0"						\
 	"console=ttyS2,115200n8\0"					\
