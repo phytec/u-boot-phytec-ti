@@ -845,7 +845,7 @@
 	};
 };
 
-&main_cpsw_mdio {
+&main_cpsw1_mdio {
 	main_phy0: ethernet-phy@0 {
 		reg = <0>;
 		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
@@ -854,12 +854,12 @@
 	};
 };
 
-&cpsw_port1 {
+&mcu_cpsw_port1 {
 	phy-mode = "rgmii-rxid";
 	phy-handle = <&mcu_phy0>;
 };
 
-&main_cpsw_port1 {
+&main_cpsw1_port1 {
 	phy-mode = "rgmii-rxid";
 	phy-handle = <&main_phy0>;
 };
