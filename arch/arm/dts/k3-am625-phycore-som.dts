@@ -1,7 +1,9 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2022 PHYTEC Messtechnik GmbH
  * Author: Wadim Egorov <w.egorov@phytec.de>
+ *
+ * Product homepage:
+ * https://www.phytec.com/product/phyboard-am62x
  */
 
 /dts-v1/;
@@ -25,14 +27,13 @@
 		bootargs = "console=ttyS2,115200n8 earlycon=ns16550a,mmio32,0x02800000";
 	};
 
-	vdd_3v3_mmc: fixed-regulator-sd {
-		/* TPS22963C */
+	vcc_3v3_mmc: regulator-vcc-3v3-mmc {
 		compatible = "regulator-fixed";
-		regulator-name = "vdd_3v3_mmc";
+		regulator-name = "VCC_3V3_MMC";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
 		regulator-boot-on;
-		enable-active-high;
 	};
 };
 
@@ -59,16 +60,27 @@
 	};
 };
 
+/*
+ * HACK: Override pinctrl with additional MDIO pins.
+ * cpsw_mdio does not implement a u-boot driver and therefore
+ * not evaluating pinctrls defined in cpsw3g_mdio.
+ */
+&cpsw3g {
+	pinctrl-names = "default";
+	pinctrl-0 = <&main_rgmii1_pins_default &main_mdio1_pins_default>;
+};
+
 &main_uart0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&main_uart0_pins_default>;
 };
 
 &sdhci1 {
+	vmmc-supply = <&vcc_3v3_mmc>;
+	vqmmc-supply = <&vddshv5_sdio>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&main_mmc1_pins_default>;
-	vmmc-supply = <&vdd_3v3_mmc>;
-	bus-width = <4>;
 	ti,driver-strength-ohm = <50>;
 	disable-wp;
+	no-1-8-v;
 };

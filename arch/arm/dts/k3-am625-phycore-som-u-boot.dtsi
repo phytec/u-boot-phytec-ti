@@ -3,6 +3,9 @@
  * phyCORE-AM62x dts file for SPLs
  * Copyright (C) 2022 Phytec Messtechnik GmbH
  * Author: Wadim Egorov <w.egorov@phytec.de>
+ *
+ * Product homepage:
+ * https://www.phytec.com/product/phyboard-am62x
  */
 
 / {
@@ -182,14 +185,8 @@
 &vcc_5v0_som {
 	u-boot,dm-spl;
 };
-&vdd_3v3 {
-	u-boot,dm-spl;
-};
 
-&vddshv_sdio {
-	u-boot,dm-spl;
-};
-&vdd_3v3_mmc {
+&vddshv5_sdio {
 	u-boot,dm-spl;
 };
 
