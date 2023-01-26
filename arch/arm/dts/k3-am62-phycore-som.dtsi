@@ -2,6 +2,9 @@
 /*
  * Copyright (C) 2022 PHYTEC Messtechnik GmbH
  * Author: Wadim Egorov <w.egorov@phytec.de>
+ *
+ * Product homepage:
+ * https://www.phytec.com/product/phycore-am62x
  */
 
 #include <dt-bindings/leds/common.h>
@@ -10,15 +13,19 @@
 
 / {
 	model = "PHYTEC phyCORE-AM62x";
-	compatible = "phytec,am62-phycore-som";
+	compatible = "phytec,am62-phycore-som", "ti,am625";
+
+	aliases {
+		rtc0 = &i2c_som_rtc;
+		rtc1 = &wkup_rtc0;
+	};
 
 	memory@80000000 {
 		device_type = "memory";
-		/* 2G RAM */
 		reg = <0x00000000 0x80000000 0x00000000 0x80000000>;
 	};
 
-	reserved-memory {
+	reserved_memory: reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
@@ -35,64 +42,36 @@
 			no-map;
 		};
 
-		wkup_r5fss0_core0_dma_memory_region: r5f-dma-memory@9db00000 {
+		wkup_r5fss0_core0_dma_memory_region: r5f-dma-memory@9da00000 {
 			compatible = "shared-dma-pool";
-			reg = <0x00 0x9db00000 0x00 0xc00000>;
+			reg = <0x00 0x9da00000 0x00 0x00100000>;
 			no-map;
 		};
 
-		mcu_m4fss_dma_memory_region: m4f-dma-memory@9cb00000 {
+		wkup_r5fss0_core0_memory_region: r5f-memory@9db00000 {
 			compatible = "shared-dma-pool";
-			reg = <0x00 0x9cb00000 0x00 0x100000>;
+			reg = <0x00 0x9db00000 0x00 0x00c00000>;
 			no-map;
-		};
-
-		mcu_m4fss_memory_region: m4f-memory@9cc00000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0x9cc00000 0x00 0xf00000>;
-			no-map;
-		};
-
-		lpm_ctx_ddr: lpm-memory@a1000000 {
-			reg = <0x00 0xa1000000 0x00 0x40000>;
-			alignment = <0x1000>;
 		};
 	};
 
-	vcc_5v0_som: fixedregulator-vcc-5v0-som {
-		/* VIN / VCC_5V0_SOM */
+	vcc_5v0_som: regulator-vcc-5v0-som {
 		compatible = "regulator-fixed";
-		regulator-name = "vcc_5v0_som";
+		regulator-name = "VCC_5V0_SOM";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
 		regulator-always-on;
 		regulator-boot-on;
 	};
 
-	vdd_3v3: fixedregulator-vdd-3v3 {
-		/* Output of TPSM828224SILR */
+	vdd_1v8: regulator-vdd-1v8 {
 		compatible = "regulator-fixed";
-		regulator-name = "vdd_3v3";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
+		regulator-name = "VDD_1V8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
 		vin-supply = <&vcc_5v0_som>;
 		regulator-always-on;
 		regulator-boot-on;
-	};
-
-	vddshv_sdio: gpio-regulator-vddshv-sdio {
-		/* Output of BD2204GUL-E2 */
-		compatible = "regulator-gpio";
-		regulator-name = "vddshv_sdio";
-		pinctrl-names = "default";
-		pinctrl-0 = <&vddshv_sdio_pins_default>;
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <3300000>;
-		regulator-boot-on;
-		vin-supply = <&vdd_3v3>;
-		gpios = <&main_gpio0 31 GPIO_ACTIVE_HIGH>;
-		states = <1800000 0x0>,
-			 <3300000 0x1>;
 	};
 
 	leds {
@@ -100,23 +79,16 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&leds_pins_default>;
 
-		led-green {
-			function = LED_FUNCTION_HEARTBEAT;
+		led-0 {
+			color = <LED_COLOR_ID_GREEN>;
 			gpios = <&main_gpio0 13 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "heartbeat";
-			default-state = "on";
+			function = LED_FUNCTION_HEARTBEAT;
 		};
 	};
 };
 
 &main_pmx0 {
-	eeprom_wp_pins_default: eeprom-wp-pins-default {
-		pinctrl-single,pins = <
-			AM62X_IOPAD(0x030, PIN_OUTPUT, 7) /* (G21) OSPI0_CSN1.GPIO0_12 */
-		>;
-	};
-
-
 	leds_pins_default: leds-pins-default {
 		pinctrl-single,pins = <
 			AM62X_IOPAD(0x034, PIN_OUTPUT, 7) /* (H21) OSPI0_CSN2.GPIO0_13 */
@@ -186,23 +158,11 @@
 		>;
 	};
 
-	rtc_pins_default: rtc-pins-default {
+	pmic_irq_pins_default: pmic-irq-pins-default {
 		pinctrl-single,pins = <
 			AM62X_IOPAD(0x1f4, PIN_INPUT, 7) /* (D16) EXTINTN.GPIO1_31 */
 		>;
 	};
-
-	vddshv_sdio_pins_default: vddshv-sdio-pins-default {
-		pinctrl-single,pins = <
-			AM62X_IOPAD(0x07c, PIN_OUTPUT, 7) /* (P25) GPMC0_CLK.GPIO0_31 */
-		>;
-	};
-};
-
-&mcu_m4fss {
-	mboxes = <&mailbox0_cluster0 &mbox_m4_0>;
-	memory-region = <&mcu_m4fss_dma_memory_region>,
-			<&mcu_m4fss_memory_region>;
 };
 
 &mcu_pmx0 {
@@ -220,14 +180,17 @@
 	status = "disabled";
 };
 
+&mcu_m4fss {
+	status = "disabled";
+};
+
 &mcu_uart0 {
 	status = "disabled";
 };
 
 &cpsw3g {
 	pinctrl-names = "default";
-	pinctrl-0 = <&main_mdio1_pins_default
-		     &main_rgmii1_pins_default>;
+	pinctrl-0 = <&main_rgmii1_pins_default>;
 };
 
 &cpsw_port1 {
@@ -236,6 +199,9 @@
 };
 
 &cpsw3g_mdio {
+	pinctrl-names = "default";
+	pinctrl-0 = <&main_mdio1_pins_default>;
+
 	cpsw3g_phy1: ethernet-phy@1 {
 		compatible = "ethernet-phy-id2000.a231", "ethernet-phy-ieee802.3-c22";
 		reg = <1>;
@@ -245,9 +211,9 @@
 };
 
 &mailbox0_cluster0 {
-	mbox_m4_0: mbox-m4-0 {
-		ti,mbox-rx = <0 0 0>;
-		ti,mbox-tx = <1 0 0>;
+	mbox_r5_0: mbox-r5-0 {
+		ti,mbox-rx = <2 0 0>;
+		ti,mbox-tx = <3 0 0>;
 	};
 };
 
@@ -256,25 +222,95 @@
 	pinctrl-0 = <&main_i2c0_pins_default>;
 	clock-frequency = <400000>;
 
+	pmic@30 {
+		compatible = "ti,tps65219";
+		reg = <0x30>;
+		buck1-supply = <&vcc_5v0_som>;
+		buck2-supply = <&vcc_5v0_som>;
+		buck3-supply = <&vcc_5v0_som>;
+		ldo1-supply = <&vdd_3v3>;
+		ldo2-supply = <&vdd_1v8>;
+		ldo3-supply = <&vcc_5v0_som>;
+		ldo4-supply = <&vcc_5v0_som>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&pmic_irq_pins_default>;
+		interrupt-parent = <&main_gpio1>;
+		interrupts = <31 IRQ_TYPE_EDGE_FALLING>;
+		interrupt-controller;
+		#interrupt-cells = <1>;
+		ti,power-button;
+		system-power-controller;
+
+		regulators {
+			vdd_core: buck1 {
+				regulator-name = "VDD_CORE";
+				regulator-min-microvolt = <750000>;
+				regulator-max-microvolt = <750000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			vdd_3v3: buck2 {
+				regulator-name = "VDD_3V3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			vdd_ddr4: buck3 {
+				regulator-name = "VDD_DDR4";
+				regulator-min-microvolt = <1100000>;
+				regulator-max-microvolt = <1100000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			vddshv5_sdio: ldo1 {
+				regulator-name = "VDDSHV5_SDIO";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-allow-bypass;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			vddr_core: ldo2 {
+				regulator-name = "VDDR_CORE";
+				regulator-min-microvolt = <850000>;
+				regulator-max-microvolt = <850000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			vdda_1v8: ldo3 {
+				regulator-name = "VDDA_1V8";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			vdd_2v5: ldo4 {
+				regulator-name = "VDD_2V5";
+				regulator-min-microvolt = <2500000>;
+				regulator-max-microvolt = <2500000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+		};
+	};
+
 	eeprom@50 {
 		compatible = "atmel,24c32";
-		pinctrl-names = "default";
-		pinctrl-0 = <&eeprom_wp_pins_default>;
-		wp-gpios = <&main_gpio0 12 GPIO_ACTIVE_LOW>;
 		pagesize = <32>;
 		reg = <0x50>;
 	};
 
-	rv3028: rtc@52 {
+	i2c_som_rtc: rtc@52 {
 		compatible = "microcrystal,rv3028";
-		pinctrl-names = "default";
-		pinctrl-0 = <&rtc_pins_default>;
 		reg = <0x52>;
-		interrupt-parent = <&main_gpio1>;
-		interrupts = <31 IRQ_TYPE_LEVEL_LOW>;
-		wakeup-source;
-		enable-level-switching-mode;
-		trickle-resistor-ohms = <3000>;
 	};
 };
 
@@ -305,10 +341,18 @@
 	non-removable;
 };
 
-/* wkup_uart0 is reserved for firmware usage */
+&wkup_rti0 {
+	/* WKUP RTI0 is used by DM firmware */
+	status = "reserved";
+};
+
+&wkup_r5fss0_core0 {
+	mboxes = <&mailbox0_cluster0 &mbox_r5_0>;
+	memory-region = <&wkup_r5fss0_core0_dma_memory_region>,
+			<&wkup_r5fss0_core0_memory_region>;
+};
+
 &wkup_uart0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&wkup_uart0_pins_default>;
 	/* WKUP UART0 is used by DM firmware */
 	status = "reserved";
 };
