@@ -126,7 +126,8 @@
 	DFU_ALT_INFO_MMC \
 	DFU_ALT_INFO_EMMC \
 	DFU_ALT_INFO_RAM \
-	DFU_ALT_INFO_OSPI
+	DFU_ALT_INFO_OSPI \
+	DFU_ALT_INFO_OSPI_NAND
 
 /* Incorporate settings into the U-Boot environment */
 #define CONFIG_EXTRA_ENV_SETTINGS					\
