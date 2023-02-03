@@ -429,12 +429,16 @@
 
 #endif
 
+#ifdef CONFIG_TARGET_AM625_A53_EVM
 #define EXTRA_ENV_DFUARGS \
 	DFU_ALT_INFO_MMC \
 	DFU_ALT_INFO_EMMC \
 	DFU_ALT_INFO_RAM \
 	DFU_ALT_INFO_OSPI \
 	DFU_ALT_INFO_OSPI_NAND
+#else
+#define EXTRA_ENV_DFUARGS
+#endif
 
 /* Incorporate settings into the U-Boot environment */
 #define CONFIG_EXTRA_ENV_SETTINGS					\
