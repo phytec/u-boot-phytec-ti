@@ -2,6 +2,12 @@
 /*
  * Copyright (C) 2021 PHYTEC America, LLC - https://www.phytec.com
  * Author: Matt McKee <mmckee@phytec.com>
+ *
+ * Copyright (C) 2022 PHYTEC Messtechnik GmbH
+ * Author: Wadim Egorov <w.egorov@phytec.de>
+ *
+ * Product homepage:
+ * https://www.phytec.com/product/phycore-am64x
  */
 
 #include <dt-bindings/leds/common.h>
@@ -10,10 +16,12 @@
 
 / {
 	model = "PHYTEC phyCORE-AM64x";
-	compatible = "phytec,am64-phycore-som";
+	compatible = "phytec,am64-phycore-som", "ti,am642";
 
 	aliases {
-		rtc0 = &rv3028;
+		ethernet0 = &cpsw_port1;
+		mmc0 = &sdhci0;
+		rtc0 = &i2c_som_rtc;
 	};
 
 	memory@40000000 {
@@ -21,67 +29,13 @@
 		reg = <0x00000000 0x40000000 0x00000000 0x40000000>;
 	};
 
-	reserved-memory {
+	reserved_memory: reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
 
 		secure_ddr: optee@9e800000 {
 			reg = <0x00 0x9e800000 0x00 0x01800000>; /* for OP-TEE */
-			alignment = <0x1000>;
-			no-map;
-		};
-
-		main_r5fss0_core0_dma_memory_region: r5f-dma-memory@a0000000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0xa0000000 0x00 0x100000>;
-			no-map;
-		};
-
-		main_r5fss0_core0_memory_region: r5f-memory@a0100000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0xa0100000 0x00 0xf00000>;
-			no-map;
-		};
-
-		main_r5fss0_core1_dma_memory_region: r5f-dma-memory@a1000000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0xa1000000 0x00 0x100000>;
-			no-map;
-		};
-
-		main_r5fss0_core1_memory_region: r5f-memory@a1100000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0xa1100000 0x00 0xf00000>;
-			no-map;
-		};
-
-		main_r5fss1_core0_dma_memory_region: r5f-dma-memory@a2000000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0xa2000000 0x00 0x100000>;
-			no-map;
-		};
-
-		main_r5fss1_core0_memory_region: r5f-memory@a2100000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0xa2100000 0x00 0xf00000>;
-			no-map;
-		};
-
-		main_r5fss1_core1_dma_memory_region: r5f-dma-memory@a3000000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0xa3000000 0x00 0x100000>;
-			no-map;
-		};
-
-		main_r5fss1_core1_memory_region: r5f-memory@a3100000 {
-			compatible = "shared-dma-pool";
-			reg = <0x00 0xa3100000 0x00 0xf00000>;
-			no-map;
-		};
-
-		rtos_ipc_memory_region: ipc-memories@a5000000 {
-			reg = <0x00 0xa5000000 0x00 0x00800000>;
 			alignment = <0x1000>;
 			no-map;
 		};
@@ -92,18 +46,18 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&leds_pins_default>;
 
-		led-green {
+		led-0 {
+			color = <LED_COLOR_ID_GREEN>;
 			function = LED_FUNCTION_HEARTBEAT;
 			gpios = <&main_gpio0 12 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "heartbeat";
-			default-state = "on";
 		};
 	};
 
-	vcc_5v0_som: fixedregulator-vcc-5v0-som {
+	vcc_5v0_som: regulator-vcc-5v0-som {
 		/* VIN / VCC_5V0_SOM */
 		compatible = "regulator-fixed";
-		regulator-name = "vcc_5v0_som";
+		regulator-name = "VCC_5V0_SOM";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
 		regulator-always-on;
@@ -128,7 +82,7 @@
 			AM64X_IOPAD(0x00e0, PIN_OUTPUT, 4)	/* (U14) PRG1_PRU0_GPO10.RGMII1_TXC */
 			AM64X_IOPAD(0x01cc, PIN_INPUT, 4)	/* (W5) PRG0_PRU1_GPO7.RGMII1_RD0 */
 			AM64X_IOPAD(0x0124, PIN_OUTPUT, 4)	/* (V15) PRG1_PRU1_GPO7.RGMII1_TD0 */
-			AM64X_IOPAD(0x01d4, PIN_INPUT, 4) 	/* (Y5) PRG0_PRU1_GPO9.RGMII1_RD1 */
+			AM64X_IOPAD(0x01d4, PIN_INPUT, 4)	/* (Y5) PRG0_PRU1_GPO9.RGMII1_RD1 */
 			AM64X_IOPAD(0x012c, PIN_OUTPUT, 4)	/* (V14) PRG1_PRU1_GPO9.RGMII1_TD1 */
 			AM64X_IOPAD(0x01d8, PIN_INPUT, 4)	/* (V6) PRG0_PRU1_GPO10.RGMII1_RD2 */
 			AM64X_IOPAD(0x0130, PIN_OUTPUT, 4)	/* (W14) PRG1_PRU1_GPO10.RGMII1_TD2 */
@@ -183,7 +137,6 @@
 };
 
 &cpsw3g {
-	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&cpsw_mdio_pins_default &cpsw_rgmii1_pins_default>;
 
@@ -193,9 +146,6 @@
 };
 
 &cpsw3g_mdio {
-	status = "okay";
-
-
 	cpsw3g_phy1: ethernet-phy@1 {
 		compatible = "ethernet-phy-id2000.a231", "ethernet-phy-ieee802.3-c22";
 		reg = <1>;
@@ -211,7 +161,6 @@
 };
 
 &cpsw_port1 {
-	status = "okay";
 	phy-mode = "rgmii-rxid";
 	phy-handle = <&cpsw3g_phy1>;
 };
@@ -220,57 +169,7 @@
 	status = "disabled";
 };
 
-&mailbox0_cluster2 {
-	status = "okay";
-
-	mbox_main_r5fss0_core0: mbox-main-r5fss0-core0 {
-		ti,mbox-rx = <0 0 2>;
-		ti,mbox-tx = <1 0 2>;
-	};
-
-	mbox_main_r5fss0_core1: mbox-main-r5fss0-core1 {
-		ti,mbox-rx = <2 0 2>;
-		ti,mbox-tx = <3 0 2>;
-	};
-};
-
-&mailbox0_cluster3 {
-	status = "disabled";
-};
-
-&mailbox0_cluster4 {
-	status = "okay";
-
-	mbox_main_r5fss1_core0: mbox-main-r5fss1-core0 {
-		ti,mbox-rx = <0 0 2>;
-		ti,mbox-tx = <1 0 2>;
-	};
-
-	mbox_main_r5fss1_core1: mbox-main-r5fss1-core1 {
-		ti,mbox-rx = <2 0 2>;
-		ti,mbox-tx = <3 0 2>;
-	};
-};
-
-&mailbox0_cluster5 {
-	status = "disabled";
-};
-
-&mailbox0_cluster6 {
-	status = "okay";
-
-	mbox_m4_0: mbox-m4-0 {
-		ti,mbox-rx = <0 0 2>;
-		ti,mbox-tx = <1 0 2>;
-	};
-};
-
-&mailbox0_cluster7 {
-	status = "disabled";
-};
-
 &main_i2c0 {
-	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&main_i2c0_pins_default>;
 	clock-frequency = <400000>;
@@ -284,19 +183,17 @@
 		reg = <0x50>;
 	};
 
-	rv3028: rtc@52 {
+	i2c_som_rtc: rtc@52 {
 		compatible = "microcrystal,rv3028";
 		pinctrl-names = "default";
 		pinctrl-0 = <&rtc_pins_default>;
 		reg = <0x52>;
 		interrupt-parent = <&main_gpio1>;
-		interrupts = <70 IRQ_TYPE_LEVEL_LOW>;
+		interrupts = <70 IRQ_TYPE_EDGE_FALLING>;
 		wakeup-source;
-		enable-level-switching-mode;
-		trickle-resistor-ohms = <3000>;
 	};
 
-	lp8733: lp8733@61 {
+	pmic@61 {
 		compatible = "ti,lp8733";
 		reg = <0x61>;
 
@@ -305,10 +202,9 @@
 		ldo0-in-supply =<&vdd_3v3>;
 		ldo1-in-supply =<&vdd_3v3>;
 
-		lp8733_regulators: regulators {
+		regulators {
 			vdd_core: buck0 {
-				/* VDD_CORE */
-				regulator-name = "vdd-core";
+				regulator-name = "VDD_CORE";
 				regulator-min-microvolt = <750000>;
 				regulator-max-microvolt = <750000>;
 				regulator-always-on;
@@ -316,8 +212,7 @@
 			};
 
 			vdd_3v3: buck1 {
-				/* VDD_3V3 */
-				regulator-name = "vdd-3v3";
+				regulator-name = "VDD_3V3";
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-boot-on;
@@ -325,8 +220,7 @@
 			};
 
 			vdd_1v8_ldo0: ldo0 {
-				/* VDD_1V8_LDO0 */
-				regulator-name = "vdd-1v8-ldo0";
+				regulator-name = "VDD_1V8_LDO0";
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
 				regulator-boot-on;
@@ -334,8 +228,7 @@
 			};
 
 			vdda_1v8: ldo1 {
-				/* VDDA_1V8 */
-				regulator-name = "vdda-1v8";
+				regulator-name = "VDDA_1V8";
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
 				regulator-always-on;
@@ -345,65 +238,43 @@
 	};
 };
 
-&main_r5fss0_core0 {
-	status = "okay";
-	mboxes = <&mailbox0_cluster2 &mbox_main_r5fss0_core0>;
-	memory-region = <&main_r5fss0_core0_dma_memory_region>,
-			<&main_r5fss0_core0_memory_region>;
-	sram = <&main_r5fss0_core0_sram>;
+&mailbox0_cluster2 {
+	status = "disabled";
 };
 
-&main_r5fss0_core1 {
-	status = "okay";
-	mboxes = <&mailbox0_cluster2 &mbox_main_r5fss0_core1>;
-	memory-region = <&main_r5fss0_core1_dma_memory_region>,
-			<&main_r5fss0_core1_memory_region>;
-	sram = <&main_r5fss0_core1_sram>;
+&mailbox0_cluster3 {
+	status = "disabled";
 };
 
-&main_r5fss1_core0 {
-	status = "okay";
-	mboxes = <&mailbox0_cluster4 &mbox_main_r5fss1_core0>;
-	memory-region = <&main_r5fss1_core0_dma_memory_region>,
-			<&main_r5fss1_core0_memory_region>;
-	sram = <&main_r5fss1_core0_sram>;
+&mailbox0_cluster4 {
+	status = "disabled";
 };
 
-&main_r5fss1_core1 {
-	status = "okay";
-	mboxes = <&mailbox0_cluster4 &mbox_main_r5fss1_core1>;
-	memory-region = <&main_r5fss1_core1_dma_memory_region>,
-			<&main_r5fss1_core1_memory_region>;
-	sram = <&main_r5fss1_core1_sram>;
+&mailbox0_cluster5 {
+	status = "disabled";
 };
 
-/* mcu_gpio0 is reserved for mcu firmware usage */
-&mcu_gpio0 {
-	status = "reserved";
+&mailbox0_cluster6 {
+	status = "disabled";
 };
 
-&oc_sram {
-	status = "okay";
+&mailbox0_cluster7 {
+	status = "disabled";
+};
 
-	main_r5fss0_core0_sram: r5f-sram@40000 {
-		reg = <0x40000 0x40000>;
-	};
+&main_r5fss0 {
+	status = "disabled";
+};
 
-	main_r5fss0_core1_sram: r5f-sram@80000 {
-		reg = <0x80000 0x40000>;
-	};
+&main_r5fss1 {
+	status = "disabled";
+};
 
-	main_r5fss1_core0_sram: r5f-sram@c0000 {
-		reg = <0xc0000 0x40000>;
-	};
-
-	main_r5fss1_core1_sram: r5f-sram@100000 {
-		reg = <0x100000 0x40000>;
-	};
+&mcu_m4fss {
+	status = "disabled";
 };
 
 &ospi0 {
-	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&ospi0_pins_default>;
 
@@ -422,34 +293,10 @@
 };
 
 &sdhci0 {
-	status = "okay";
 	bus-width = <8>;
 	non-removable;
 	ti,driver-strength-ohm = <50>;
 	disable-wp;
 	/* temporarily disable hs400 until new eMMC chips can be tested */
 	/delete-property/ mmc-hs400-1_8v;
-};
-
-#define TS_OFFSET(pa, val)     (0x4+(pa)*4) (0x10000 | val)
-
-&timesync_router {
-	status = "okay";
-	pinctrl-names = "default";
-	pinctrl-0 = <&mcu_cpts_pps>;
-
-	/* Example of the timesync routing */
-	mcu_cpts_pps: mcu-cpts-pps {
-		pinctrl-single,pins = <
-			/* pps [cpts genf1] in22 -> out37 [cpts hw8_push] */
-			TS_OFFSET(37, 22)
-			/* pps [cpts genf1] in22 -> out25 [SYNC1_OUT pin] */
-			TS_OFFSET(25, 22)
-		>;
-	};
-};
-
-/* adc0 is reserved for R5 usage */
-&tscadc0 {
-	status = "reserved";
 };
