@@ -18,8 +18,13 @@
 		tick-timer = &timer1;
 	};
 
-	aliases {
-		ethernet0 = &cpsw3g;
+	vdd_3v3_mmc: regulator-sd {
+		compatible = "regulator-fixed";
+		regulator-name = "VDD_3V3_MMC";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+		enable-active-high;
 	};
 };
 
@@ -33,7 +38,7 @@
 			AM64X_IOPAD(0x028c, PIN_INPUT_PULLDOWN, 0)	/* (L20) MMC1_CLK */
 			AM64X_IOPAD(0x0290, PIN_INPUT, 0)		/* MMC1_CLKLB */
 			AM64X_IOPAD(0x0294, PIN_INPUT_PULLUP, 0)	/* (J19) MMC1_CMD */
-			AM64X_IOPAD(0x0298, PIN_INPUT, 0)		/* (D19) MMC1_SDCD */
+			AM64X_IOPAD(0x0298, PIN_INPUT_PULLUP, 0)	/* (D19) MMC1_SDCD */
 		>;
 	};
 
@@ -46,7 +51,7 @@
 
 	main_usb0_pins_default: main-usb0-pins-default {
 		pinctrl-single,pins = <
-			AM64X_IOPAD(0x02a8, PIN_OUTPUT, 0)	/* (E19) USB0_DRVVBUS */
+			AM64X_IOPAD(0x02a8, PIN_OUTPUT, 0)      /* (E19) USB0_DRVVBUS */
 		>;
 	};
 };
@@ -60,10 +65,12 @@
 &sdhci1 {
 	status = "okay";
 	pinctrl-names = "default";
-	bus-width = <4>;
 	pinctrl-0 = <&main_mmc1_pins_default>;
+	vmmc-supply = <&vdd_3v3_mmc>;
+	bus-width = <4>;
 	ti,driver-strength-ohm = <50>;
 	disable-wp;
+	no-1-8-v;
 };
 
 &usbss0 {
