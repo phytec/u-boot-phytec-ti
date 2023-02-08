@@ -69,4 +69,14 @@
 	"rootfs raw 0x2000000 0x5fc0000;" \
 	"phypattern raw 0x7fc0000 0x40000\0"
 
+#define DFU_ALT_INFO_GPMC_NAND \
+       "dfu_alt_info_gpmc_nand=" \
+       "tiboot3.bin raw 0x0 0x00200000;" \
+       "tispl.bin raw 0x00200000 0x00200000;" \
+       "tiboot3.backup raw 0x00400000 0x00200000;"\
+       "u-boot.img raw 0x00600000 0x00400000;" \
+       "u-boot-env raw 0x00a00000 0x00040000;" \
+       "u-boot-env.backup raw 0x00a40000 0x00040000;" \
+       "file-system raw 0x00a80000 0x3f580000\0" \
+
 #endif /* __TI_DFU_H */
