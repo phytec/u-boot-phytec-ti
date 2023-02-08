@@ -5,6 +5,7 @@
  */
 
 #include "k3-am62x-sk-common-u-boot.dtsi"
+#include "k3-am62x-lp-sk-nand.dtsi"
 
 &ospi0 {
 	u-boot,dm-spl;
