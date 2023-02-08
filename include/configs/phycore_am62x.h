@@ -11,12 +11,7 @@
 
 #include <linux/sizes.h>
 
-/* DDR Configuration */
-#define CONFIG_SYS_SDRAM_BASE1		0x880000000
-
-#ifdef CONFIG_SYS_K3_SPL_ATF
-#define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME	"tispl.bin"
-#endif
+#include "phytec_am6_common.h"
 
 #if defined(CONFIG_TARGET_PHYCORE_AM62X_A53)
 #define CONFIG_SPL_MAX_SIZE		SZ_1M
@@ -46,53 +41,6 @@
 #define CONFIG_SYS_SPL_MALLOC_START    0x84000000
 #define CONFIG_SYS_SPL_MALLOC_SIZE     SZ_16M
 #endif
-
-/* U-Boot general configuration */
-#define EXTRA_ENV_SETTINGS \
-	"default_device_tree=k3-am625-phyboard-lyra-rdk.dtb\0"	\
-	"findfdt=" \
-		"setenv name_fdt ${default_device_tree};" \
-		"setenv fdtfile ${name_fdt}\0" \
-	"name_kern=Image\0" \
-	"console=ttyS2,115200n8\0" \
-	"args_all=setenv optargs earlycon=ns16550a,mmio32,0x02800000 " \
-		"${mtdparts}\0" \
-	"run_kern=booti ${loadaddr} ${rd_spec} ${fdtaddr}\0"
-
-/* U-Boot MMC-specific configuration */
-#define EXTRA_ENV_SETTINGS_MMC \
-	"boot=mmc\0" \
-	"mmcdev=1\0" \
-	"bootpart=2\0" \
-	"bootdir=/boot\0" \
-	"rd_spec=-\0" \
-	"mmcrootfstype=ext4 rootwait\0" \
-	"finduuid=part uuid ${boot} ${mmcdev}:${bootpart} uuid\0" \
-	"args_mmc=run finduuid;setenv bootargs console=${console} " \
-		"${optargs} " \
-		"root=/dev/mmcblk${mmcdev}p${bootpart} rw " \
-		"rootfstype=${mmcrootfstype}\0" \
-	"init_mmc=run args_all args_mmc\0" \
-	"get_fdt_mmc=load mmc ${mmcdev}:${bootpart} ${fdtaddr} ${bootdir}/${name_fdt}\0" \
-	"get_overlay_mmc=" \
-		"fdt address ${fdtaddr};" \
-		"fdt resize 0x100000;" \
-		"for overlay in $overlays;" \
-		"do;" \
-		"load mmc ${mmcdev}:${bootpart} ${dtboaddr} ${bootdir}/${overlay} && " \
-		"fdt apply ${dtboaddr};" \
-		"done;\0" \
-	"get_kern_mmc=load mmc ${mmcdev}:${bootpart} ${loadaddr} " \
-		"${bootdir}/${name_kern}\0" \
-	"get_fit_mmc=load mmc ${mmcdev}:${bootpart} ${addr_fit} " \
-		"${bootdir}/${name_fit}\0"
-
-
-/* Incorporate settings into the U-Boot environment */
-#define CONFIG_EXTRA_ENV_SETTINGS \
-	DEFAULT_LINUX_BOOT_ENV \
-	EXTRA_ENV_SETTINGS \
-	EXTRA_ENV_SETTINGS_MMC
 
 #ifdef CONFIG_SYS_MALLOC_LEN
 #undef CONFIG_SYS_MALLOC_LEN
