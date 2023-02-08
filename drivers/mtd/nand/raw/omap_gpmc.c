@@ -13,9 +13,10 @@
 #include <linux/bch.h>
 #include <linux/compiler.h>
 #include <nand.h>
-#include <linux/mtd/omap_elm.h>
 #include <soc.h>
 #include <dm/uclass.h>
+
+#include "omap_elm.h"
 
 #define BADBLOCK_MARKER_LENGTH	2
 #define SECTOR_BYTES		512
@@ -1266,6 +1267,15 @@ void board_nand_init(void)
 {
 	struct udevice *dev;
 	int ret;
+
+#ifdef CONFIG_NAND_OMAP_ELM
+	ret = uclass_get_device_by_driver(UCLASS_MTD,
+					  DM_GET_DRIVER(gpmc_elm), &dev);
+	if (ret && ret != -ENODEV) {
+		pr_err("%s: Failed to get ELM device: %d\n", __func__, ret);
+		return;
+	}
+#endif
 
 	ret = uclass_get_device_by_driver(UCLASS_MTD,
 					  DM_GET_DRIVER(gpmc_nand), &dev);
