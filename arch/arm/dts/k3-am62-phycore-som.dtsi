@@ -17,7 +17,6 @@
 
 	aliases {
 		rtc0 = &i2c_som_rtc;
-		rtc1 = &wkup_rtc0;
 	};
 
 	memory@80000000 {
@@ -180,10 +179,6 @@
 	status = "disabled";
 };
 
-&mcu_m4fss {
-	status = "disabled";
-};
-
 &mcu_uart0 {
 	status = "disabled";
 };
@@ -339,17 +334,6 @@
 	ti,driver-strength-ohm = <50>;
 	disable-wp;
 	non-removable;
-};
-
-&wkup_rti0 {
-	/* WKUP RTI0 is used by DM firmware */
-	status = "reserved";
-};
-
-&wkup_r5fss0_core0 {
-	mboxes = <&mailbox0_cluster0 &mbox_r5_0>;
-	memory-region = <&wkup_r5fss0_core0_dma_memory_region>,
-			<&wkup_r5fss0_core0_memory_region>;
 };
 
 &wkup_uart0 {
