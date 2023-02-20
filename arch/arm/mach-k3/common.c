@@ -628,8 +628,10 @@ int misc_init_r(void)
 	}
 
 	/* Default FIT boot on non-GP devices */
-	if (get_device_type() != K3_DEVICE_TYPE_GP)
-		env_set("boot_fit", "1");
+	if (get_device_type() != K3_DEVICE_TYPE_GP) {
+		if (!env_get("boot_fit"))
+			env_set("boot_fit", "1");
+	}
 
 	return 0;
 }
