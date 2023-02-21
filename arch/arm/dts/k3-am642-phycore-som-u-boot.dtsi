@@ -97,9 +97,6 @@
 	u-boot,dm-spl;
 	flash@0 {
 		u-boot,dm-spl;
-		partition@3fc0000 {
-			u-boot,dm-spl;
-		};
 	};
 };
 
