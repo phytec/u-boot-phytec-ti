@@ -13,6 +13,7 @@
 #include <config_distro_bootcmd.h>
 #include <environment/ti/mmc.h>
 #include <environment/ti/k3_dfu.h>
+#include <environment/ti/k3_rproc.h>
 
 /* DDR Configuration */
 #define CONFIG_SYS_SDRAM_BASE1		0x880000000
@@ -236,10 +237,18 @@
 	"get_kern_nand=ubifsload ${loadaddr} ${bootdir}/${name_kern}\0"	\
 	"get_fit_nand=ubifsload ${addr_fit} ${bootdir}/${name_fit}\0"
 
+#if defined(CONFIG_TARGET_AM625_A53_EVM)
+#if defined(DEFAULT_RPROCS)
+#undef DEFAULT_RPROCS
+#endif
+#define DEFAULT_RPROCS ""						\
+		"0 /lib/firmware/am62-mcu-m4f0_0-fw "
+#endif
+
 #define BOOTENV_DEV_LINUX(devtypeu, devtypel, instance) \
 	"bootcmd_linux=" \
 		"if test \"${android_boot}\" -eq 0; then;" \
-			"run findfdt; run envboot; run init_${boot};" \
+			"run findfdt; run envboot; run init_${boot}; run boot_rprocs;" \
 			"if test ${boot_fit} -eq 1; then;" \
 				"run get_fit_${boot}; run get_fit_${boot}; run get_overlaystring; run run_fit;"\
 			"else;" \
@@ -518,7 +527,8 @@
 	EXTRA_ENV_AM625_BOARD_SETTINGS_NAND				\
 	EXTRA_ENV_DFUARGS						\
 	EXTRA_ENV_AM625_BOARD_SETTING_USBMSC				\
-	EXTRA_ENV_AM625_BOARD_SETTINGS_OSPI_NAND
+	EXTRA_ENV_AM625_BOARD_SETTINGS_OSPI_NAND			\
+	EXTRA_ENV_RPROC_SETTINGS
 
 /* Now for the remaining common defines */
 #include <configs/ti_armv7_common.h>
