@@ -21,6 +21,7 @@
 		usb0 = &usb0;
 		usb1 = &usb1;
 		spi0 = &ospi0;
+		remoteproc0 = &mcu_m4fss;
 	};
 
 	chosen {
@@ -39,6 +40,18 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
+
+		mcu_m4fss_dma_memory_region: m4f-dma-memory@9cb00000 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0x9cb00000 0x00 0x100000>;
+			no-map;
+		};
+
+		mcu_m4fss_memory_region: m4f-memory@9cc00000 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0x9cc00000 0x00 0xe00000>;
+			no-map;
+		};
 
 		secure_tfa_ddr: tfa@9e780000 {
 			reg = <0x00 0x9e780000 0x00 0x80000>;
