@@ -494,6 +494,26 @@ bool soc_is_j7200(void)
 	return soc == J7200;
 }
 
+bool soc_is_am64x(void)
+{
+	u32 soc;
+
+	soc = (readl(CTRLMMR_WKUP_JTAG_ID) &
+		JTAG_ID_PARTNO_MASK) >> JTAG_ID_PARTNO_SHIFT;
+
+	return soc == AM64X;
+}
+
+bool soc_is_am62x(void)
+{
+	u32 soc;
+
+	soc = (readl(CTRLMMR_WKUP_JTAG_ID) &
+		JTAG_ID_PARTNO_MASK) >> JTAG_ID_PARTNO_SHIFT;
+
+	return soc == AM62X;
+}
+
 #ifdef CONFIG_ARM64
 void board_prep_linux(bootm_headers_t *images)
 {

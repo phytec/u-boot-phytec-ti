@@ -11,8 +11,13 @@
 #include <linux/soc/ti/ti_sci_protocol.h>
 #include <mach/security.h>
 
+#define AM65X  0xBB5A
 #define J721E  0xbb64
 #define J7200  0xbb6d
+#define AM64X  0xBB38
+#define J721S2 0xBB75
+#define AM62X  0xBB7E
+#define J784S4 0xBB80
 
 struct fwl_data {
 	const char *name;
