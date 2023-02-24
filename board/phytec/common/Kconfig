@@ -11,6 +11,14 @@ config PHYTEC_IMX8M_SOM_DETECTION
 	   Support of I2C EEPROM based SoM detection. Supported
 	   for PHYTEC i.MX8M/i.MX8MM/i.MX8MN/i.MX8MP boards.
 
+config PHYTEC_AM62_SOM_DETECTION
+	bool "Support SoM detection for AM62 Phytec platforms"
+	depends on (TARGET_PHYCORE_AM62X_A53 || TARGET_PHYCORE_AM62X_R5)
+	select PHYTEC_SOM_DETECTION
+	help
+	   Support of I2C EEPROM based SoM detection. Supported
+	   for PHYTEC AM62xx boards.
+
 config PHYTEC_AM64_SOM_DETECTION
 	bool "Support SoM detection for AM64 Phytec platforms"
 	depends on (TARGET_PHYCORE_AM64X_A53 || TARGET_PHYCORE_AM64X_R5)
