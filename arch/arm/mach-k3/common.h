@@ -42,3 +42,5 @@ void spl_enable_dcache(void);
 void mmr_unlock(phys_addr_t base, u32 partition);
 bool is_rom_loaded_sysfw(struct rom_extended_boot_data *data);
 enum k3_device_type get_device_type(void);
+struct ti_sci_handle *get_ti_sci_handle(void);
+void do_board_detect(void);
