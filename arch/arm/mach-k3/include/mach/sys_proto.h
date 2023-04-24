@@ -33,6 +33,7 @@ bool soc_is_j721e(void);
 bool soc_is_j7200(void);
 bool soc_is_am64x(void);
 bool soc_is_am62x(void);
+bool soc_is_am62ax(void);
 
 void k3_spl_init(void);
 void k3_mem_init(void);
