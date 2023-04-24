@@ -1,0 +1,52 @@
+#
+# Copyright (C) 2023 PHYTEC America LLC
+# Author: Garrett Giordano <ggiordano@phytec.com>
+#
+# SPDX-License-Identifier:     GPL-2.0+
+#
+
+choice
+	prompt "PHYTEC phyCORE-AM62Ax based boards"
+	optional
+
+config TARGET_PHYCORE_AM62A7_A53
+	bool "PHYTEC phyCORE-AM62a7 (A53 processor)"
+	select ARM64
+	select SOC_K3_AM62A7
+	imply BOARD
+	imply SPL_BOARD
+
+config TARGET_PHYCORE_AM62A7_R5
+	bool "PHYTEC phyCORE-AM62a7 (R5 processor)"
+	select CPU_V7R
+	select SYS_THUMB_BUILD
+	select K3_LOAD_SYSFW
+	select SOC_K3_AM62A7
+	select RAM
+	select SPL_RAM
+	select K3_DDRSS
+	imply SYS_K3_SPL_ATF
+
+endchoice
+
+if TARGET_PHYCORE_AM62A7_R5 || TARGET_PHYCORE_AM62A7_A53
+
+config SYS_BOARD
+       default "phycore_am62ax"
+
+config SYS_VENDOR
+       default "phytec"
+
+config SYS_CONFIG_NAME
+       default "phycore_am62ax"
+
+source "board/phytec/common/Kconfig"
+
+endif
+
+if TARGET_PHYCORE_AM62A7_R5
+
+config SPL_LDSCRIPT
+	default "arch/arm/mach-omap2/u-boot-spl.lds"
+
+endif
