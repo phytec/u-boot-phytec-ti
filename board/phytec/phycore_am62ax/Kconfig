@@ -13,6 +13,7 @@ config TARGET_PHYCORE_AM62A7_A53
 	bool "PHYTEC phyCORE-AM62a7 (A53 processor)"
 	select ARM64
 	select SOC_K3_AM62A7
+	select SUPPORT_EXTENSION_SCAN
 	imply BOARD
 	imply SPL_BOARD
 
