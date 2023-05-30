@@ -13,6 +13,7 @@ config TARGET_PHYCORE_AM62X_A53
 	bool "PHYTEC phyCORE-AM62x (A53 processor)"
 	select ARM64
 	select SOC_K3_AM622
+	select SUPPORT_EXTENSION_SCAN
 	imply BOARD
 	imply SPL_BOARD
 
@@ -40,6 +41,8 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
        default "phycore_am62x"
 
+source "board/phytec/common/Kconfig"
+
 endif
 
 if TARGET_PHYCORE_AM62X_R5
@@ -55,5 +58,7 @@ config SYS_CONFIG_NAME
 
 config SPL_LDSCRIPT
 	default "arch/arm/mach-omap2/u-boot-spl.lds"
+
+source "board/phytec/common/Kconfig"
 
 endif
