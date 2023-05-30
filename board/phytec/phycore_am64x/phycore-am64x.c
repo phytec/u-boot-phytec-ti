@@ -65,7 +65,7 @@ void spl_board_init(void)
 }
 #endif
 
-#ifdef CONFIG_ENV_IS_IN_MMC
+#ifdef CONFIG_ENV_IS_IN_FAT
 int mmc_get_env_dev(void)
 {
 	u32 boot_device = get_boot_device();
