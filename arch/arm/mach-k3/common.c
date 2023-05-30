@@ -514,6 +514,16 @@ bool soc_is_am62x(void)
 	return soc == AM62X;
 }
 
+bool soc_is_am62ax(void)
+{
+	u32 soc;
+
+	soc = (readl(CTRLMMR_WKUP_JTAG_ID) &
+		JTAG_ID_PARTNO_MASK) >> JTAG_ID_PARTNO_SHIFT;
+
+	return soc == AM62AX;
+}
+
 #ifdef CONFIG_ARM64
 void board_prep_linux(bootm_headers_t *images)
 {

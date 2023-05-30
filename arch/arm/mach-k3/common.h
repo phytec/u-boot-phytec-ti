@@ -18,6 +18,7 @@
 #define J721S2 0xBB75
 #define AM62X  0xBB7E
 #define J784S4 0xBB80
+#define AM62AX 0xBB8D
 
 struct fwl_data {
 	const char *name;

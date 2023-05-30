@@ -9,5 +9,6 @@ endif
 
 obj-$(CONFIG_PHYTEC_SOM_DETECTION) += phytec_som_detection.o
 obj-$(CONFIG_PHYTEC_IMX8M_SOM_DETECTION) += imx8m_som_detection.o
+obj-$(CONFIG_PHYTEC_AM62A_SOM_DETECTION) += am62a_som_detection.o
 obj-$(CONFIG_PHYTEC_AM62_SOM_DETECTION) += am62_som_detection.o
 obj-$(CONFIG_PHYTEC_AM64_SOM_DETECTION) += am64_som_detection.o
