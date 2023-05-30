@@ -57,7 +57,10 @@
 	"get_kern_mmc=load mmc ${mmcdev}:${bootpart} ${loadaddr} " \
 		"${name_kern}\0" \
 	"get_fit_mmc=load mmc ${mmcdev}:${bootpart} ${addr_fit} " \
-		"${name_fit}\0"
+		"${name_fit}\0" \
+	"serverip=192.168.3.10\0" \
+	"ipaddr=192.168.3.11\0" \
+	"netmask=255.255.255.0\0"
 
 /* Incorporate settings into the U-Boot environment */
 #define CONFIG_EXTRA_ENV_SETTINGS \
