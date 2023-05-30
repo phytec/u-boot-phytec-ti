@@ -47,7 +47,13 @@
 		"do;" \
 		"load mmc ${mmcdev}:${bootpart} ${dtboaddr} ${overlay} && " \
 		"fdt apply ${dtboaddr};" \
-		"done;\0" \
+		"done;" \
+		"setenv extension_overlay_addr ${dtboaddr};" \
+		"setenv extension_overlay_cmd \'load mmc " \
+			"${mmcdev}:${bootpart} ${dtboaddr} " \
+			"${extension_overlay_name}\';" \
+		"extension scan;" \
+		"extension apply all;\0" \
 	"get_kern_mmc=load mmc ${mmcdev}:${bootpart} ${loadaddr} " \
 		"${name_kern}\0" \
 	"get_fit_mmc=load mmc ${mmcdev}:${bootpart} ${addr_fit} " \
