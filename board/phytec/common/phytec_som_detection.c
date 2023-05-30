@@ -23,7 +23,7 @@ int phytec_eeprom_data_setup(struct phytec_eeprom_data *data,
 	int ret;
 
 	ret = phytec_eeprom_data_init(data, bus_num, addr);
-	if (ret) {
+	if (ret && addr_fallback >= 0) {
 		pr_err("%s: init failed. Trying fall back address 0x%x\n",
 		       __func__, addr_fallback);
 		ret = phytec_eeprom_data_init(data, bus_num, addr_fallback);
