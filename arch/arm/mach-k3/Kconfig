@@ -211,5 +211,6 @@ source "board/ti/j784s4/Kconfig"
 source "board/phytec/phycore_am62x/Kconfig"
 source "board/phytec/phycore_am62ax/Kconfig"
 source "board/phytec/phycore_am64x/Kconfig"
+source "board/phytec/phycore_am68x/Kconfig"
 
 endif
