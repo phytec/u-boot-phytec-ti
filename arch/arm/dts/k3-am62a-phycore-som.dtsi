@@ -12,7 +12,7 @@
 #include <dt-bindings/net/ti-dp83867.h>
 
 / {
-	model = "PHYTEC phyCORE-Lyra AM62Ax";
+	model = "PHYTEC phyCORE-AM62Ax";
 	compatible = "phytec,am62a-phycore-som", "ti,am62a7";
 
 	aliases {
