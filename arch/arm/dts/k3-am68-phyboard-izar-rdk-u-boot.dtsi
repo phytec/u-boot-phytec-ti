@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * phyCORE-AM68 dts file for SPLs
+ * phyCORE-AM68x dts file for SPLs
  * Copyright (C) 2023 Phytec Messtechnik GmbH
  * Author: Dominik Haller <d.haller@phytec.de>
  *

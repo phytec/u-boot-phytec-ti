@@ -11,7 +11,7 @@
 
 / {
 	compatible = "phytec,am68-phycore-som", "ti,j721s2";
-	model = "PHYTEC phyCORE-AM68";
+	model = "PHYTEC phyCORE-AM68x";
 
 	aliases {
 		mmc0 = &main_sdhci0;
