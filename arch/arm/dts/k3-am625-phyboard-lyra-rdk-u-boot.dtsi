@@ -8,6 +8,8 @@
  * https://www.phytec.com/product/phyboard-am62x
  */
 
+#include "k3-am625-phycore-som-binman.dtsi"
+
 / {
 	chosen {
 		stdout-path = "serial2:115200n8";
