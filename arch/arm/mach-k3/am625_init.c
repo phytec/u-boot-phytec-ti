@@ -14,6 +14,7 @@
 #include <dm.h>
 #include <dm/uclass-internal.h>
 #include <dm/pinctrl.h>
+#include <dm/root.h>
 
 #define RTC_BASE_ADDRESS		0x2b1f0000
 #define REG_K3RTC_S_CNT_LSW		(RTC_BASE_ADDRESS + 0x18)
@@ -79,6 +80,28 @@ static __maybe_unused void enable_mcu_esm_reset(void)
 	stat &= RST_CTRL_ESM_ERROR_RST_EN_Z_MASK;
 	writel(stat, CTRLMMR_MCU_RST_CTRL);
 }
+
+#ifdef CONFIG_SPL_OF_LIST
+void do_dt_magic(void)
+{
+	int ret, rescan;
+
+	do_board_detect();
+
+	/*
+	 * Board detection has been done.
+	 * Let us see if another dtb wouldn't be a better match
+	 * for our board
+	 */
+	if (IS_ENABLED(CONFIG_CPU_V7R)) {
+		ret = fdtdec_resetup(&rescan);
+		if (!ret && rescan) {
+			dm_uninit();
+			dm_init_and_scan(true);
+		}
+	}
+}
+#endif
 
 #if defined(CONFIG_CPU_V7R)
 
@@ -153,6 +176,8 @@ void board_init_f(ulong dummy)
 		pinctrl_select_state(dev, "default");
 
 	preloader_console_init();
+
+	do_dt_magic();
 
 #ifdef CONFIG_K3_EARLY_CONS
 	/*
