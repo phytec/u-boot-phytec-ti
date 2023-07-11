@@ -18,7 +18,7 @@
 #define PHYTEC_EEPROM_INVAL	0xff
 
 #define PHYTEC_GET_OPTION(option) \
-	((option > '9') ? option - 'A' + 10 : option - '0')
+	(((option) > '9') ? (option) - 'A' + 10 : (option) - '0')
 
 enum {
 	PHYTEC_API_REV0 = 0,
