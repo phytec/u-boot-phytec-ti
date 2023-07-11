@@ -7,6 +7,8 @@
 #ifndef _PHYTEC_SOM_DETECTION_H
 #define _PHYTEC_SOM_DETECTION_H
 
+#include <extension_board.h>
+
 #define PHYTEC_MAX_OPTIONS	17
 #define PHYTEC_IMX8MQ_SOM	66
 #define PHYTEC_IMX8MM_SOM	69
@@ -73,6 +75,9 @@ void __maybe_unused phytec_print_som_info(struct phytec_eeprom_data *data);
 
 char * __maybe_unused phytec_get_opt(struct phytec_eeprom_data *data);
 
+struct extension *phytec_add_extension(const char *name, const char *overlay,
+				       const char *other);
+
 # else
 
 inline int phytec_eeprom_data_setup(struct phytec_eeprom_data *data,
@@ -94,6 +99,13 @@ inline void __maybe_unused phytec_print_som_info(
 }
 
 inline char * __maybe_unused phytec_get_opt(struct phytec_eeprom_data *data)
+{
+	return NULL;
+}
+
+inline struct extension *phytec_add_extension(const char *name,
+					      const char *overlay,
+					      const char *other)
 {
 	return NULL;
 }
