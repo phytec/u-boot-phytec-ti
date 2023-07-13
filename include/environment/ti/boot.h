@@ -250,6 +250,7 @@
 		"if test $fdtfile = undefined; then " \
 			"echo WARNING: Could not determine device tree to use; fi; \0"
 
+#ifndef CONFIG_BOOTCOMMAND
 #define CONFIG_BOOTCOMMAND \
 	"if test ${dofastboot} -eq 1; then " \
 		"echo Boot fastboot requested, resetting dofastboot ...;" \
@@ -265,6 +266,8 @@
 	"run emmc_linux_boot; " \
 	"run emmc_android_boot; " \
 	""
+
+#endif
 
 #endif /* CONFIG_OMAP54XX */
 
