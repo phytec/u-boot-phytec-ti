@@ -58,6 +58,7 @@
 #include <environment/ti/mmc.h>
 #include <environment/ti/nand.h>
 
+#ifndef CONFIG_EXTRA_ENV_SETTINGS
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	DEFAULT_LINUX_BOOT_ENV \
 	DEFAULT_MMC_TI_ARGS \
@@ -67,6 +68,8 @@
 	DFUARGS \
 	NETARGS \
 	NANDARGS \
+
+#endif
 
 /*
  * SPL related defines.  The Public RAM memory map the ROM defines the
