@@ -1,0 +1,38 @@
+if TARGET_PHYCORE_AM57X
+
+config SYS_BOARD
+	default "phycore_am57x"
+
+config SYS_VENDOR
+	default "phytec"
+
+config SYS_CONFIG_NAME
+	default "phycore_am57x"
+
+choice
+	prompt "Select DDR3L Total Memory Size"
+	default PHYCORE_AM57X_256M16_x2_DDR
+	help
+	  The phyCORE-AM57x SOM can be populated with different DDR3 chips
+	  resulting in various configurations and total available memory.
+	  By default, memory configuration is read from the SoM's I2C EEPROM.
+	  However in case of EEPROM failure this is a fallback config option.
+
+	config PHYCORE_AM57X_128M16_x2_DDR
+		bool "512MiB (2x 128M16)"
+	config PHYCORE_AM57X_256M16_x2_DDR
+		bool "1GiB (2x 256M16)"
+	config PHYCORE_AM57X_256M16_x4_DDR
+		bool "2GiB (4x 256M16)"
+	config PHYCORE_AM57X_512M16_x2_DDR
+		bool "2GiB (2x 512M16)"
+	config PHYCORE_AM57X_512M16_x2_ECC_DDR
+		bool "2GiB (2x 512M16) with ECC"
+	config PHYCORE_AM57X_512M16_x4_DDR
+		bool "4GiB (4x 512M16)"
+endchoice
+
+source "board/phytec/common/Kconfig"
+source "board/ti/common/Kconfig"
+
+endif
