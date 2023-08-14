@@ -3,6 +3,8 @@
  * Copyright (C) 2021 PHYTEC America, LLC - https://www.phytec.com
  */
 
+#include "k3-am642-phycore-som-binman.dtsi"
+
 / {
 	chosen {
 		stdout-path = "serial2:115200n8";
