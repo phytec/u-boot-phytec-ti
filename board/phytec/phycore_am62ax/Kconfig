@@ -1,9 +1,7 @@
+# SPDX-License-Identifier:     GPL-2.0+
 #
 # Copyright (C) 2023 PHYTEC America LLC
 # Author: Garrett Giordano <ggiordano@phytec.com>
-#
-# SPDX-License-Identifier:     GPL-2.0+
-#
 
 choice
 	prompt "PHYTEC phyCORE-AM62Ax based boards"
@@ -13,6 +11,7 @@ config TARGET_PHYCORE_AM62A7_A53
 	bool "PHYTEC phyCORE-AM62a7 (A53 processor)"
 	select ARM64
 	select SOC_K3_AM62A7
+	select BINMAN
 	imply BOARD
 	imply SPL_BOARD
 
@@ -25,6 +24,7 @@ config TARGET_PHYCORE_AM62A7_R5
 	select RAM
 	select SPL_RAM
 	select K3_DDRSS
+	select BINMAN
 	imply SYS_K3_SPL_ATF
 
 endchoice
