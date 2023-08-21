@@ -445,6 +445,13 @@ void eeprom_set_board_env(void)
 	if (!opt)
 		goto err;
 
+	/*
+	 * Only the AM574x supports ECC. Unset the ECC option in all other
+	 * SoC configurations because there're no device-tree available.
+	 */
+	if (soc_id == 0 || soc_id == 1 || soc_id == 3 || soc_id == 6)
+		opt[1] = '0';
+
 	/* Set environment variables */
 	env_set("board_soc", soc);
 	env_set("board_opt", opt);
