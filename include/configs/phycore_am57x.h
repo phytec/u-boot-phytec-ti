@@ -107,7 +107,7 @@
 	"get_overlay_mmc=" \
 		"fdt address ${fdtaddr};" \
 		"fdt resize 0x100000;" \
-		"for overlay in $name_overlays;" \
+		"for overlay in $overlays;" \
 		"do;" \
 		"load mmc ${bootpart} ${dtboaddr} ${bootdir}/${overlay};" \
 		"fdt apply ${dtboaddr};" \
@@ -153,7 +153,7 @@
 	"get_overlay_nand=" \
 		"fdt address ${fdtaddr};" \
 		"fdt resize 0x100000;" \
-		"for overlay in $name_overlays;" \
+		"for overlay in $overlays;" \
 		"do;" \
 		"ubifsload ${dtboaddr} ${bootdir}/${overlay};" \
 		"fdt apply ${dtboaddr};" \
