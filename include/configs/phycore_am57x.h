@@ -104,6 +104,11 @@
 		"run netargs; " \
 		"bootz ${loadaddr} - ${fdtaddr}\0" \
 	"board_override=0\0" \
+	"get_overlaystring=" \
+		"for overlay in $overlays;" \
+		"do;" \
+		"setenv overlaystring ${overlaystring}'#'${overlay};" \
+		"done;\0" \
 	"get_overlay_mmc=" \
 		"fdt address ${fdtaddr};" \
 		"fdt resize 0x100000;" \
