@@ -169,6 +169,9 @@
 		"ubi part NAND.file-system;" \
 		"ubifsmount ubi0:rootfs;" \
 		"ubifsload ${loadaddr} ${bootdir}/${bootfile};" \
+		"if test ${boot_fit} -eq 1; then " \
+			"run run_fit; " \
+		"fi; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run nandloadfdt; then " \
 				"run get_overlay_nand; " \
@@ -212,6 +215,7 @@
 	"fi;" \
 	"if test ${boot_fit} -eq 1; then " \
 		"run update_to_fit;" \
+		"run get_overlaystring;" \
 	"fi;" \
 	"run findfdt; " \
 	"run envboot; " \
