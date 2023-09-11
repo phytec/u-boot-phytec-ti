@@ -63,6 +63,23 @@
 		mbox-names = "tx", "rx";
 		bootph-pre-ram;
 	};
+
+	main_esm: esm@420000 {
+		compatible = "ti,j721e-esm";
+		reg = <0x0 0x420000 0x0 0x1000>;
+		ti,esm-pins = <160>, <161>;
+		bootph-pre-ram;
+	};
+};
+
+&cbass_mcu {
+	bootph-pre-ram;
+	mcu_esm: esm@4100000 {
+		compatible = "ti,j721e-esm";
+		reg = <0x0 0x4100000 0x0 0x1000>;
+		ti,esm-pins = <0>, <1>;
+		bootph-pre-ram;
+	};
 };
 
 &dmsc {
