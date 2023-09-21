@@ -8,4 +8,5 @@ obj- := __dummy__.o
 endif
 
 obj-$(CONFIG_PHYTEC_SOM_DETECTION) += phytec_som_detection.o
+obj-$(CONFIG_PHYTEC_AM62_SOM_DETECTION) += am62_som_detection.o
 obj-$(CONFIG_PHYTEC_AM64_SOM_DETECTION) += am64_som_detection.o
