@@ -62,8 +62,6 @@ struct phytec_eeprom_data {
 	} data;
 } __packed;
 
-#if IS_ENABLED(CONFIG_PHYTEC_SOM_DETECTION)
-
 int phytec_eeprom_data_setup_fallback(struct phytec_eeprom_data *data,
 				      int bus_num, int addr,
 				      int addr_fallback);
@@ -77,44 +75,5 @@ char * __maybe_unused phytec_get_opt(struct phytec_eeprom_data *data);
 
 struct extension *phytec_add_extension(const char *name, const char *overlay,
 				       const char *other);
-
-#else
-
-inline int phytec_eeprom_data_setup(struct phytec_eeprom_data *data,
-				    int bus_num, int addr)
-{
-	return PHYTEC_EEPROM_INVAL;
-}
-
-inline int phytec_eeprom_data_setup_fallback(struct phytec_eeprom_data *data,
-					     int bus_num, int addr,
-					     int addr_fallback)
-{
-	return PHYTEC_EEPROM_INVAL;
-}
-
-inline int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
-				   int bus_num, int addr)
-{
-	return PHYTEC_EEPROM_INVAL;
-}
-
-inline void __maybe_unused phytec_print_som_info(struct phytec_eeprom_data *data)
-{
-}
-
-inline char *__maybe_unused phytec_get_opt(struct phytec_eeprom_data *data)
-{
-	return NULL;
-}
-
-inline struct extension *phytec_add_extension(const char *name,
-					      const char *overlay,
-					      const char *other)
-{
-	return NULL;
-}
-
-#endif /* IS_ENABLED(CONFIG_PHYTEC_SOM_DETECTION) */
 
 #endif /* _PHYTEC_SOM_DETECTION_H */
