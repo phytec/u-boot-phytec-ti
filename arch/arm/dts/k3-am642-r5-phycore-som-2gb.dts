@@ -98,6 +98,7 @@
 	vtt-supply = <&vtt_supply>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&ddr_vtt_pins_default>;
+	ti,ecc-enable;
 };
 
 &ospi0 {
