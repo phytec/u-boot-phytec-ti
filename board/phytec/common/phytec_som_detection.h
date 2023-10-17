@@ -8,6 +8,8 @@
 #define _PHYTEC_SOM_DETECTION_H
 
 #define PHYTEC_MAX_OPTIONS	17
+#define PHYTEC_AM64XX_SOM	72
+
 #define PHYTEC_EEPROM_INVAL	0xff
 
 #define PHYTEC_GET_OPTION(option) \

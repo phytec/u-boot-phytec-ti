@@ -16,8 +16,15 @@
 #include <asm/arch/sys_proto.h>
 #include <dm/uclass.h>
 #include <k3-ddrss.h>
+#include <extension_board.h>
+#include <malloc.h>
+
+#include "../common/am64_som_detection.h"
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define EEPROM_ADDR             0x50
+#define EEPROM_ADDR_FALLBACK    -1
 
 int board_init(void)
 {
@@ -268,3 +275,31 @@ int board_late_init(void)
 
 	return 0;
 }
+
+#ifdef CONFIG_CMD_EXTENSION
+static struct extension *add_extension(const char *name, const char *overlay,
+				       const char *other)
+{
+	struct extension *extension;
+
+	extension = calloc(1, sizeof(struct extension));
+	snprintf(extension->name, sizeof(extension->name), name);
+	snprintf(extension->overlay, sizeof(extension->overlay), overlay);
+	snprintf(extension->other, sizeof(extension->other), other);
+	snprintf(extension->owner, sizeof(extension->owner), "PHYTEC");
+
+	return extension;
+}
+
+int extension_board_scan(struct list_head *extension_list)
+{
+	struct extension *extension = NULL;
+	struct phytec_eeprom_data data;
+	int ret = 0;
+
+	phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	phytec_print_som_info(&data);
+
+	return ret;
+}
+#endif
