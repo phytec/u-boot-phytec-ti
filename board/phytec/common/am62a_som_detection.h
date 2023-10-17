@@ -10,41 +10,10 @@
 
 #include "phytec_som_detection.h"
 
-#if IS_ENABLED(CONFIG_PHYTEC_AM62A_SOM_DETECTION)
-
 u8 phytec_am62a_detect(u8 som, char *opt);
 u8 __maybe_unused phytec_get_am62a_ddr_size(struct phytec_eeprom_data *data);
 u8 __maybe_unused phytec_get_am62a_spi(struct phytec_eeprom_data *data);
 u8 __maybe_unused phytec_get_am62a_eth(struct phytec_eeprom_data *data);
 u8 __maybe_unused phytec_get_am62a_rtc(struct phytec_eeprom_data *data);
-
-#else
-
-inline u8 phytec_am62a_detect(u8 som, char *opt)
-{
-	return -1;
-}
-
-inline u8 __maybe_unused phytec_get_am62a_ddr_size(struct phytec_eeprom_data *data)
-{
-	return PHYTEC_EEPROM_INVAL;
-}
-
-inline u8 __maybe_unused phytec_get_am62a_spi(struct phytec_eeprom_data *data)
-{
-	return PHYTEC_EEPROM_INVAL;
-}
-
-inline u8 __maybe_unused phytec_get_am62a_eth(struct phytec_eeprom_data *data)
-{
-	return PHYTEC_EEPROM_INVAL;
-}
-
-inline u8 __maybe_unused phytec_get_am62a_rtc(struct phytec_eeprom_data *data)
-{
-	return PHYTEC_EEPROM_INVAL;
-}
-
-#endif /* IS_ENABLED(CONFIG_PHYTEC_AM62A_SOM_DETECTION) */
 
 #endif /* _PHYTEC_AM62A_SOM_DETECTION_H */
