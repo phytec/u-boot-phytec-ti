@@ -288,6 +288,7 @@
 
 &usbss0 {
 	ti,vbus-divider;
+	ti,usb2-only;
 };
 
 &usb0 {
