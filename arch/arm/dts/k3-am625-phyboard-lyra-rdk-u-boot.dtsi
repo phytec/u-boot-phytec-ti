@@ -183,6 +183,10 @@
 	bootph-pre-ram;
 };
 
+&main_usb1_pins_default {
+	bootph-pre-ram;
+};
+
 &mcu_pmx0 {
 	bootph-pre-ram;
 };
@@ -208,6 +212,24 @@
 };
 
 &secure_proxy_main {
+	bootph-pre-ram;
+};
+
+&usbss0 {
+	bootph-pre-ram;
+};
+
+&usb0 {
+	/* Since role switching is not supported in U-Boot */
+	/delete-property/ extcon;
+	bootph-pre-ram;
+};
+
+&usbss1 {
+	bootph-pre-ram;
+};
+
+&usb1 {
 	bootph-pre-ram;
 };
 
