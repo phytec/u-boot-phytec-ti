@@ -615,10 +615,6 @@ int spl_start_uboot(void)
 		return 1;
 
 #ifdef CONFIG_SPL_ENV_SUPPORT
-#if defined(CONFIG_MTD_RAW_NAND) && defined(CONFIG_ENV_IS_IN_NAND)
-	nand_init();
-#endif
-
 	env_init();
 	env_load();
 	if (env_get_yesno("boot_os") != 1)
