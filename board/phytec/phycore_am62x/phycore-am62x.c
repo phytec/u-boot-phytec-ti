@@ -384,19 +384,11 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 {
 	int ret;
 	struct phytec_eeprom_data data;
-#if defined(CONFIG_FDT_FIXUP_PARTITIONS)
-	static struct node_info nodes[] = {
-		{ "jedec,spi-nor", MTD_DEV_TYPE_NOR, },
-	};
-
-	/* Update partition nodes using info from mtdparts env var */
-	printf("Updating MTD partitions...\n");
-	fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
-#endif
 
 	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
 	if (ret < 0)
 		return ret;
+	fdt_copy_fixed_partitions(blob);
 	return qspi_fixup(blob, &data);
 }
 #endif
