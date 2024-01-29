@@ -96,10 +96,41 @@ void spl_perform_fixups(struct spl_image_info *spl_image)
 }
 #endif
 
+int qspi_fixup(void *blob, struct phytec_eeprom_data *data)
+{
+	ofnode node;
+	int ret;
+
+	if (!phytec_am62_is_qspi(data))
+		return 0;
+
+	if (blob) {
+		do_fixup_by_compat_u32(blob, "jedec,spi-nor", "spi-tx-bus-width", 1, 0);
+		do_fixup_by_compat_u32(blob, "jedec,spi-nor", "spi-rx-bus-width", 4, 0);
+	} else {
+		node = ofnode_by_compatible(ofnode_null(), "jedec,spi-nor");
+		if (!ofnode_valid(node))
+			return -1;
+		ret = ofnode_write_u32(node, "spi-tx-bus-width", 1);
+		if (ret < 0)
+			return ret;
+		ret = ofnode_write_u32(node, "spi-rx-bus-width", 4);
+		if (ret < 0)
+			return ret;
+	}
+	return 0;
+}
+
 #if defined(CONFIG_SPL_BUILD)
 int do_board_detect(void)
 {
-	return 0;
+	int ret;
+	struct phytec_eeprom_data data;
+
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret < 0)
+		return ret;
+	return qspi_fixup(NULL, &data);
 }
 #endif
 
@@ -351,6 +382,8 @@ int extension_board_scan(struct list_head *extension_list)
 #if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
 int ft_board_setup(void *blob, struct bd_info *bd)
 {
+	int ret;
+	struct phytec_eeprom_data data;
 #if defined(CONFIG_FDT_FIXUP_PARTITIONS)
 	static struct node_info nodes[] = {
 		{ "jedec,spi-nor", MTD_DEV_TYPE_NOR, },
@@ -361,6 +394,22 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 	fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
 #endif
 
-	return 0;
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret < 0)
+		return ret;
+	return qspi_fixup(blob, &data);
+}
+#endif
+
+#if IS_ENABLED(CONFIG_OF_BOARD_FIXUP)
+int board_fix_fdt(void *blob)
+{
+	int ret;
+	struct phytec_eeprom_data data;
+
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret < 0)
+		return ret;
+	return qspi_fixup(NULL, &data);
 }
 #endif
