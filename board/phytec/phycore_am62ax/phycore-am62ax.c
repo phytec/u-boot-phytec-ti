@@ -230,6 +230,7 @@ enum env_location env_get_location(enum env_operation op, int prio)
 	};
 }
 
+#if IS_ENABLED(CONFIG_BOARD_LATE_INIT)
 int board_late_init(void)
 {
 	u32 boot_device = get_boot_device();
@@ -253,6 +254,7 @@ int board_late_init(void)
 
 	return 0;
 }
+#endif
 
 #if IS_ENABLED(CONFIG_CMD_EXTENSION)
 int extension_board_scan(struct list_head *extension_list)
