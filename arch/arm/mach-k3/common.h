@@ -45,3 +45,5 @@ enum k3_device_type get_device_type(void);
 void ti_secure_image_post_process(void **p_image, size_t *p_size);
 void ti_secure_image_check_binary(void **p_image, size_t *p_size);
 void wkup_ctrl_remove_can_io_isolation_if_set(void);
+struct ti_sci_handle *get_ti_sci_handle(void);
+void do_board_detect(void);
