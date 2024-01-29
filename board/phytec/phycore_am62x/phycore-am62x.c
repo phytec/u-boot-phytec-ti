@@ -291,30 +291,20 @@ int board_late_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_CMD_EXTENSION
-static struct extension *add_extension(const char *name, const char *overlay,
-				       const char *other)
-{
-	struct extension *extension;
-
-	extension = calloc(1, sizeof(struct extension));
-	snprintf(extension->name, sizeof(extension->name), name);
-	snprintf(extension->overlay, sizeof(extension->overlay), overlay);
-	snprintf(extension->other, sizeof(extension->other), other);
-	snprintf(extension->owner, sizeof(extension->owner), "PHYTEC");
-
-	return extension;
-}
-
+#if IS_ENABLED(CONFIG_CMD_EXTENSION)
 int extension_board_scan(struct list_head *extension_list)
 {
 	struct extension *extension = NULL;
 	struct phytec_eeprom_data data;
-	int ret = 0;
+	int count = 0;
+	int ret;
 
-	phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret)
+		return count;
+
 	phytec_print_som_info(&data);
 
-	return ret;
+	return count;
 }
 #endif
