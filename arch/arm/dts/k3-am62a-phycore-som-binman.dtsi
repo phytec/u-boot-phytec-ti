@@ -113,7 +113,7 @@
 };
 #endif
 
-#ifdef CONFIG_TARGET_PHYCORE_AM62A7_R5
+#ifdef CONFIG_TARGET_PHYCORE_AM62AX_R5
 
 &rcfg_yaml_tifs {
 	config = "tifs-rm-cfg.yaml";
@@ -250,7 +250,7 @@
 
 #endif
 
-#ifdef CONFIG_TARGET_PHYCORE_AM62A7_A53
+#ifdef CONFIG_TARGET_PHYCORE_AM62AX_A53
 
 #define SPL_NODTB "spl/u-boot-spl-nodtb.bin"
 #define SPL_AM62A7_PHYBOARD_LYRA_DTB "spl/dts/k3-am62a7-phyboard-lyra-rdk.dtb"
