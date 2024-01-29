@@ -12,6 +12,8 @@
 
 extern struct phytec_eeprom_data eeprom_data;
 
+#if IS_ENABLED(CONFIG_PHYTEC_AM62A_SOM_DETECTION)
+
 /* Check if the SoM is actually one of the following products:
  * - AM62Ax
  *
@@ -127,3 +129,32 @@ u8 __maybe_unused phytec_get_am62a_rtc(struct phytec_eeprom_data *data)
 	pr_debug("%s: rtc: %u\n", __func__, rtc);
 	return rtc;
 }
+
+#else
+
+inline u8 phytec_am62a_detect(u8 som, char *opt)
+{
+	return -1;
+}
+
+inline u8 __maybe_unused phytec_get_am62a_ddr_size(struct phytec_eeprom_data *data)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+
+inline u8 __maybe_unused phytec_get_am62a_spi(struct phytec_eeprom_data *data)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+
+inline u8 __maybe_unused phytec_get_am62a_eth(struct phytec_eeprom_data *data)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+
+inline u8 __maybe_unused phytec_get_am62a_rtc(struct phytec_eeprom_data *data)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+
+#endif

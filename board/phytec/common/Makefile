@@ -7,7 +7,4 @@ ifdef CONFIG_SPL_BUILD
 obj- := __dummy__.o
 endif
 
-obj-$(CONFIG_PHYTEC_SOM_DETECTION) += phytec_som_detection.o
-obj-$(CONFIG_PHYTEC_AM62A_SOM_DETECTION) += am62a_som_detection.o
-obj-$(CONFIG_PHYTEC_AM62_SOM_DETECTION) += am62_som_detection.o
-obj-$(CONFIG_PHYTEC_AM64_SOM_DETECTION) += am64_som_detection.o
+obj-y += phytec_som_detection.o am62a_som_detection.o  am62_som_detection.o am64_som_detection.o
