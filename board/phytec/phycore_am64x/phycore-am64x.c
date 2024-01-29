@@ -12,12 +12,14 @@
 #include <env_internal.h>
 #include <spl.h>
 #include <fdt_support.h>
+#include <jffs2/load_kernel.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/sys_proto.h>
 #include <dm/uclass.h>
 #include <k3-ddrss.h>
 #include <extension_board.h>
 #include <malloc.h>
+#include <mtd_node.h>
 
 #include "../common/am64_som_detection.h"
 
@@ -316,5 +318,22 @@ int extension_board_scan(struct list_head *extension_list)
 	}
 
 	return count;
+}
+#endif
+
+#if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
+int ft_board_setup(void *blob, struct bd_info *bd)
+{
+#if defined(CONFIG_FDT_FIXUP_PARTITIONS)
+	static struct node_info nodes[] = {
+		{ "jedec,spi-nor", MTD_DEV_TYPE_NOR, },
+	};
+
+	/* Update partition nodes using info from mtdparts env var */
+	printf("Updating MTD partitions...\n");
+	fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
+#endif
+
+	return 0;
 }
 #endif
