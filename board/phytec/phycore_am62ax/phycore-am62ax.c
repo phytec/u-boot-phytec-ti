@@ -237,9 +237,14 @@ int board_late_init(void)
 	switch (boot_device) {
 	case BOOT_DEVICE_MMC1:
 		env_set_ulong("mmcdev", 0);
+		env_set("boot", "mmc");
 		break;
 	case BOOT_DEVICE_MMC2:
 		env_set_ulong("mmcdev", 1);
+		env_set("boot", "mmc");
+		break;
+	case BOOT_DEVICE_SPI:
+		env_set("boot", "spi");
 		break;
 	};
 
