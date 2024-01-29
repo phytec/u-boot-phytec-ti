@@ -22,6 +22,10 @@ DECLARE_GLOBAL_DATA_PTR;
 #define EEPROM_ADDR             0x50
 #define EEPROM_ADDR_FALLBACK    -1
 
+#define AM6X_DISABLE_ETH_PHY_OVERLAY "k3-am6-phycore-disable-eth-phy.dtbo"
+#define AM6X_DISABLE_SPI_NOR_OVERLAY "k3-am6-phycore-disable-spi-nor.dtbo"
+#define AM6X_DISABLE_RTC_OVERLAY "k3-am6-phycore-disable-rtc.dtbo"
+
 int board_init(void)
 {
 	return 0;
@@ -304,6 +308,27 @@ int extension_board_scan(struct list_head *extension_list)
 		return count;
 
 	phytec_print_som_info(&data);
+
+	if (phytec_get_am62_eth(&data) == 0) {
+		extension = phytec_add_extension("Disable eth phy",
+						 AM6X_DISABLE_ETH_PHY_OVERLAY, "");
+		list_add_tail(&extension->list, extension_list);
+		count++;
+	}
+
+	if (phytec_get_am62_spi(&data) == PHYTEC_EEPROM_VALUE_X) {
+		extension = phytec_add_extension("Disable SPI NOR Flash",
+						 AM6X_DISABLE_SPI_NOR_OVERLAY, "");
+		list_add_tail(&extension->list, extension_list);
+		count++;
+	}
+
+	if (phytec_get_am62_rtc(&data) == 0) {
+		extension = phytec_add_extension("Disable RTC",
+						 AM6X_DISABLE_RTC_OVERLAY, "");
+		list_add_tail(&extension->list, extension_list);
+		count++;
+	}
 
 	return count;
 }
