@@ -12,6 +12,7 @@ config TARGET_PHYCORE_AM62A7_A53
 	select ARM64
 	select SOC_K3_AM62A7
 	select BINMAN
+	select SUPPORT_EXTENSION_SCAN
 	imply BOARD
 	imply SPL_BOARD
 
@@ -40,8 +41,12 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
        default "phycore_am62ax"
 
+source "board/phytec/common/Kconfig"
+
 endif
 
 if TARGET_PHYCORE_AM62A7_R5
+
+source "board/phytec/common/Kconfig"
 
 endif
