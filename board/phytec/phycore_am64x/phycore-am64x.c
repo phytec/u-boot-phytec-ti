@@ -334,16 +334,7 @@ int extension_board_scan(struct list_head *extension_list)
 #if defined(CONFIG_OF_LIBFDT) && defined(CONFIG_OF_BOARD_SETUP)
 int ft_board_setup(void *blob, struct bd_info *bd)
 {
-#if defined(CONFIG_FDT_FIXUP_PARTITIONS)
-	static struct node_info nodes[] = {
-		{ "jedec,spi-nor", MTD_DEV_TYPE_NOR, },
-	};
-
-	/* Update partition nodes using info from mtdparts env var */
-	printf("Updating MTD partitions...\n");
-	fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
-#endif
-
+	fdt_copy_fixed_partitions(blob);
 	return 0;
 }
 #endif
