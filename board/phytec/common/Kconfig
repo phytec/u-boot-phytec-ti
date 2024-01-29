@@ -3,3 +3,11 @@ config PHYTEC_SOM_DETECTION
 	select SPL_CRC8 if SPL
 	help
 	   Support of I2C EEPROM based SoM detection.
+
+config PHYTEC_AM64_SOM_DETECTION
+	bool "Support SoM detection for AM64 Phytec platforms"
+	depends on (TARGET_PHYCORE_AM64X_A53 || TARGET_PHYCORE_AM64X_R5)
+	select PHYTEC_SOM_DETECTION
+	help
+	   Support of I2C EEPROM based SoM detection. Supported
+	   for PHYTEC AM64xx boards.

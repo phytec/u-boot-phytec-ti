@@ -13,6 +13,7 @@
 #include <u-boot/crc.h>
 
 #include "phytec_som_detection.h"
+#include "am64_som_detection.h"
 
 struct phytec_eeprom_data eeprom_data;
 
@@ -52,6 +53,8 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 	int ret, i;
 	unsigned int crc;
 	int *ptr;
+	u8 som;
+	char *opt;
 
 	if (!data)
 		data = &eeprom_data;
@@ -106,7 +109,20 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 		return -EINVAL;
 	}
 
-	return 0;
+	som = data->data.data_api2.som_no;
+	debug("%s: som id: %u\n", __func__, som);
+	opt = phytec_get_opt(data);
+	if (!opt)
+		return -EINVAL;
+
+	ret = 0;
+	if (IS_ENABLED(CONFIG_PHYTEC_AM64_SOM_DETECTION))
+		ret = phytec_am64_detect(som, opt);
+	if (!ret)
+		return 0;
+
+	pr_err("%s: SoM ID does not match. Wrong EEPROM data?\n", __func__);
+	return -EINVAL;
 }
 
 void __maybe_unused phytec_print_som_info(struct phytec_eeprom_data *data)

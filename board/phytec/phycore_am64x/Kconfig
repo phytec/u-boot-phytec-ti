@@ -11,6 +11,7 @@ config TARGET_PHYCORE_AM64X_A53
 	bool "PHYTEC phyCORE-AM64x (A53 processor)"
 	select ARM64
 	select BINMAN
+	select SUPPORT_EXTENSION_SCAN
 	imply BOARD
 	imply SPL_BOARD
 
@@ -38,6 +39,8 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
        default "phycore_am64x"
 
+source "board/phytec/common/Kconfig"
+
 endif
 
 if TARGET_PHYCORE_AM64X_R5
@@ -50,5 +53,7 @@ config SYS_VENDOR
 
 config SYS_CONFIG_NAME
        default "phycore_am64x"
+
+source "board/phytec/common/Kconfig"
 
 endif
