@@ -240,16 +240,20 @@ int board_late_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_CMD_EXTENSION
+#if IS_ENABLED(CONFIG_CMD_EXTENSION)
 int extension_board_scan(struct list_head *extension_list)
 {
 	struct extension *extension = NULL;
 	struct phytec_eeprom_data data;
-	int ret = 0;
+	int count = 0;
+	int ret;
 
-	phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret)
+		return count;
+
 	phytec_print_som_info(&data);
 
-	return ret;
+	return count;
 }
 #endif
