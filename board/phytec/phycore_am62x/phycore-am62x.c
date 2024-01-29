@@ -299,6 +299,9 @@ int board_late_init(void)
 	case BOOT_DEVICE_SPI:
 		env_set("boot", "spi");
 		break;
+	case BOOT_DEVICE_ETHERNET:
+		env_set("boot", "net");
+		break;
 	};
 
 	return 0;
