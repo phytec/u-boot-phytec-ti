@@ -134,8 +134,42 @@
 	bootph-pre-ram;
 	flash@0 {
 		bootph-pre-ram;
-		partition@3fc0000 {
-			bootph-pre-ram;
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			partition@0 {
+				label = "ospi.tiboot";
+				reg = <0x000000 0x100000>;
+			};
+			partition@100000 {
+				label = "ospi.tispl";
+				reg = <0x100000 0x200000>;
+			};
+			partition@300000 {
+				label = "ospi.u-boot";
+				reg = <0x300000 0x400000>;
+			};
+			partition@700000 {
+				label = "ospi.env";
+				reg = <0x700000 0x020000>;
+			};
+			partition@720000 {
+				label = "ospi.env.backup";
+				reg = <0x720000 0x020000>;
+			};
+			partition@740000 {
+				label = "ospi.dtb";
+				reg = <0x740000 0xc0000>;
+			};
+			partition@800000 {
+				label = "ospi.kernel";
+				reg = <0x0800000 0x1600000>;
+			};
+			partition@1e00000 {
+				label = "ospi.rootfs";
+				reg = <0x1e00000 0x2200000>;
+			};
 		};
 	};
 };
