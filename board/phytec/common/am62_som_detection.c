@@ -11,6 +11,8 @@
 
 extern struct phytec_eeprom_data eeprom_data;
 
+#if IS_ENABLED(CONFIG_PHYTEC_AM62_SOM_DETECTION)
+
 /* Check if the SoM is actually one of the following products:
  * - AM62xx
  *
@@ -126,3 +128,31 @@ u8 __maybe_unused phytec_get_am62_rtc(struct phytec_eeprom_data *data)
 	pr_debug("%s: rtc: %u\n", __func__, rtc);
 	return rtc;
 }
+
+#else
+
+inline u8 phytec_am62_detect(u8 som, char *opt)
+{
+	return -1;
+}
+
+inline u8 __maybe_unused phytec_get_am62_ddr_size(struct phytec_eeprom_data *data)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+
+inline u8 __maybe_unused phytec_get_am62_spi(struct phytec_eeprom_data *data)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+
+inline u8 __maybe_unused phytec_get_am62_eth(struct phytec_eeprom_data *data)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+
+inline u8 __maybe_unused phytec_get_am62p_rtc(struct phytec_eeprom_data *data)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+#endif
