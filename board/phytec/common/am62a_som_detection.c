@@ -56,7 +56,7 @@ u8 __maybe_unused phytec_get_am62a_ddr_size(struct phytec_eeprom_data *data)
  * Filter SPI-NOR flash information.
  *
  * returns:
- *  - 0x0 if no SPI is poulated.
+ *  - PHYTEC_EEPROM_VALUE_X if no SPI is poulated.
  *  - Otherwise a board depended code for the size.
  *  - PHYTEC_EEPROM_INVAL when the data is invalid.
  */

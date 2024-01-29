@@ -9,6 +9,8 @@
 
 #include "phytec_som_detection.h"
 
+#define PHYTEC_EEPROM_VALUE_X	0x21
+
 u8 phytec_am64_detect(u8 som, char *opt);
 u8 __maybe_unused phytec_get_am64_ddr_size(struct phytec_eeprom_data *data);
 u8 __maybe_unused phytec_get_am64_spi(struct phytec_eeprom_data *data);
