@@ -12,8 +12,15 @@
 #include <fdt_support.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/sys_proto.h>
+#include <extension_board.h>
+#include <malloc.h>
+
+#include "../common/am62a_som_detection.h"
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define EEPROM_ADDR             0x50
+#define EEPROM_ADDR_FALLBACK    -1
 
 int board_init(void)
 {
@@ -232,3 +239,17 @@ int board_late_init(void)
 
 	return 0;
 }
+
+#ifdef CONFIG_CMD_EXTENSION
+int extension_board_scan(struct list_head *extension_list)
+{
+	struct extension *extension = NULL;
+	struct phytec_eeprom_data data;
+	int ret = 0;
+
+	phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	phytec_print_som_info(&data);
+
+	return ret;
+}
+#endif
