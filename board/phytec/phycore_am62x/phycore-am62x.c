@@ -14,6 +14,8 @@
 #include <asm/arch/sys_proto.h>
 #include <extension_board.h>
 #include <malloc.h>
+#include <dm/uclass.h>
+#include <k3-ddrss.h>
 
 #include "../common/am62_som_detection.h"
 
