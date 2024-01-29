@@ -140,20 +140,6 @@
 			no-map;
 		};
 	};
-
-	/* Dummy regulator to enable OSPI0 */
-	vdd_ospi: regulator-ospi {
-		compatible = "regulator-fixed";
-		regulator-name = "vdd_ospi";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		regulator-boot-on;
-		regulator-always-on;
-		enable-active-high;
-		pinctrl-names = "default";
-		pinctrl-0 = <&vdd_ospi_pins_default>;
-		gpio = <&wkup_gpio0 3 GPIO_ACTIVE_HIGH>;
-	};
 };
 
 &main_pmx0 {
@@ -218,12 +204,6 @@
 	pmic_irq_pins_default: pmic-irq-pins-default {
 		pinctrl-single,pins = <
 			J721S2_WKUP_IOPAD(0x060, PIN_INPUT, 7) /* (C21) MCU_OSPI1_CSn1.WKUP_GPIO0_39 */
-		>;
-	};
-
-	vdd_ospi_pins_default: vdd-ospi-pins-default {
-		pinctrl-single,pins = <
-			J721S2_WKUP_IOPAD(0x0cc, PIN_OUTPUT, 7) /* (C27) WKUP_GPIO0_3 */
 		>;
 	};
 
@@ -398,7 +378,7 @@
 		reg = <0x2d>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&wkup_sn65dsi83_pins_default>;
-		/* enable-gpios = <&wkup_gpio0 11 GPIO_ACTIVE_HIGH>; */
+		enable-gpios = <&wkup_gpio0 11 GPIO_ACTIVE_HIGH>;
 		status = "disabled";
 
 		sn65dsi83_ports: ports {
