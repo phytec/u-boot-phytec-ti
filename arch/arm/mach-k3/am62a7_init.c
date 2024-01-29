@@ -13,6 +13,7 @@
 #include <dm.h>
 #include <dm/uclass-internal.h>
 #include <dm/pinctrl.h>
+#include <dm/root.h>
 
 struct fwl_data cbass_main_fwls[] = {
        { "FSS_DAT_REG3", 7, 8 },
@@ -68,6 +69,28 @@ static void ctrl_mmr_unlock(void)
 	mmr_unlock(PADCFG_MMR0_BASE, 1);
 	mmr_unlock(PADCFG_MMR1_BASE, 1);
 }
+
+#ifdef CONFIG_SPL_OF_LIST
+void do_dt_magic(void)
+{
+	int ret, rescan;
+
+	do_board_detect();
+
+	/*
+	 * Board detection has been done.
+	 * Let us see if another dtb wouldn't be a better match
+	 * for our board
+	 */
+	if (IS_ENABLED(CONFIG_CPU_V7R)) {
+		ret = fdtdec_resetup(&rescan);
+		if (!ret && rescan) {
+			dm_uninit();
+			dm_init_and_scan(true);
+		}
+	}
+}
+#endif
 
 #if (IS_ENABLED(CONFIG_CPU_V7R))
 static void setup_qos(void)
@@ -168,6 +191,8 @@ void board_init_f(ulong dummy)
 	}
 
 	preloader_console_init();
+
+	do_dt_magic();
 
 	/* Output System Firmware version info */
 	k3_sysfw_print_ver();
