@@ -7,21 +7,19 @@ choice
 	prompt "PHYTEC phyCORE-AM62Ax based boards"
 	optional
 
-config TARGET_PHYCORE_AM62A7_A53
-	bool "PHYTEC phyCORE-AM62a7 (A53 processor)"
+config TARGET_PHYCORE_AM62AX_A53
+	bool "PHYTEC phyCORE-AM62Ax (A53 processor)"
 	select ARM64
-	select SOC_K3_AM62A7
 	select BINMAN
 	select SUPPORT_EXTENSION_SCAN
 	imply BOARD
 	imply SPL_BOARD
 
-config TARGET_PHYCORE_AM62A7_R5
+config TARGET_PHYCORE_AM62AX_R5
 	bool "PHYTEC phyCORE-AM62a7 (R5 processor)"
 	select CPU_V7R
 	select SYS_THUMB_BUILD
 	select K3_LOAD_SYSFW
-	select SOC_K3_AM62A7
 	select RAM
 	select SPL_RAM
 	select K3_DDRSS
@@ -30,7 +28,7 @@ config TARGET_PHYCORE_AM62A7_R5
 
 endchoice
 
-if TARGET_PHYCORE_AM62A7_R5 || TARGET_PHYCORE_AM62A7_A53
+if TARGET_PHYCORE_AM62AX_R5 || TARGET_PHYCORE_AM62AX_A53
 
 config SYS_BOARD
        default "phycore_am62ax"
@@ -45,7 +43,7 @@ source "board/phytec/common/Kconfig"
 
 endif
 
-if TARGET_PHYCORE_AM62A7_R5
+if TARGET_PHYCORE_AM62AX_R5
 
 source "board/phytec/common/Kconfig"
 
