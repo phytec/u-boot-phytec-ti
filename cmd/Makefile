@@ -238,7 +238,9 @@ obj-y += nvedit.o
 
 obj-$(CONFIG_CMD_BCM_EXT_UTILS) += broadcom/
 
-obj-$(CONFIG_TI_COMMON_CMD_OPTIONS) += ti/
+ifneq ($(filter y, $(CONFIG_TI_COMMON_CMD_OPTIONS) $(CONFIG_CMD_DDRSS)),)
+obj-y += ti/
+endif
 
 filechk_data_gz = (echo "static const char data_gz[] ="; cat $< | scripts/bin2c; echo ";")
 
