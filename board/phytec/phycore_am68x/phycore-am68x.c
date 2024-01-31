@@ -144,7 +144,7 @@ u32 get_boot_device(void)
 	return bootmedia;
 }
 
-#ifdef CONFIG_ENV_IS_IN_FAT
+#if IS_ENABLED(CONFIG_ENV_IS_IN_FAT) || IS_ENABLED(CONFIG_ENV_IS_IN_MMC)
 int mmc_get_env_dev(void)
 {
 	u32 boot_device = get_boot_device();
