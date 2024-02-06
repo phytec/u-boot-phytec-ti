@@ -134,15 +134,6 @@ int do_board_detect(void)
 }
 #endif
 
-#if defined(CONFIG_SPL_LOAD_FIT)
-int board_fit_config_name_match(const char *name)
-{
-	if (!strcmp(name, "k3-am625-r5-phycore-som-2gb") || !strcmp(name, "k3-am625-phyboard-lyra-rdk"))
-		return 0;
-	return -1;
-}
-#endif
-
 #define CTRLMMR_USB0_PHY_CTRL   0x43004008
 #define CTRLMMR_USB1_PHY_CTRL   0x43004018
 #define CORE_VOLTAGE            0x80000000
