@@ -18,6 +18,7 @@
 #include <mtd_node.h>
 #include <dm/uclass.h>
 #include <k3-ddrss.h>
+#include "phycore-ddr-data.h"
 
 #include "../common/am62_som_detection.h"
 
@@ -35,18 +36,207 @@ int board_init(void)
 	return 0;
 }
 
+enum {
+	EEPROM_RAM_SIZE_512MB = 0,
+	EEPROM_RAM_SIZE_1GB = 1,
+	EEPROM_RAM_SIZE_2GB = 2,
+	EEPROM_RAM_SIZE_4GB = 4
+};
+
+static u8 phytec_get_am62_ddr_size_default(void)
+{
+	int ret;
+	struct phytec_eeprom_data data;
+
+	if (IS_ENABLED(CONFIG_PHYCORE_AM62X_RAM_SIZE_FIX)) {
+		if (IS_ENABLED(CONFIG_PHYCORE_AM62X_RAM_SIZE_1GB))
+			return EEPROM_RAM_SIZE_1GB;
+		else if (IS_ENABLED(CONFIG_PHYCORE_AM62X_RAM_SIZE_2GB))
+			return EEPROM_RAM_SIZE_2GB;
+		else if (IS_ENABLED(CONFIG_PHYCORE_AM62X_RAM_SIZE_4GB))
+			return EEPROM_RAM_SIZE_4GB;
+	}
+
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+
+	/* Default DDR size is 2GB */
+	if (ret)
+		return EEPROM_RAM_SIZE_2GB;
+	else
+		return phytec_get_am62_ddr_size(&data);
+}
+
 int dram_init(void)
 {
-	return fdtdec_setup_mem_size_base();
+	u8 ram_size;
+
+	ram_size = phytec_get_am62_ddr_size_default();
+
+#if defined(CONFIG_K3_AM64_DDRSS)
+	/*
+	* HACK: ddrss driver support 2GB RAM by default
+	* V2A_CTL_REG should be updated to support other RAM size
+	*/
+#define AM64_DDRSS_SS_BASE	0x0F300000
+#define DDRSS_V2A_CTL_REG	0x0020
+	if (ram_size == EEPROM_RAM_SIZE_4GB) {
+		writel(0x00000210, AM64_DDRSS_SS_BASE + DDRSS_V2A_CTL_REG);
+	}
+#endif
+
+	switch (ram_size) {
+	case EEPROM_RAM_SIZE_1GB:
+		gd->ram_size = 0x40000000;
+		break;
+	case EEPROM_RAM_SIZE_2GB:
+		gd->ram_size = 0x80000000;
+		break;
+	case EEPROM_RAM_SIZE_4GB:
+#ifdef CONFIG_PHYS_64BIT
+		gd->ram_size = 0x100000000;
+#else
+		gd->ram_size = 0x80000000;
+#endif
+		break;
+	default:
+		gd->ram_size = 0x80000000;
+	}
+
+	return 0;
+}
+
+phys_size_t board_get_usable_ram_top(phys_size_t total_size)
+{
+#ifdef CONFIG_PHYS_64BIT
+	/* Limit RAM used by U-Boot to the DDR low region */
+	if (gd->ram_top > 0x100000000)
+		return 0x100000000;
+#endif
+	return gd->ram_top;
 }
 
 int dram_init_banksize(void)
 {
-	return fdtdec_setup_memory_banksize();
+	u8 ram_size;
+
+	ram_size = phytec_get_am62_ddr_size_default();
+	switch (ram_size) {
+	case EEPROM_RAM_SIZE_1GB:
+		gd->bd->bi_dram[0].start = CFG_SYS_SDRAM_BASE;
+		gd->bd->bi_dram[0].size = 0x40000000;
+		gd->ram_size = 0x40000000;
+		break;
+
+	case EEPROM_RAM_SIZE_2GB:
+		gd->bd->bi_dram[0].start = CFG_SYS_SDRAM_BASE;
+		gd->bd->bi_dram[0].size = 0x80000000;
+		gd->ram_size = 0x80000000;
+		break;
+
+	case EEPROM_RAM_SIZE_4GB:
+		/* Bank 0 declares the memory available in the DDR low region */
+		gd->bd->bi_dram[0].start = CFG_SYS_SDRAM_BASE;
+		gd->bd->bi_dram[0].size = 0x80000000;
+		gd->ram_size = 0x80000000;
+
+#ifdef CONFIG_PHYS_64BIT
+		/* Bank 1 declares the memory available in the DDR upper region */
+		gd->bd->bi_dram[1].start = CFG_SYS_SDRAM_BASE1;
+		gd->bd->bi_dram[1].size = 0x80000000;
+		gd->ram_size = 0x100000000;
+#endif
+		break;
+	default:
+		/* Continue with default 2GB setup */
+		gd->bd->bi_dram[0].start = CFG_SYS_SDRAM_BASE;
+		gd->bd->bi_dram[0].size = 0x80000000;
+		gd->ram_size = 0x80000000;
+		printf("DDR size %d is not supported\n", ram_size);
+	}
+
+	return 0;
+}
+
+int qspi_fixup(void *blob, struct phytec_eeprom_data *data)
+{
+	ofnode node;
+	int ret;
+
+	if (!phytec_am62_is_qspi(data))
+		return 0;
+
+	if (blob) {
+		do_fixup_by_compat_u32(blob, "jedec,spi-nor", "spi-tx-bus-width", 1, 0);
+		do_fixup_by_compat_u32(blob, "jedec,spi-nor", "spi-rx-bus-width", 4, 0);
+	} else {
+		node = ofnode_by_compatible(ofnode_null(), "jedec,spi-nor");
+		if (!ofnode_valid(node))
+			return -1;
+		ret = ofnode_write_u32(node, "spi-tx-bus-width", 1);
+		if (ret < 0)
+			return ret;
+		ret = ofnode_write_u32(node, "spi-rx-bus-width", 4);
+		if (ret < 0)
+			return ret;
+	}
+	return 0;
 }
 
 #if defined(CONFIG_SPL_BUILD)
 #if defined(CONFIG_K3_AM64_DDRSS)
+
+int update_ddrss_timings(void)
+{
+	int ret;
+	u8 ram_size;
+	struct ddrss *ddr_patch;
+	void *fdt = (void *)gd->fdt_blob;
+
+	ram_size = phytec_get_am62_ddr_size_default();
+	switch (ram_size) {
+	case EEPROM_RAM_SIZE_1GB:
+		ddr_patch = &phycore_ddrss_data[PHYCORE_1GB];
+		break;
+	case EEPROM_RAM_SIZE_2GB:
+		ddr_patch = NULL;
+		break;
+	case EEPROM_RAM_SIZE_4GB:
+		ddr_patch = &phycore_ddrss_data[PHYCORE_4GB];
+		break;
+	default:
+	}
+
+	/* Nothing to patch */
+	if (!ddr_patch)
+		return 0;
+
+	debug("Applying DDRSS timings patch for ram_size %d\n", ram_size);
+
+	ret = fdt_apply_ddrss_timings_patch(fdt, ddr_patch);
+	if (ret < 0) {
+		printf("Failed to apply ddrs timings patch %d\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+int do_board_detect(void)
+{
+	int ret;
+	struct phytec_eeprom_data data;
+
+	ret = update_ddrss_timings();
+	if (ret)
+		return ret;
+
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret < 0)
+		return ret;
+
+	return qspi_fixup(NULL, &data);
+}
+
 static void fixup_ddr_driver_for_ecc(struct spl_image_info *spl_image)
 {
 	struct udevice *dev;
@@ -96,43 +286,7 @@ void spl_perform_fixups(struct spl_image_info *spl_image)
 }
 #endif
 
-int qspi_fixup(void *blob, struct phytec_eeprom_data *data)
-{
-	ofnode node;
-	int ret;
 
-	if (!phytec_am62_is_qspi(data))
-		return 0;
-
-	if (blob) {
-		do_fixup_by_compat_u32(blob, "jedec,spi-nor", "spi-tx-bus-width", 1, 0);
-		do_fixup_by_compat_u32(blob, "jedec,spi-nor", "spi-rx-bus-width", 4, 0);
-	} else {
-		node = ofnode_by_compatible(ofnode_null(), "jedec,spi-nor");
-		if (!ofnode_valid(node))
-			return -1;
-		ret = ofnode_write_u32(node, "spi-tx-bus-width", 1);
-		if (ret < 0)
-			return ret;
-		ret = ofnode_write_u32(node, "spi-rx-bus-width", 4);
-		if (ret < 0)
-			return ret;
-	}
-	return 0;
-}
-
-#if defined(CONFIG_SPL_BUILD)
-int do_board_detect(void)
-{
-	int ret;
-	struct phytec_eeprom_data data;
-
-	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
-	if (ret < 0)
-		return ret;
-	return qspi_fixup(NULL, &data);
-}
-#endif
 
 #define CTRLMMR_USB0_PHY_CTRL   0x43004008
 #define CTRLMMR_USB1_PHY_CTRL   0x43004018
