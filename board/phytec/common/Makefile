@@ -4,7 +4,7 @@
 
 ifdef CONFIG_SPL_BUILD
 # necessary to create built-in.o
-obj- := __dummy__.o
+obj-$(CONFIG_K3_AM64_DDRSS) += k3_ddrss_patch.o
 endif
 
 obj-y += phytec_som_detection.o am62a_som_detection.o  am62_som_detection.o am64_som_detection.o
