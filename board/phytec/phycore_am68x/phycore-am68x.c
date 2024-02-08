@@ -18,7 +18,6 @@
 #include <asm/gpio.h>
 #include <asm/io.h>
 #include <spl.h>
-#include <asm/arch/sys_proto.h>
 #include <dm.h>
 #include <dm/uclass-internal.h>
 
@@ -174,6 +173,9 @@ enum env_location env_get_location(enum env_operation op, int prio)
 			return ENVL_FAT;
 		if (CONFIG_IS_ENABLED(ENV_IS_IN_MMC))
 			return ENVL_MMC;
+	case BOOT_DEVICE_SPI:
+		if (CONFIG_IS_ENABLED(ENV_IS_IN_SPI_FLASH))
+			return ENVL_SPI_FLASH;
 	default:
 		return ENVL_NOWHERE;
 	};
@@ -186,9 +188,14 @@ int board_late_init(void)
 	switch (boot_device) {
 	case BOOT_DEVICE_MMC1:
 		env_set_ulong("mmcdev", 0);
+		env_set("boot", "mmc");
 		break;
 	case BOOT_DEVICE_MMC2:
 		env_set_ulong("mmcdev", 1);
+		env_set("boot", "mmc");
+		break;
+	case BOOT_DEVICE_SPI:
+		env_set("boot", "spi");
 		break;
 	};
 
