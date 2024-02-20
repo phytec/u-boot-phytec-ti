@@ -59,11 +59,10 @@ static u8 phytec_get_am62_ddr_size_default(void)
 
 	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
 
-	/* Default DDR size is 2GB */
-	if (ret)
-		return EEPROM_RAM_SIZE_2GB;
-	else
+	if (!ret && data.valid)
 		return phytec_get_am62_ddr_size(&data);
+	/* Default DDR size is 2GB */
+	return EEPROM_RAM_SIZE_2GB;
 }
 
 int dram_init(void)
@@ -162,6 +161,9 @@ int qspi_fixup(void *blob, struct phytec_eeprom_data *data)
 	ofnode node;
 	int ret;
 
+	if (!data)
+		return 0;
+
 	if (!phytec_am62_is_qspi(data))
 		return 0;
 
@@ -231,8 +233,8 @@ int do_board_detect(void)
 		return ret;
 
 	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
-	if (ret < 0)
-		return ret;
+	if (ret || !data.valid)
+		return 0;
 
 	return qspi_fixup(NULL, &data);
 }
@@ -494,7 +496,7 @@ int extension_board_scan(struct list_head *extension_list)
 	int ret;
 
 	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
-	if (ret)
+	if (ret || !data.valid)
 		return count;
 
 	phytec_print_som_info(&data);
@@ -531,8 +533,8 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 	struct phytec_eeprom_data data;
 
 	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
-	if (ret < 0)
-		return ret;
+	if (ret || !data.valid)
+		return 0;
 	fdt_copy_fixed_partitions(blob);
 	return qspi_fixup(blob, &data);
 }
@@ -545,8 +547,8 @@ int board_fix_fdt(void *blob)
 	struct phytec_eeprom_data data;
 
 	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
-	if (ret < 0)
-		return ret;
+	if (ret || !data.valid)
+		return 0;
 	return qspi_fixup(NULL, &data);
 }
 #endif
