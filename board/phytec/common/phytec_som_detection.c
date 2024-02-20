@@ -115,6 +115,7 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 		goto err;
 	}
 
+	data->valid = true;
 	som = data->data.data.data_api2.som_no;
 	debug("%s: som id: %u\n", __func__, som);
 	opt = phytec_get_opt(data);
@@ -128,10 +129,8 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 		ret = phytec_am62_detect(som, opt);
 	if (IS_ENABLED(CONFIG_PHYTEC_AM62A_SOM_DETECTION))
 		ret = phytec_am62a_detect(som, opt);
-	if (!ret) {
-		data->valid = true;
+	if (!ret)
 		return 0;
-	}
 
 	pr_err("%s: SoM ID does not match. Wrong EEPROM data?\n", __func__);
 err:
