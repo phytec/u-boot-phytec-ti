@@ -57,7 +57,7 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 {
 	int ret, i;
 	unsigned int crc;
-	int *ptr;
+	u8 *ptr;
 	u8 som;
 	char *opt;
 	unsigned const eepromdatsize = sizeof(struct phytec_eeprom_payload);
@@ -90,7 +90,7 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 		goto err;
 	}
 
-	ptr = (int *)data;
+	ptr = (u8 *)data;
 	for (i = 0; i < eepromdatsize; ++i)
 		if (ptr[i] != 0x0)
 			break;
