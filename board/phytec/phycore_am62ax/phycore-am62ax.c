@@ -265,7 +265,7 @@ int extension_board_scan(struct list_head *extension_list)
 	int ret;
 
 	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
-	if (ret)
+	if (ret || !data.valid)
 		return count;
 
 	phytec_print_som_info(&data);
