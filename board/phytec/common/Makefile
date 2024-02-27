@@ -7,4 +7,7 @@ ifdef CONFIG_SPL_BUILD
 obj-$(CONFIG_K3_AM64_DDRSS) += k3_ddrss_patch.o
 endif
 
-obj-y += phytec_som_detection.o am62a_som_detection.o  am62_som_detection.o am64_som_detection.o
+obj-y += phytec_som_detection.o phytec_som_detection_blocks.o
+obj-y += am62a_som_detection.o
+obj-y += am62_som_detection.o
+obj-y += am64_som_detection.o
