@@ -30,13 +30,12 @@ int board_init(void)
 
 int dram_init(void)
 {
-#ifdef CONFIG_PHYS_64BIT
-	gd->ram_size = 0x100000000;
-#else
-	gd->ram_size = 0x80000000;
-#endif
+	s32 ret;
 
-	return 0;
+	ret = fdtdec_setup_mem_size_base();
+	if (ret)
+		printf("Error setting up mem size and base. %d\n", ret);
+	return ret;
 }
 
 phys_size_t board_get_usable_ram_top(phys_size_t total_size)
@@ -52,19 +51,13 @@ phys_size_t board_get_usable_ram_top(phys_size_t total_size)
 
 int dram_init_banksize(void)
 {
-	/* Bank 0 declares the memory available in the DDR low region */
-	gd->bd->bi_dram[0].start = CFG_SYS_SDRAM_BASE;
-	gd->bd->bi_dram[0].size = 0x7fffffff;
-	gd->ram_size = 0x80000000;
+	s32 ret;
 
-#ifdef CONFIG_PHYS_64BIT
-	/* Bank 1 declares the memory available in the DDR high region */
-	gd->bd->bi_dram[1].start = CFG_SYS_SDRAM_BASE1;
-	gd->bd->bi_dram[1].size = 0x7fffffff;
-	gd->ram_size = 0x100000000;
-#endif
+	ret = fdtdec_setup_memory_banksize();
+	if (ret)
+		printf("Error setting up memory banksize. %d\n", ret);
 
-	return 0;
+	return ret;
 }
 
 #if defined(CONFIG_SPL_LOAD_FIT)
