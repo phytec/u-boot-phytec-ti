@@ -97,7 +97,7 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 		goto err;
 
 	if (data->data.api_rev == 0xff) {
-		pr_err("%s: EEPROM is not flashed. Prototype?: %i\n", __func__, -EINVAL);
+		pr_err("%s: EEPROM is not flashed. Prototype?\n", __func__);
 		goto err;
 	}
 
@@ -107,7 +107,7 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 			break;
 
 	if (i == eepromdatsize) {
-		pr_err("%s: EEPROM data is all zero. Erased?: %i\n", __func__, -EINVAL);
+		pr_err("%s: EEPROM data is all zero. Erased?\n", __func__);
 		goto err;
 	}
 
@@ -121,8 +121,8 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 	debug("%s: crc: %x\n", __func__, crc);
 
 	if (crc) {
-		pr_err("%s: CRC mismatch. EEPROM data is not usable: %i\n",
-		       __func__, -EINVAL);
+		pr_err("%s: CRC mismatch. EEPROM data is unusable\n",
+		       __func__);
 		goto err;
 	}
 
