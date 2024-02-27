@@ -26,6 +26,10 @@
 		spi0 = &ospi0;
 		spi1 = &ospi1;
 	};
+
+	memory@80000000 {
+		bootph-pre-ram;
+	};
 };
 
 &wkup_i2c0 {
