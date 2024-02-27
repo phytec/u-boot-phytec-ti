@@ -206,6 +206,7 @@ int update_ddrss_timings(void)
 		ddr_patch = &phycore_ddrss_data[PHYCORE_4GB];
 		break;
 	default:
+		break;
 	}
 
 	/* Nothing to patch */
