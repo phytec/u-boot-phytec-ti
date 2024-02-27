@@ -241,6 +241,13 @@ struct extension *phytec_add_extension(const char *name, const char *overlay,
 
 #else
 
+inline int phytec_eeprom_data_setup_fallback(struct phytec_eeprom_data *data,
+					     int bus_num, int addr,
+					     int addr_fallback)
+{
+	return PHYTEC_EEPROM_INVAL;
+}
+
 inline int phytec_eeprom_data_setup(struct phytec_eeprom_data *data,
 				    int bus_num, int addr)
 {
