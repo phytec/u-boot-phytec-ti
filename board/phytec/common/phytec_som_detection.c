@@ -78,46 +78,15 @@ int phytec_eeprom_read(u8 *data, int bus_num, int addr,
 	return ret;
 }
 
-int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
-			    int bus_num, int addr)
+int phytec_eeprom_data_init_v2(struct phytec_eeprom_data *data)
 {
-	int ret, i;
+	int ret;
 	unsigned int crc;
-	u8 *ptr;
 	u8 som;
 	char *opt;
-	unsigned const eepromdatsize = sizeof(struct phytec_eeprom_payload);
 
-	if (!data)
-		data = &eeprom_data;
-
-	ret = phytec_eeprom_read((u8 *)data, bus_num, addr,
-				 eepromdatsize, 0);
-	if (ret)
-		goto err;
-
-	if (data->data.api_rev == 0xff) {
-		pr_err("%s: EEPROM is not flashed. Prototype?\n", __func__);
-		goto err;
-	}
-
-	ptr = (u8 *)data;
-	for (i = 0; i < eepromdatsize; ++i)
-		if (ptr[i] != 0x0)
-			break;
-
-	if (i == eepromdatsize) {
-		pr_err("%s: EEPROM data is all zero. Erased?\n", __func__);
-		goto err;
-	}
-
-	/* We are done here for early revisions */
-	if (data->data.api_rev <= PHYTEC_API_REV1) {
-		data->valid = true;
-		return 0;
-	}
-
-	crc = crc8(0, (const unsigned char *)&data->data, eepromdatsize);
+	crc = crc8(0, (const unsigned char *)&data->data,
+		   PHYTEC_API2_DATA_LEN);
 	debug("%s: crc: %x\n", __func__, crc);
 
 	if (crc) {
@@ -144,6 +113,48 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 		return 0;
 
 	pr_err("%s: SoM ID does not match. Wrong EEPROM data?\n", __func__);
+err:
+	data->valid = false;
+	return -1;
+}
+
+int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
+			    int bus_num, int addr)
+{
+	int ret, i;
+	u8 *ptr;
+
+	if (!data)
+		data = &eeprom_data;
+
+	ret = phytec_eeprom_read((u8 *)data, bus_num, addr,
+				 PHYTEC_API2_DATA_LEN, 0);
+	if (ret)
+		goto err;
+
+	if (data->data.api_rev == 0xff) {
+		pr_err("%s: EEPROM is not flashed. Prototype?\n", __func__);
+		goto err;
+	}
+
+	ptr = (u8 *)data;
+	for (i = 0; i < PHYTEC_API2_DATA_LEN; ++i)
+		if (ptr[i] != 0x0)
+			break;
+
+	if (i == PHYTEC_API2_DATA_LEN) {
+		pr_err("%s: EEPROM data is all zero. Erased?\n", __func__);
+		goto err;
+	}
+
+	if (data->data.api_rev >= PHYTEC_API_REV2) {
+		ret = phytec_eeprom_data_init_v2(data);
+		if (ret)
+			goto err;
+	}
+
+	data->valid = true;
+	return 0;
 err:
 	data->valid = false;
 	return -1;
