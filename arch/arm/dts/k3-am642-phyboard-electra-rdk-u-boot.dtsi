@@ -190,8 +190,14 @@
 	bootph-pre-ram;
 };
 
+&serdes0 {
+	bootph-pre-ram;
+	status = "disabled";
+};
+
 &usbss0 {
 	bootph-pre-ram;
+	ti,usb2-only;
 };
 
 &usb0 {
