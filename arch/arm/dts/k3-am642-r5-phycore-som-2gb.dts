@@ -124,7 +124,6 @@
 };
 
 &usbss0 {
-	status = "okay";
 	ti,vbus-divider;
 	ti,usb2-only;
 };
