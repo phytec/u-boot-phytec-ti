@@ -96,6 +96,14 @@
 	bootph-pre-ram;
 };
 
+&main_i2c0 {
+	bootph-pre-ram;
+};
+
+&main_i2c0_pins_default {
+	bootph-pre-ram;
+};
+
 &main_mmc1_pins_default {
 	bootph-pre-ram;
 };
