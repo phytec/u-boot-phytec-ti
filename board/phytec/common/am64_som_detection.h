@@ -17,4 +17,17 @@ u8 __maybe_unused phytec_get_am64_spi(struct phytec_eeprom_data *data);
 u8 __maybe_unused phytec_get_am64_eth(struct phytec_eeprom_data *data);
 u8 __maybe_unused phytec_get_am64_rtc(struct phytec_eeprom_data *data);
 
+static inline int phytec_am64_is_qspi(struct phytec_eeprom_data *data)
+{
+	u8 spi = phytec_get_am64_spi(data);
+
+	if (spi == PHYTEC_EEPROM_VALUE_X)
+		return 0;
+	return spi <= PHYTEC_EEPROM_NOR_FLASH_64MB_QSPI;
+}
+
+static inline int phytec_am64_is_ospi(struct phytec_eeprom_data *data)
+{
+	return phytec_get_am64_spi(data) > PHYTEC_EEPROM_NOR_FLASH_64MB_QSPI;
+}
 #endif /* _PHYTEC_AM64_SOM_DETECTION_H */
