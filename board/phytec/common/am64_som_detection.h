@@ -10,6 +10,7 @@
 #include "phytec_som_detection.h"
 
 #define PHYTEC_EEPROM_VALUE_X	0x21
+#define PHYTEC_EEPROM_NOR_FLASH_64MB_QSPI	0xC
 
 u8 phytec_am64_detect(u8 som, char *opt);
 u8 __maybe_unused phytec_get_am64_ddr_size(struct phytec_eeprom_data *data);
