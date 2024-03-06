@@ -95,6 +95,10 @@
 	/delete-property/ power-domains;
 };
 
+&main_i2c0 {
+	/delete-property/ power-domains;
+};
+
 &main_pmx0 {
 	bootph-pre-ram;
 	ddr_vtt_pins_default: ddr-vtt-pins-default {
