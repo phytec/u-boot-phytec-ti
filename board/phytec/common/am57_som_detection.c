@@ -251,15 +251,14 @@ u8 __maybe_unused phytec_get_am57_temp(struct phytec_eeprom_data *data)
 char * __maybe_unused phytec_get_am57_opt(struct phytec_eeprom_data *data)
 {
 	char *opt;
-	u8 len;
 
 	if (!data)
 		data = &eeprom_data;
 
 	opt = phytec_get_opt(data);
 	if (opt) {
-		len = strlen(opt);
-		opt[len - 2] = '\0';
+		/* Always return first 9 chars */
+		opt[9] = '\0';
 	} else {
 		opt = NULL;
 	}
