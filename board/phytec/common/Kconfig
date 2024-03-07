@@ -20,6 +20,14 @@ config PHYTEC_AM57_SOM_DETECTION
 	   Support of I2C EEPROM based SoM detection. Supported
 	   for PHYTEC AM57xx boards.
 
+config PHYTEC_AM57_EEPROM_APIV0
+	bool "Support AM57 EEPROM APIv0 on AM57 Phytec platforms"
+	depends on (TARGET_PHYCORE_AM57X && PHYTEC_AM57_SOM_DETECTION)
+	default y
+	help
+	   Support SoM detection on PHYTEC AM57x platforms flashed with
+	   AM57x EEPROM APIv0 (pre-PD20.1.0 releases).
+
 config PHYTEC_AM62_SOM_DETECTION
 	bool "Support SoM detection for AM62 Phytec platforms"
 	depends on (TARGET_PHYCORE_AM62X_A53 || TARGET_PHYCORE_AM62X_R5)
