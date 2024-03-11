@@ -209,7 +209,7 @@ static int passwd_abort_sha256(uint64_t etime)
 
 			/* And check if sha matches saved value in env */
 			if (slow_equals(sha, sha_env, SHA256_SUM_LEN))
-				abort = 1;
+				bootretry_dont_retry();
 		}
 		udelay(10000);
 	} while (!abort && get_ticks() <= etime);
