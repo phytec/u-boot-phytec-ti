@@ -12,7 +12,6 @@
 #include <env_internal.h>
 #include <fastboot.h>
 #include <fdt_support.h>
-#include <jffs2/load_kernel.h>
 #include <image.h>
 #include <init.h>
 #include <malloc.h>
@@ -41,7 +40,6 @@
 #include <dwc3-omap-uboot.h>
 #include <ti-usb-phy-uboot.h>
 #include <mmc.h>
-#include <mtd_node.h>
 #include <dm/uclass.h>
 #include <hang.h>
 
@@ -738,15 +736,7 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 {
 	ft_cpu_setup(blob, bd);
 
-#if defined(CONFIG_FDT_FIXUP_PARTITIONS)
-	static struct node_info nodes[] = {
-		{ "ti,omap2-nand", MTD_DEV_TYPE_NAND, },
-	};
-
-	/* Update partition nodes using info from mtdparts env var */
-	printf("Updating MTD partitions...\n");
-	fdt_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
-#endif
+	fdt_copy_fixed_partitions(blob);
 
 	return 0;
 }
