@@ -147,7 +147,7 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			partition@0 {
-				label = "ospi.tiboot";
+				label = "ospi.tiboot3";
 				reg = <0x000000 0x100000>;
 			};
 			partition@100000 {
