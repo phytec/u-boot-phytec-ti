@@ -9,9 +9,8 @@
 #ifndef __PHYCORE_AM68X_H
 #define __PHYCORE_AM68X_H
 
-#include <linux/sizes.h>
-
 /* DDR Configuration */
+#define CFG_SYS_SDRAM_BASE		0x80000000
 #define CFG_SYS_SDRAM_BASE1             0x880000000
 
 /* SPL Loader Configuration */
@@ -21,8 +20,5 @@
 #else
 #define CFG_SYS_UBOOT_BASE              0x50080000
 #endif
-
-/* Now for the remaining common defines */
-#include <configs/ti_armv7_common.h>
 
 #endif /* __CONFIG_PHYCORE_AM68X_H */
