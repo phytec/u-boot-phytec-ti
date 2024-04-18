@@ -8,6 +8,7 @@
 
 #include "k3-binman.dtsi"
 
+#ifdef CONFIG_PHYTEC_K3_KEY_BLOB_COPY
 /* Override path to schema and key files */
 &binman {
 	custMpk {
@@ -24,6 +25,13 @@
 		};
 	};
 };
+#else
+/* Delete nodes for custMPK and ti-degenerate-key keys*/
+&binman {
+	/delete-node/ custMpk;
+	/delete-node/ ti-degenerate-key;
+};
+#endif
 
 #ifndef CONFIG_ARM64
 &binman {
@@ -124,7 +132,7 @@
 			combined;
 			dm-data;
 			sysfw-inner-cert;
-			keyfile = "custMpk.pem";
+			keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 			sw-rev = <1>;
 			content-sbl = <&u_boot_spl>;
 			content-sysfw = <&ti_fs_enc>;
@@ -170,7 +178,7 @@
 			combined;
 			dm-data;
 			sysfw-inner-cert;
-			keyfile = "custMpk.pem";
+			keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 			sw-rev = <1>;
 			content-sbl = <&u_boot_spl_fs>;
 			content-sysfw = <&ti_fs_enc_fs>;
@@ -223,7 +231,7 @@
 			content-dm-data = <&combined_dm_cfg_gp>;
 			load-dm-data = <0x43c3a800>;
 			sw-rev = <1>;
-			keyfile = "ti-degenerate-key.pem";
+			keyfile = CONFIG_PHYTEC_K3_DEGENERATE_KEY;
 		};
 		u_boot_spl_unsigned: u-boot-spl {
 			no-expanded;
@@ -270,7 +278,7 @@
 			core = "secure";
 			load = <0x40000>;
 			sw-rev = <CONFIG_K3_X509_SWRV>;
-			keyfile = "custMpk.pem";
+			keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 			countersign;
 			fsstub;
 		};
@@ -308,7 +316,7 @@
 			core = "secure";
 			load = <0x60000>;
 			sw-rev = <CONFIG_K3_X509_SWRV>;
-			keyfile = "ti-degenerate-key.pem";
+			keyfile = CONFIG_PHYTEC_K3_DEGENERATE_KEY;
 			fsstub;
 		};
 		fsstub_gp: fsstub-gp.bin {
@@ -338,7 +346,7 @@
 					entry = <CONFIG_K3_ATF_LOAD_ADDR>;
 					ti-secure {
 						content = <&atf>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					atf: atf-bl31 {
 					};
@@ -354,7 +362,7 @@
 					entry = <0x9e800000>;
 					ti-secure {
 						content = <&tee>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					tee: tee-os {
 					};
@@ -409,7 +417,7 @@
 					entry = <0x89000000>;
 					ti-secure {
 						content = <&dm>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					dm: blob-ext {
 						filename = "ti-dm.bin";
@@ -426,7 +434,7 @@
 					entry = <CONFIG_SPL_TEXT_BASE>;
 					ti-secure {
 						content = <&u_boot_spl_nodtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					u_boot_spl_nodtb: blob-ext {
 						filename = SPL_NODTB;
@@ -440,7 +448,7 @@
 					compression = "none";
 					ti-secure {
 						content = <&spl_am625_phyboard_lyra_dtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					spl_am625_phyboard_lyra_dtb: blob-ext {
 						filename = SPL_AM625_PHYBOARD_LYRA_DTB;
@@ -482,7 +490,7 @@
 					load = <CONFIG_TEXT_BASE>;
 					ti-secure {
 						content = <&u_boot_nodtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					u_boot_nodtb: u-boot-nodtb {
 					};
@@ -498,7 +506,7 @@
 					compression = "none";
 					ti-secure {
 						content = <&am625_phyboard_lyra_dtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					am625_phyboard_lyra_dtb: blob-ext {
 						filename = AM625_PHYBOARD_LYRA_DTB;
