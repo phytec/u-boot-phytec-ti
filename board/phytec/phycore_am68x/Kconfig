@@ -39,6 +39,8 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
        default "phycore_am68x"
 
+source "board/phytec/common/Kconfig"
+
 endif
 
 if TARGET_PHYCORE_AM68X_R5
@@ -51,5 +53,7 @@ config SYS_VENDOR
 
 config SYS_CONFIG_NAME
        default "phycore_am68x"
+
+source "board/phytec/common/Kconfig"
 
 endif
