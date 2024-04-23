@@ -114,6 +114,15 @@
 			<&mcu_secproxy 23>;
 		bootph-pre-ram;
 	};
+
+	wkup_vtm0: vtm@42040000 {
+		compatible = "ti,j721s2-avs";
+		reg = <0x0 0x42040000 0x0 0x350>,
+		      <0x0 0x42050000 0x0 0x350>,
+		      <0x0 0x43000300 0x0 0x10>;
+		power-domains = <&k3_pds 180 TI_SCI_PD_SHARED>;
+		#thermal-sensor-cells = <1>;
+	};
 };
 
 &main_pmx0 {
@@ -213,9 +222,28 @@
 	bootph-pre-ram;
 };
 
+&wkup_i2c0 {
+	bootph-pre-ram;
+
+	vdd_cpu_avs: regulator@40 {
+		compatible = "ti,tps6287x";
+		bootph-pre-ram;
+		reg = <0x40>;
+		regulator-name = "VDD_CPU_AVS";
+		regulator-min-microvolt = <600000>;
+		regulator-max-microvolt = <900000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+};
+
 &wkup_uart0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&wkup_uart0_pins_default>;
 };
 
+&wkup_vtm0 {
+	vdd-supply-2 = <&vdd_cpu_avs>;
+	bootph-pre-ram;
+};
 #include "k3-am68-phyboard-izar-rdk-u-boot.dtsi"
