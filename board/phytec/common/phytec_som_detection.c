@@ -17,6 +17,7 @@
 #include "am64_som_detection.h"
 #include "am62_som_detection.h"
 #include "am62a_som_detection.h"
+#include "am57_som_detection.h"
 
 struct phytec_eeprom_data eeprom_data;
 

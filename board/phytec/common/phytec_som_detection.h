@@ -11,6 +11,7 @@
 #include "phytec_som_detection_blocks.h"
 
 #define PHYTEC_MAX_OPTIONS	17
+#define PHYTEC_AM57XX_SOM	57
 #define PHYTEC_AM62XX_SOM	71
 #define PHYTEC_AM64XX_SOM	72
 #define PHYTEC_AM62AX_SOM	75

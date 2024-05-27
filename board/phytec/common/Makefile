@@ -8,6 +8,7 @@ obj-$(CONFIG_K3_AM64_DDRSS) += k3_ddrss_patch.o
 endif
 
 obj-y += phytec_som_detection.o phytec_som_detection_blocks.o
+obj-y += am57_som_detection.o
 obj-y += am62a_som_detection.o
 obj-y += am62_som_detection.o
 obj-y += am64_som_detection.o
