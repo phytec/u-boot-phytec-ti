@@ -37,6 +37,23 @@ static const char * const phytec_som_type_str[] = {
 	"KSP",
 };
 
+#if IS_ENABLED(CONFIG_PHYTEC_AM57_EEPROM_APIV0)
+#define PHYTEC_AM57_EEPROM_APIV0_MAGIC     0x07052017
+/* struct phytec_am57_eeprom_apiv0_data for backwards compat */
+struct phytec_am57_eeprom_apiv0_data {
+	u32 header;		/* PHYTEC EEPROM header */
+	u8 api_version;	/* EEPROM layout API version */
+	u8 mod_version;	/* PCM/PFL/PCA */
+	u8 som_pcb_rev;	/* SOM PCB revision */
+	u8 mac[6];
+	u8 ksp;		/* 1: KSP, 2: KSM */
+	u8 kspno;		/* Number for KSP/KSM module */
+	u8 kit_opt[11];	/* coding for variants */
+	u8 reserved[5];	/* not used */
+	u8 bs;		/* Bits set in previous bytes */
+} __packed;
+#endif
+
 struct phytec_api0_data {
 	u8 pcb_rev;		/* PCB revision of SoM */
 	u8 som_type;		/* SoM type */
