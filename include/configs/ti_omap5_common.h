@@ -264,6 +264,7 @@
 
 #include <config_distro_bootcmd.h>
 
+#ifndef CFG_EXTRA_ENV_SETTINGS
 #define CFG_EXTRA_ENV_SETTINGS \
 	DEFAULT_LINUX_BOOT_ENV \
 	DEFAULT_MMC_TI_ARGS \
@@ -284,6 +285,8 @@
 	NETARGS \
 	NANDARGS \
 	BOOTENV
+
+#endif
 
 /*
  * SPL related defines.  The Public RAM memory map the ROM defines the
