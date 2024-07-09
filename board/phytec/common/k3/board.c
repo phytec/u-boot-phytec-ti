@@ -8,6 +8,7 @@
 #include <fdt_support.h>
 #include <spl.h>
 #include <asm/arch/hardware.h>
+#include <extension_board.h>
 
 #include "../am6_som_detection.h"
 
@@ -102,5 +103,49 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 	fdt_copy_fixed_partitions(blob);
 
 	return 0;
+}
+#endif
+
+#if IS_ENABLED(CONFIG_CMD_EXTENSION)
+int extension_board_scan(struct list_head *extension_list)
+{
+	struct extension *extension = NULL;
+	struct phytec_eeprom_data data;
+	int count = 0;
+	int ret;
+
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret)
+		return count;
+
+	if (phytec_get_am6_eth(&data) == 0) {
+		extension = phytec_add_extension("Disable Ethernet phy",
+						 "k3-am6xx-phycore-disable-eth-phy.dtbo", "");
+		list_add_tail(&extension->list, extension_list);
+		count++;
+	}
+
+	if (phytec_get_am6_spi(&data) == PHYTEC_EEPROM_VALUE_X) {
+		extension = phytec_add_extension("Disable SPI NOR Flash",
+						 "k3-am6xx-phycore-disable-spi-nor.dtbo", "");
+		list_add_tail(&extension->list, extension_list);
+		count++;
+	}
+
+	if (phytec_am6_is_qspi(&data)) {
+		extension = phytec_add_extension("Select QSPI NOR Flash",
+						 "k3-am6xx-phycore-qspi-nor.dtbo", "");
+		list_add_tail(&extension->list, extension_list);
+		count++;
+	}
+
+	if (phytec_get_am6_rtc(&data) == 0) {
+		extension = phytec_add_extension("Disable RTC",
+						 "k3-am6xx-phycore-disable-rtc.dtbo", "");
+		list_add_tail(&extension->list, extension_list);
+		count++;
+	}
+
+	return count;
 }
 #endif
