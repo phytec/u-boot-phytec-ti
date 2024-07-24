@@ -7,6 +7,7 @@
 // TODO: Make platform independent
 #define LPDDR4_INTR_CTL_REG_COUNT (423U)
 #define LPDDR4_INTR_PHY_INDEP_REG_COUNT (345U)
+#define LPDDR4_INTR_PHY_REG_COUNT (1406U)
 
 static int fdt_setprop_inplace_idx_u32(void *fdt, int nodeoffset,
 				       const char *name, uint32_t idx, u32 val)
@@ -48,7 +49,7 @@ int fdt_apply_ddrss_timings_patch(void *fdt, struct ddrss *ddrss)
 					return ret;
 			}
 
-	for (i = 0; i < LPDDR4_INTR_PHY_INDEP_REG_COUNT; i++)
+	for (i = 0; i < LPDDR4_INTR_PHY_REG_COUNT; i++)
 		for (j = 0; j < ddrss->phy_regs_num; j++)
 			if (i == ddrss->phy_regs[j].off) {
 				ret = fdt_setprop_inplace_idx_u32(fdt,
