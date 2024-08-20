@@ -35,6 +35,7 @@ config TARGET_PHYCORE_AM62AX_A53
 	bool "PHYTEC phyCORE-AM62Ax running on A53"
 	select ARM64
 	select BINMAN
+	select OF_SYSTEM_SETUP
 	imply BOARD
 	imply SPL_BOARD
 
