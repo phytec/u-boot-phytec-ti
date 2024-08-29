@@ -172,8 +172,15 @@
 	bootph-all;
 };
 
+&serdes0 {
+	bootph-pre-ram;
+	status = "disabled";
+};
+
 &usbss0 {
 	bootph-all;
+	ti,vbus-divider;
+	ti,usb2-only;
 };
 
 &usb0 {
