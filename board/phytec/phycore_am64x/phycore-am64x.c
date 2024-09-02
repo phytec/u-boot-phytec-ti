@@ -14,6 +14,7 @@
 #include <fdt_support.h>
 #include <asm/arch/hardware.h>
 
+#include "../common/k3/k3_memory_fixups.h"
 #include "../common/am6_som_detection.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -101,20 +102,10 @@ int dram_init_banksize(void)
 #if IS_ENABLED(CONFIG_SPL_BUILD)
 void spl_perform_fixups(struct spl_image_info *spl_image)
 {
-	u64 start[CONFIG_NR_DRAM_BANKS];
-	u64 size[CONFIG_NR_DRAM_BANKS];
-	int bank;
-	int ret;
-
-	dram_init();
-	dram_init_banksize();
-
-	for (bank = 0; bank < CONFIG_NR_DRAM_BANKS; bank++) {
-		start[bank] = gd->bd->bi_dram[bank].start;
-		size[bank] = gd->bd->bi_dram[bank].size;
-	}
-
-	ret = fdt_fixup_memory_banks(spl_image->fdt_addr, start, size, CONFIG_NR_DRAM_BANKS);
+	if (IS_ENABLED(CONFIG_K3_DDRSS) && IS_ENABLED(CONFIG_K3_INLINE_ECC))
+		fixup_ddr_driver_for_ecc(spl_image);
+	else
+		fixup_memory_node(spl_image);
 }
 #endif
 
