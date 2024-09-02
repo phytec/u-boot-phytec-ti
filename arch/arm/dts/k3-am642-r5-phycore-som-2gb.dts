@@ -132,6 +132,7 @@
 
 &memorycontroller {
 	vtt-supply = <&vtt_supply>;
+	ti,ecc-enable;
 };
 
 &ospi0 {
