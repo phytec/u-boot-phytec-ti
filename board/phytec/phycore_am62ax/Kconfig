@@ -3,7 +3,7 @@
 # Copyright (C) 2023 PHYTEC America LLC
 # Author: Garrett Giordano <ggiordano@phytec.com>
 
-if TARGET_PHYCORE_AM62AX_R5 || TARGET_PHYCORE_AM62AX_A53
+if TARGET_PHYCORE_AM62AX_A53
 
 config SYS_BOARD
        default "phycore_am62ax"
@@ -14,11 +14,25 @@ config SYS_VENDOR
 config SYS_CONFIG_NAME
        default "phycore_am62ax"
 
+source "board/phytec/common/Kconfig"
+
 endif
 
 if TARGET_PHYCORE_AM62AX_R5
 
+config SYS_BOARD
+       default "phycore_am62ax"
+
+config SYS_VENDOR
+       default "phytec"
+
+config SYS_CONFIG_NAME
+       default "phycore_am62ax"
+
 config SPL_LDSCRIPT
 	default "arch/arm/mach-omap2/u-boot-spl.lds"
+
+source "board/phytec/common/Kconfig"
+source "board/phytec/common/k3/Kconfig"
 
 endif
