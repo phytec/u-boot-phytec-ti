@@ -4,12 +4,12 @@
  * Author: Garrett Giordano <ggiordano@phytec.com>
  */
 
+#include <asm/arch/hardware.h>
 #include <asm/io.h>
-#include <env.h>
-#include <env_internal.h>
 #include <spl.h>
 #include <fdt_support.h>
-#include <asm/arch/hardware.h>
+
+#include "../common/am6_som_detection.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
