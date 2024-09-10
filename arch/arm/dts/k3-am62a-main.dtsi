@@ -274,7 +274,7 @@
 	main_esm: esm@420000 {
 		compatible = "ti,j721e-esm";
 		reg = <0x0 0x420000 0x0 0x1000>;
-		ti,esm-pins = <160>, <161>, <162>, <163>, <177>, <178>;
+		ti,esm-pins = <192>, <192>, <195>, <204>, <209>, <210>;
 		bootph-pre-ram;
 	};
 
