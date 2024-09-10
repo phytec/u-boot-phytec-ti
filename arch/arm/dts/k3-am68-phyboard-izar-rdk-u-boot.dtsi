@@ -143,7 +143,6 @@
 };
 
 &usb0 {
-	dr_mode = "peripheral";
 	bootph-pre-ram;
 };
 
