@@ -98,15 +98,6 @@
 
 &main_pmx0 {
 	bootph-pre-ram;
-	main_uart1_pins_default: main-uart1-pins-default {
-		pinctrl-single,pins = <
-			AM62X_IOPAD(0x194, PIN_INPUT, 2)	/* (B19) MCASP0_AXR3.UART1_CTSn */
-			AM62X_IOPAD(0x198, PIN_OUTPUT, 2)	/* (A19) MCASP0_AXR2.UART1_RTSn */
-			AM62X_IOPAD(0x1ac, PIN_INPUT, 2)	/* (E19) MCASP0_AFSR.UART1_RXD */
-			AM62X_IOPAD(0x1b0, PIN_OUTPUT, 2)	/* (A20) MCASP0_ACLKR.UART1_TXD */
-		>;
-		bootph-pre-ram;
-	};
 };
 
 /* Main UART1 is used for TIFS firmware logs */
