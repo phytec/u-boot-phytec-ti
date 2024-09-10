@@ -107,7 +107,7 @@
 	"get_overlaystring=" \
 		"for overlay in $overlays;" \
 		"do;" \
-		"setenv overlaystring ${overlaystring}'#'${overlay};" \
+		"setenv overlaystring ${overlaystring}'#conf-ti_'${overlay};" \
 		"done;\0" \
 	"get_overlay_mmc=" \
 		"fdt address ${fdtaddr};" \
@@ -139,6 +139,9 @@
 			"if test ${board_soc} = am57xx || test ${board_opt} = undefined; then " \
 				"echo WARNING: Using generic FDT! Please update EEPROM!;" \
 				"setenv fdtfile " CONFIG_DEFAULT_FDT_FILE ";" \
+				"if test ${boot_fit} -eq 1; then " \
+					"setenv fdtfile am57xx-phytec-pcm-948.dtb; " \
+				"fi; " \
 			"else " \
 				"setenv fdtfile ${board_soc}-phytec-pcm-948-${board_opt}.dtb;" \
 			"fi;" \
