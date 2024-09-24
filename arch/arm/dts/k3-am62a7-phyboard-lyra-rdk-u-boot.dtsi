@@ -214,6 +214,14 @@
 	bootph-all;
 };
 
+&phy_gmii_sel {
+	bootph-all;
+};
+
+&main_rgmii1_pins_default {
+	bootph-all;
+};
+
 &fss {
 	bootph-all;
 };
@@ -253,4 +261,8 @@
 			};
 		};
 	};
+};
+
+&main_conf {
+	bootph-all;
 };
