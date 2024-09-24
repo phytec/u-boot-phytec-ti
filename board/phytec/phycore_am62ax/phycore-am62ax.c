@@ -47,6 +47,10 @@ void spl_board_init(void)
 	val &= ~(CORE_VOLTAGE);
 	writel(val, CTRLMMR_USB1_PHY_CTRL);
 
+	if (IS_ENABLED(CONFIG_SPL_ETH))
+		/* Init DRAM size for R5/A53 SPL */
+		dram_init_banksize();
+
 	/* We have 32k crystal, so lets enable it */
 	val = readl(MCU_CTRL_LFXOSC_CTRL);
 	val &= ~(MCU_CTRL_LFXOSC_32K_DISABLE_VAL);
