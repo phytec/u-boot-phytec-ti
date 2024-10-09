@@ -100,7 +100,21 @@ int board_late_init(void)
 #if IS_ENABLED(CONFIG_OF_LIBFDT) && IS_ENABLED(CONFIG_OF_BOARD_SETUP)
 int ft_board_setup(void *blob, struct bd_info *bd)
 {
+	struct phytec_eeprom_data data;
+	int ret;
+
 	fdt_copy_fixed_partitions(blob);
+
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret || !data.valid)
+		return 0;
+
+	ret = phytec_ft_board_fixup(&data, blob, bd);
+	if (ret) {
+		pr_err("%s: Failed to add PHYTEC information to fdt.\n",
+		       __func__);
+		return 0;
+	}
 
 	return 0;
 }
