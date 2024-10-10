@@ -12,3 +12,4 @@ obj-y += am57_som_detection.o
 obj-y += am62a_som_detection.o
 obj-y += am62_som_detection.o
 obj-y += am64_som_detection.o
+obj-y += am68_som_detection.o

@@ -18,6 +18,7 @@
 #include "am62_som_detection.h"
 #include "am62a_som_detection.h"
 #include "am57_som_detection.h"
+#include "am68_som_detection.h"
 
 struct phytec_eeprom_data eeprom_data;
 
@@ -112,6 +113,8 @@ int phytec_eeprom_data_init_v2(struct phytec_eeprom_data *data)
 		ret = phytec_am62a_detect(som, opt);
 	if (IS_ENABLED(CONFIG_PHYTEC_AM57_SOM_DETECTION))
 		ret = phytec_am57_detect(som, opt);
+	if (IS_ENABLED(CONFIG_PHYTEC_AM68_SOM_DETECTION))
+		ret = phytec_am68_detect(som, opt);
 	if (!ret)
 		return 0;
 

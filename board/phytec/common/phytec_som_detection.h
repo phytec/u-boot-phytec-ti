@@ -15,6 +15,7 @@
 #define PHYTEC_AM62XX_SOM	71
 #define PHYTEC_AM64XX_SOM	72
 #define PHYTEC_AM62AX_SOM	75
+#define PHYTEC_AM68X_SOM        74
 
 #define PHYTEC_EEPROM_INVAL	0xff
 

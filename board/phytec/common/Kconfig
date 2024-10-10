@@ -51,6 +51,13 @@ config PHYTEC_AM64_SOM_DETECTION
 	help
 	   Support of I2C EEPROM based SoM detection. Supported
 	   for PHYTEC AM64xx boards.
+config PHYTEC_AM68_SOM_DETECTION
+	bool "Support SoM detection for AM68 PHYTEC platforms"
+	depends on (TARGET_PHYCORE_AM68X_A72 || TARGET_PHYCORE_AM68X_R5)
+	select PHYTEC_SOM_DETECTION
+	help
+	   Support of I2C EEPROM based SoM detection. Supported
+	   for PHYTEC AM68x boards.
 
 config PHYTEC_K3_KEY_BLOB_COPY
 	bool "Copy the MPK Key and the degenerate TI key to the build path"
