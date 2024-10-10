@@ -36,6 +36,10 @@
 	bootph-pre-ram;
 };
 
+&wkup_i2c0_pins_default {
+	bootph-pre-ram;
+};
+
 &cbass_main {
 	bootph-pre-ram;
 };
