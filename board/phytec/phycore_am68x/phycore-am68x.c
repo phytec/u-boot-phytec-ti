@@ -251,6 +251,33 @@ int board_late_init(void)
 
 void spl_board_init(void)
 {
+	struct udevice *dev;
+	int ret;
+
+	if (IS_ENABLED(CONFIG_ESM_K3)) {
+		ret = uclass_get_device_by_name(UCLASS_MISC, "esm@700000",
+						&dev);
+		if (ret)
+			printf("MISC init for esm@700000 failed: %d\n", ret);
+
+		ret = uclass_get_device_by_name(UCLASS_MISC, "esm@40800000",
+						&dev);
+		if (ret)
+			printf("MISC init for esm@40800000 failed: %d\n", ret);
+
+		ret = uclass_get_device_by_name(UCLASS_MISC, "esm@42080000",
+						&dev);
+		if (ret)
+			printf("MISC init for esm@42080000 failed: %d\n", ret);
+	}
+
+	if (IS_ENABLED(CONFIG_ESM_PMIC)) {
+		ret = uclass_get_device_by_driver(UCLASS_MISC,
+						  DM_DRIVER_GET(pmic_esm),
+						  &dev);
+		if (ret)
+			printf("ESM PMIC init failed: %d\n", ret);
+	}
 }
 #ifdef CONFIG_SPL_BUILD
 #ifdef CONFIG_PHYS_64BIT
