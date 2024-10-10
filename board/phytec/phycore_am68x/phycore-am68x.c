@@ -20,19 +20,57 @@
 #include <spl.h>
 #include <dm.h>
 #include <dm/uclass-internal.h>
+#include <dm/root.h>
+
+#include "../common/am68_som_detection.h"
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define EEPROM_ADDR             0x50
+#define EEPROM_ADDR_FALLBACK    -1
+
+#define EEPROM_DATA *(struct phytec_eeprom_data *) \
+		     (CONFIG_SYS_K3_MCU_SCRATCHPAD_BASE)
 
 int board_init(void)
 {
 	return 0;
 }
 
+enum {
+	EEPROM_RAM_SIZE_1X512MB,
+	EEPROM_RAM_SIZE_1X1GB,
+	EEPROM_RAM_SIZE_2X512MB,
+	EEPROM_RAM_SIZE_1X2GB,
+	EEPROM_RAM_SIZE_2X1GB,
+	EEPROM_RAM_SIZE_1X4GB,
+	EEPROM_RAM_SIZE_2X2GB,
+	EEPROM_RAM_SIZE_1X8GB,
+	EEPROM_RAM_SIZE_2X4GB,
+	EEPROM_RAM_SIZE_2X8GB
+};
+
+static u8 phytec_get_am68_ddr_size_default(void)
+{
+	struct phytec_eeprom_data data = EEPROM_DATA;
+
+	if (IS_ENABLED(CONFIG_PHYCORE_AM68X_RAM_SIZE_FIX)) {
+		if (IS_ENABLED(CONFIG_PHYCORE_AM68X_RAM_SIZE_2X2GB))
+			return EEPROM_RAM_SIZE_2X2GB;
+		else if (IS_ENABLED(CONFIG_PHYCORE_AM68X_RAM_SIZE_2X4GB))
+			return EEPROM_RAM_SIZE_2X4GB;
+	}
+
+	if (data.valid)
+		return phytec_get_am68_ddr_size(&data);
+	/* Default DDR size is 4GB */
+	return EEPROM_RAM_SIZE_2X2GB;
+}
+
 int dram_init(void)
 {
 	s32 ret;
-
-	ret = fdtdec_setup_mem_size_base();
+	ret = fdtdec_setup_mem_size_base_lowest();
 	if (ret)
 		printf("Error setting up mem size and base. %d\n", ret);
 	return ret;
@@ -52,7 +90,6 @@ phys_size_t board_get_usable_ram_top(phys_size_t total_size)
 int dram_init_banksize(void)
 {
 	s32 ret;
-
 	ret = fdtdec_setup_memory_banksize();
 	if (ret)
 		printf("Error setting up memory banksize. %d\n", ret);
@@ -60,15 +97,32 @@ int dram_init_banksize(void)
 	return ret;
 }
 
-#if defined(CONFIG_SPL_LOAD_FIT)
+#if defined(CONFIG_SPL_LOAD_FIT) && defined(CONFIG_SPL_MULTI_DTB_FIT)
 int board_fit_config_name_match(const char *name)
 {
-	if (!strcmp(name, "k3-am68-r5-phycore-som") || !strcmp(name, "k3-am68-phyboard-izar-rdk"))
-		return 0;
+	u8 ram_size;
+
+	if (IS_ENABLED(CONFIG_CPU_V7R)) {
+		ram_size = phytec_get_am68_ddr_size_default();
+	switch (ram_size) {
+	case EEPROM_RAM_SIZE_2X2GB:
+		if (!strcmp(name, "k3-am68-r5-phycore-som-4gb"))
+			return 0;
+		break;
+	case EEPROM_RAM_SIZE_2X4GB:
+		if (!strcmp(name, "k3-am68-r5-phycore-som-8gb"))
+			return 0;
+		break;
+	default:
+		if (!strcmp(name, "k3-am68-r5-phycore-som-4gb"))
+			return 0;
+		break;
+		}
+	}
+
 	return -1;
 }
 #endif
-
 static u32 __get_backup_bootmedia(u32 main_devstat)
 {
 	u32 bkup_boot = (main_devstat & MAIN_DEVSTAT_BKUP_BOOTMODE_MASK) >>
@@ -198,14 +252,87 @@ int board_late_init(void)
 void spl_board_init(void)
 {
 }
-
 #ifdef CONFIG_SPL_BUILD
+#ifdef CONFIG_PHYS_64BIT
+void spl_perform_fixups(struct spl_image_info *spl_image)
+{
+	u64 start[CONFIG_NR_DRAM_BANKS];
+	u64 size[CONFIG_NR_DRAM_BANKS];
+	int bank;
+	int ret;
+	u8 ram_size;
+
+	dram_init();
+	dram_init_banksize();
+
+	ram_size = phytec_get_am68_ddr_size_default();
+	switch (ram_size) {
+	case EEPROM_RAM_SIZE_2X2GB:
+		gd->bd->bi_dram[1].start = 0x880000000;
+		gd->bd->bi_dram[1].size = 0x80000000;
+		gd->ram_size = 0x10000000;
+		break;
+	case EEPROM_RAM_SIZE_2X4GB:
+		gd->bd->bi_dram[1].start = 0x880000000;
+		gd->bd->bi_dram[1].size = 0x180000000;
+		gd->ram_size = 0x20000000;
+		break;
+	default:
+		gd->bd->bi_dram[1].start = 0x880000000;
+		gd->bd->bi_dram[1].size = 0x80000000;
+		gd->ram_size = 0x10000000;
+	}
+
+	for (bank = 0; bank < CONFIG_NR_DRAM_BANKS; bank++) {
+		start[bank] = gd->bd->bi_dram[bank].start;
+		size[bank] = gd->bd->bi_dram[bank].size;
+	}
+
+	ret = fdt_fixup_memory_banks(spl_image->fdt_addr, start, size, CONFIG_NR_DRAM_BANKS);
+	if (ret)
+		printf("Error fixing up memory banks for A72 devicetree. %d\n", ret);
+}
+#endif
+#ifdef CONFIG_PHYTEC_AM68_SOM_DETECTION
+void do_board_detect(void)
+{
+	int ret;
+	struct phytec_eeprom_data data;
+
+	/* Read I2C EEPROM */
+	ret = phytec_eeprom_data_setup(&data, 0, EEPROM_ADDR);
+	if (ret) {
+		printf("%s: I2C read failed or EEPROM information is invalid!\n"
+		       "Please flash your SOM's EEPROM with valid information.\n",
+		       __func__);
+	} else {
+		/* Store I2C EEPROM data in SRAM to avoid multiple I2C reads */
+		EEPROM_DATA = data;
+	}
+}
+#else
+void do_board_detect(void) { }
+#endif
+#if defined(CONFIG_SPL_MULTI_DTB_FIT)
+void embedded_dtb_select(void)
+{
+	int ret;
+
+	ret = fdtdec_setup();
+	if (ret)
+		printf("Error setting up new devicetree!: %d\n", ret);
+}
+#endif
 void board_init_f(ulong dummy)
 {
 	struct udevice *dev;
 	int ret;
 
 	k3_spl_init();
+	do_board_detect();
+#if defined(CONFIG_SPL_MULTI_DTB_FIT)
+	embedded_dtb_select();
+#endif
 	k3_mem_init();
 
 	if (IS_ENABLED(CONFIG_K3_AVS0)) {

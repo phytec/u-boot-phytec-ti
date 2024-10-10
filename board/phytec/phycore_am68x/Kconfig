@@ -57,3 +57,33 @@ config SYS_CONFIG_NAME
 source "board/phytec/common/Kconfig"
 
 endif
+
+config PHYCORE_AM68X_RAM_SIZE_FIX
+        bool "Set phyCORE-AM68x RAM size fix instead of detecting"
+        default false
+        help
+          RAM size is automatic being detected with the help of
+          the EEPROM introspection data. Set RAM size to a fix value
+          instead.
+
+choice
+        prompt "phyCORE-AM68x RAM size"
+        depends on PHYCORE_AM68X_RAM_SIZE_FIX
+        default PHYCORE_AM68X_RAM_SIZE_2X2GB
+
+config PHYCORE_AM68X_RAM_SIZE_1X2GB
+	bool "1X2GB RAM"
+	help
+	   Set RAM size fix to 2GB in 1x2GB configuration for phyCORE-AM68x.
+
+config PHYCORE_AM68X_RAM_SIZE_2X2GB
+        bool "2X2GB RAM"
+        help
+          Set RAM size fix to 4GB in 2x2GB configuration for phyCORE-AM68x.
+
+config PHYCORE_AM68X_RAM_SIZE_2X4GB
+        bool "2X4GB RAM"
+        help
+          Set RAM size fix to 8GB in 2x4GB configuration for phyCORE-AM68x.
+
+endchoice
