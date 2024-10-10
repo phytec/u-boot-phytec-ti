@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * phyCORE-AM68x dts file for R5 SPL
  * Copyright (C) 2023 Phytec Messtechnik GmbH
@@ -7,9 +7,7 @@
 
 /dts-v1/;
 
-#include "k3-am68-ddr-phycore-som-lp4-4266.dtsi"
 #include "k3-am68-phycore-som.dtsi"
-#include "k3-j721s2-ddr.dtsi"
 
 / {
 	chosen {
@@ -55,14 +53,6 @@
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
 		clock-frequency = <19200000>;
-		bootph-pre-ram;
-	};
-
-	memory@80000000 {
-		device_type = "memory";
-		/* 4 GB RAM */
-		reg = <0x00 0x80000000 0x00 0x80000000>,
-			<0x08 0x80000000 0x00 0x80000000>;
 		bootph-pre-ram;
 	};
 

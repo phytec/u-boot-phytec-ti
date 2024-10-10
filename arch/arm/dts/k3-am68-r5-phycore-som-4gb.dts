@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * phyCORE-AM68x dts file for R5 SPL
+ * Copyright (C) 2024 Phytec Messtechnik GmbH
+ * Author: Dominik Haller <d.haller@phytec.de>
+ */
+
+/dts-v1/;
+
+#include "k3-am68-r5-phycore-som.dtsi"
+#include "k3-am68-ddr-phycore-som-lp4-4266-4gb.dtsi"
+#include "k3-j721s2-ddr.dtsi"
+
+/ {
+
+	memory@80000000 {
+		device_type = "memory";
+		/* 4 GB RAM */
+		reg = <0x00 0x80000000 0x00 0x80000000>,
+			<0x08 0x80000000 0x00 0x80000000>;
+		bootph-pre-ram;
+	};
+};
