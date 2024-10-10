@@ -511,7 +511,7 @@
 	clock-frequency = <400000>;
 	status = "okay";
 
-	pmic@48 {
+	pmic: pmic@48 {
 		compatible = "ti,tps6594-q1";
 		reg = <0x48>;
 		ti,primary-pmic;

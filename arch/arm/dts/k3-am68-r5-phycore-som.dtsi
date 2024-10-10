@@ -67,6 +67,10 @@
 	};
 };
 
+&bucka12 {
+	bootph-pre-ram;
+};
+
 &cbass_mcu_wakeup {
 	sa3_secproxy: secproxy@44880000 {
 		bootph-pre-ram;
@@ -202,6 +206,16 @@
 &ospi0 {
 	reg = <0x0 0x47040000 0x0 0x100>,
 	      <0x0 0x50000000 0x0 0x8000000>;
+};
+
+&pmic {
+	compatible = "ti,tps659413";
+	bootph-pre-ram;
+
+	esm: esm {
+		compatible = "ti,tps659413-esm";
+		bootph-pre-ram;
+	};
 };
 
 &sms {
