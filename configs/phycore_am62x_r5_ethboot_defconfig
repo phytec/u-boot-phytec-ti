@@ -1,2 +1,4 @@
 #include <configs/phycore_am62x_r5_defconfig>
 #include <configs/am62x_r5_ethboot.config>
+
+CONFIG_SPL_STACK_R_ADDR=0x83000000
