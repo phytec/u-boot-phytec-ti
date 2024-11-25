@@ -8,6 +8,13 @@
 
 #include "k3-binman.dtsi"
 
+#ifndef CONFIG_PHYTEC_K3_KEY_BLOB_COPY
+&binman {
+		/delete-node/ custMpk;
+		/delete-node/ ti-degenerate-key;
+	};
+#endif
+
 #ifdef CONFIG_TARGET_PHYCORE_AM62X_R5
 &binman {
 	tiboot3-am62x-hs-phycore-som.bin {
@@ -18,7 +25,7 @@
 			combined;
 			dm-data;
 			sysfw-inner-cert;
-			keyfile = "custMpk.pem";
+			keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 			sw-rev = <1>;
 			content-sbl = <&u_boot_spl>;
 			content-sysfw = <&ti_fs_enc>;
@@ -64,7 +71,7 @@
 			combined;
 			dm-data;
 			sysfw-inner-cert;
-			keyfile = "custMpk.pem";
+			keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 			sw-rev = <1>;
 			content-sbl = <&u_boot_spl_fs>;
 			content-sysfw = <&ti_fs_enc_fs>;
@@ -117,7 +124,7 @@
 			content-dm-data = <&combined_dm_cfg_gp>;
 			load-dm-data = <0x43c3a800>;
 			sw-rev = <1>;
-			keyfile = "ti-degenerate-key.pem";
+			keyfile = CONFIG_PHYTEC_K3_DEGENERATE_KEY;
 		};
 		u_boot_spl_unsigned: u-boot-spl {
 			no-expanded;
@@ -159,7 +166,7 @@
 			core = "secure";
 			load = <0x40000>;
 			sw-rev = <CONFIG_K3_X509_SWRV>;
-			keyfile = "custMpk.pem";
+			keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 			countersign;
 			tifsstub;
 		};
@@ -197,7 +204,7 @@
 			core = "secure";
 			load = <0x60000>;
 			sw-rev = <CONFIG_K3_X509_SWRV>;
-			keyfile = "ti-degenerate-key.pem";
+			keyfile = CONFIG_PHYTEC_K3_DEGENERATE_KEY;
 			tifsstub;
 		};
 		tifsstub_gp: tifsstub-gp.bin {
@@ -212,6 +219,24 @@
 
 		fit {
 			images {
+
+				atf {
+					ti-secure {
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
+					};
+				};
+
+				tee {
+					ti-secure {
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
+					};
+				};
+
+				spl {
+					ti-secure {
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
+					};
+				};
 
 				tifsstub-hs {
 					description = "TIFSSTUB";
@@ -255,7 +280,7 @@
 				dm {
 					ti-secure {
 						content = <&dm>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					dm: ti-dm {
 						filename = "ti-dm.bin";
@@ -269,7 +294,7 @@
 					compression = "none";
 					ti-secure {
 						content = <&spl_am625_phyboard_lyra_dtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					spl_am625_phyboard_lyra_dtb: blob-ext {
 						filename = SPL_AM625_PHYBOARD_LYRA_DTB;
@@ -300,6 +325,9 @@
 			images {
 				uboot {
 					description = "U-Boot for phyCORE-AM62x";
+					ti-secure {
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
+					};
 				};
 
 				fdt-0 {
@@ -309,7 +337,7 @@
 					compression = "none";
 					ti-secure {
 						content = <&am625_phyboard_lyra_dtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					am625_phyboard_lyra_dtb: blob-ext {
 						filename = AM625_PHYBOARD_LYRA_DTB;
