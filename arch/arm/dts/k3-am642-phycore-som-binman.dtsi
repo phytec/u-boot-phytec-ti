@@ -8,6 +8,13 @@
 
 #include "k3-binman.dtsi"
 
+#ifndef CONFIG_PHYTEC_K3_KEY_BLOB_COPY
+&binman {
+		/delete-node/ custMpk;
+		/delete-node/ ti-degenerate-key;
+};
+#endif
+
 #ifdef CONFIG_TARGET_PHYCORE_AM64X_R5
 &binman {
 	tiboot3-am64x_sr2-hs-phycore-som.bin {
@@ -17,7 +24,7 @@
 				<&combined_sysfw_cfg>, <&sysfw_inner_cert>;
 			combined;
 			sysfw-inner-cert;
-			keyfile = "custMpk.pem";
+			keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 			sw-rev = <1>;
 			content-sbl = <&u_boot_spl>;
 			content-sysfw = <&ti_sci_enc>;
@@ -57,7 +64,7 @@
 				<&combined_sysfw_cfg_fs>, <&sysfw_inner_cert_fs>;
 			combined;
 			sysfw-inner-cert;
-			keyfile = "custMpk.pem";
+			keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 			sw-rev = <1>;
 			content-sbl = <&u_boot_spl_fs>;
 			content-sysfw = <&ti_sci_enc_fs>;
@@ -101,7 +108,7 @@
 			content-sysfw-data = <&combined_sysfw_cfg_gp>;
 			load-sysfw-data = <0x7b000>;
 			sw-rev = <1>;
-			keyfile = "ti-degenerate-key.pem";
+			keyfile = CONFIG_PHYTEC_K3_DEGENERATE_KEY;
 		};
 		u_boot_spl_unsigned: u-boot-spl {
 			no-expanded;
@@ -133,6 +140,24 @@
 			#address-cells = <1>;
 
 			images {
+				atf {
+					ti-secure {
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
+					};
+				};
+
+				tee {
+					ti-secure {
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
+					};
+				};
+
+				spl {
+					ti-secure {
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
+					};
+				};
+
 				dm {
 					blob-ext {
 						filename = "/dev/null";
@@ -146,7 +171,7 @@
 					compression = "none";
 					ti-secure {
 						content = <&spl_am642_phyboard_electra_dtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					spl_am642_phyboard_electra_dtb: blob-ext {
 						filename = SPL_AM642_PHYBOARD_ELECTRA_DTB;
@@ -177,6 +202,9 @@
 			images {
 				uboot {
 					description = "U-Boot for AM64 board";
+					ti-secure {
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
+					};
 				};
 
 				fdt-0 {
@@ -186,7 +214,7 @@
 					compression = "none";
 					ti-secure {
 						content = <&am642_phyboard_electra_dtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					am642_phyboard_electra_dtb: blob-ext {
 						filename = AM642_PHYBOARD_ELECTRA_DTB;
@@ -315,7 +343,7 @@
 					compression = "none";
 					ti-secure {
 						content = <&spl_am642_phyboard_electra_dtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					spl_am642_phyboard_electra_dtb: blob-ext {
 						filename = SPL_AM642_PHYBOARD_ELECTRA_DTB;
@@ -355,7 +383,7 @@
 					compression = "none";
 					ti-secure {
 						content = <&am642_phyboard_electra_dtb>;
-						keyfile = "custMpk.pem";
+						keyfile = CONFIG_PHYTEC_K3_MPK_KEY;
 					};
 					am642_phyboard_electra_dtb: blob-ext {
 						filename = AM642_PHYBOARD_ELECTRA_DTB;
