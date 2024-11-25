@@ -1,3 +1,7 @@
+#ifdef CONFIG_ARCH_K3
+source "board/phytec/common/k3/Kconfig"
+#endif
+
 config PHYTEC_SOM_DETECTION
 	bool "Support SoM detection for PHYTEC platforms"
 	select SPL_CRC8 if SPL
