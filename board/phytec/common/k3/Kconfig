@@ -3,3 +3,31 @@ config PHYTEC_K3_DDR_PATCH
 	help
 	   Allow to override default DDR timings prior to
 	   DDRSS driver probing.
+
+config PHYTEC_K3_KEY_BLOB_COPY
+	bool "Copy the MPK Key and the degenerate TI key to the build path"
+	default y
+	help
+	   Choose how to handle the keys
+	   If PHYTEC_K3_KEY_BLOB_COPY, then copy the keys into the u-boot directory for building
+	   This allows for compatibility with the TI dummy keys stored in u-boot.
+	   If !PHYTEC_K3_KEY_BLOB_COPY, then use the original key while building
+	   It is recommended to use the original key to avoid making copies of keys.
+
+config PHYTEC_K3_MPK_KEY
+	string "Path to customer specific MPK key"
+	default "custMpk.pem" if PHYTEC_K3_KEY_BLOB_COPY
+	default "arch/arm/mach-k3/keys/custMpk.pem" if !PHYTEC_K3_KEY_BLOB_COPY
+	help
+	   Path to the signing MPK key
+	   If PHYTEC_K3_KEY_BLOB_COPY, then path to blob copy of the original key
+	   If !PHYTEC_K3_KEY_BLOB_COPY, then path to original key
+
+config PHYTEC_K3_DEGENERATE_KEY
+	string "Path to the degenerate TI key"
+	default "ti-degenerate-key.pem" if PHYTEC_K3_KEY_BLOB_COPY
+	default "arch/arm/mach-k3/keys/ti-degenerate-key.pem" if !PHYTEC_K3_KEY_BLOB_COPY
+	help
+	   Path to the degenerate key
+	   If PHYTEC_K3_KEY_BLOB_COPY, then path to blob copy of the original key
+	   If !PHYTEC_K3_KEY_BLOB_COPY, then path to original key
