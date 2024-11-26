@@ -90,7 +90,7 @@ char * __maybe_unused phytec_get_opt(struct phytec_eeprom_data *data);
 u8 __maybe_unused phytec_get_rev(struct phytec_eeprom_data *data);
 u8 __maybe_unused phytec_get_som_type(struct phytec_eeprom_data *data);
 #if IS_ENABLED(CONFIG_OF_LIBFDT)
-int phytec_ft_board_fixup(struct phytec_eeprom_data *data, void *blob, struct bd_info *bd);
+int phytec_ft_board_fixup(struct phytec_eeprom_data *data, void *blob);
 #endif /* IS_ENABLED(CONFIG_OF_LIBFDT) */
 
 #if IS_ENABLED(CONFIG_CMD_EXTENSION)

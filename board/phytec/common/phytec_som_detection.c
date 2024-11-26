@@ -459,8 +459,7 @@ u8 __maybe_unused phytec_get_som_type(struct phytec_eeprom_data *data)
 }
 
 #if IS_ENABLED(CONFIG_OF_LIBFDT)
-int phytec_ft_board_fixup(struct phytec_eeprom_data *data, void *blob,
-			  struct bd_info *bd)
+int phytec_ft_board_fixup(struct phytec_eeprom_data *data, void *blob)
 {
 	char product_name[PHYTEC_PRODUCT_NAME_LEN] = {'\0'};
 	char part_number[PHYTEC_PART_NUMBER_LEN] = {'\0'};
@@ -570,8 +569,7 @@ inline struct phytec_api3_element * __maybe_unused
 }
 
 #if IS_ENABLED(CONFIG_OF_LIBFDT)
-inline int phytec_ft_board_fixup(struct phytec_eeprom_data *data, void *blob,
-				 struct bd_info *bd)
+inline int phytec_ft_board_fixup(struct phytec_eeprom_data *data, void *blob)
 {
 	return 0;
 }
