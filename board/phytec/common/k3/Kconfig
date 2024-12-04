@@ -40,3 +40,11 @@ config EMBED_RAUC_ENV
 	   Provides logic to select a boot partition based on environment variables
 	   and switch to the other if the boot fails.
 	   Includes include/env/phytec/rauc.env.
+
+config DOFITBOOT_DEFAULT
+	bool "Boot from a fit image"
+	default n
+	help
+	   When set to 0 we do not attempt to boot from a fit image.
+	   When set to 1 we will attempt to boot from a fit image. This config
+	   sets the dofitboot variable in the u-boot environment.
