@@ -414,8 +414,6 @@ static int k3_ddrss_ofdata_to_priv(struct udevice *dev)
 	if (ret)
 		dev_err(dev, "ddr fhs cnt not populated %d\n", ret);
 
-	ddrss->ti_ecc_enabled = dev_read_bool(dev, "ti,ecc-enable");
-
 	return ret;
 }
 
@@ -800,7 +798,9 @@ static int k3_ddrss_probe(struct udevice *dev)
 
 	k3_lpddr4_start(ddrss);
 
-	if (ddrss->ti_ecc_enabled) {
+	k3_ddrss_ddr_bank_base_size_calc(ddrss);
+
+	if (IS_ENABLED(CONFIG_K3_INLINE_ECC)) {
 		if (!ddrss->ddrss_ss_cfg) {
 			printf("%s: ss_cfg is required if ecc is enabled but not provided.",
 			       __func__);
