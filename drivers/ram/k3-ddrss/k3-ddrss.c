@@ -155,7 +155,6 @@ struct k3_ddrss_desc {
 	lpddr4_obj *driverdt;
 	lpddr4_config config;
 	lpddr4_privatedata pd;
-	struct k3_ddrss_ecc_region ecc_range;
 	struct k3_ddrss_ecc_region ecc_regions[K3_DDRSS_MAX_ECC_REGIONS];
 	u64 ecc_reserved_space;
 	bool ti_ecc_enabled;
@@ -726,30 +725,6 @@ static void k3_ddrss_ddr_bank_base_size_calc(struct k3_ddrss_desc *ddrss)
 		ddrss->ddr_ram_size += ddrss->ddr_bank_size[bank];
 }
 
-static void k3_ddrss_ddr_inline_ecc_base_size_calc(struct k3_ddrss_ecc_region *range)
-{
-	fdt_addr_t base;
-	fdt_size_t size;
-	ofnode node1;
-
-	node1 = ofnode_null();
-
-	do {
-		node1 = ofnode_by_prop_value(node1, "device_type", "ecc", 4);
-	} while (!ofnode_is_enabled(node1));
-
-	base = ofnode_get_addr_size(node1, "reg", &size);
-
-	if (base == FDT_ADDR_T_NONE) {
-		debug("%s: Failed to get ECC node reg and size\n", __func__);
-		range->start = 0;
-		range->range = 0;
-	} else {
-		range->start = base;
-		range->range = size;
-	}
-}
-
 static void k3_ddrss_ddr_reg_init(struct k3_ddrss_desc *ddrss)
 {
 	u32 v2a_ctl_reg, sdram_idx;
@@ -813,11 +788,8 @@ static void k3_ddrss_lpddr4_ecc_init(struct k3_ddrss_desc *ddrss)
 
 static int k3_ddrss_probe(struct udevice *dev)
 {
-	u64 end;
 	int ret;
 	struct k3_ddrss_desc *ddrss = dev_get_priv(dev);
-	__maybe_unused struct k3_ddrss_data *ddrss_data = (struct k3_ddrss_data *)dev_get_driver_data(dev);
-	__maybe_unused struct k3_ddrss_ecc_region *range = &ddrss->ecc_range;
 
 	debug("%s(dev=%p)\n", __func__, dev);
 
@@ -855,27 +827,9 @@ static int k3_ddrss_probe(struct udevice *dev)
 
 		k3_ddrss_lpddr4_ecc_calc_reserved_mem(ddrss);
 
-		k3_ddrss_ddr_inline_ecc_base_size_calc(range);
-		if (!range->range) {
-			/* Configure entire DDR space by default */
-			debug("%s: Defaulting to protecting entire DDR space using inline ECC\n",
-			      __func__);
-			ddrss->ecc_range.start = ddrss->ddr_bank_base[0];
-			ddrss->ecc_range.range = ddrss->ddr_ram_size - ddrss->ecc_reserved_space;
-		} else {
-			ddrss->ecc_range.start = range->start;
-			ddrss->ecc_range.range = range->range;
-		}
-
-		end = ddrss->ecc_range.start + ddrss->ecc_range.range;
-
-		if (end > (ddrss->ddr_ram_size - ddrss->ecc_reserved_space))
-			ddrss->ecc_regions[0].range = ddrss->ddr_ram_size - ddrss->ecc_reserved_space;
-		else
-			ddrss->ecc_regions[0].range = ddrss->ecc_range.range;
-
-		ddrss->ecc_regions[0].start = ddrss->ecc_range.start - ddrss->ddr_bank_base[0];
-
+		/* Always configure one region that covers full DDR space */
+		ddrss->ecc_regions[0].start = ddrss->ddr_bank_base[0] - ddrss->ddr_bank_base[0];
+		ddrss->ecc_regions[0].range = ddrss->ddr_ram_size - ddrss->ecc_reserved_space;
 		k3_ddrss_lpddr4_ecc_init(ddrss);
 	}
 
