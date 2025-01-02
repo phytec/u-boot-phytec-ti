@@ -59,7 +59,6 @@
 
 #define SINGLE_DDR_SUBSYSTEM	0x1
 #define MULTI_DDR_SUBSYSTEM	0x2
-#define MAX_MULTI_DDR 4
 
 #define MULTI_DDR_CFG0  0x00114100
 #define MULTI_DDR_CFG1  0x00114104
@@ -81,24 +80,6 @@ enum intrlv_gran {
 	GRAN_6GB,
 	GRAN_8GB,
 	GRAN_16GB
-};
-
-u64 gran_bytes[] = {
-	0x80,
-	0x200,
-	0x800,
-	0x1000,
-	0x4000,
-	0x8000,
-	0x80000,
-	0x40000000,
-	0x60000000,
-	0x80000000,
-	0xC0000000,
-	0x100000000,
-	0x180000000,
-	0x200000000,
-	0x400000000
 };
 
 enum intrlv_size {
@@ -140,13 +121,6 @@ enum emif_active {
 	EMIF_ALL
 };
 
-#define K3_DDRSS_MAX_ECC_REGIONS		3
-
-struct k3_ddrss_ecc_region {
-	u64 start;
-	u64 range;
-};
-
 struct k3_msmc {
 	enum intrlv_gran gran;
 	enum intrlv_size size;
@@ -154,7 +128,13 @@ struct k3_msmc {
 	enum emif_config config;
 	enum emif_active active;
 	u32 num_ddr;
-	struct k3_ddrss_ecc_region R0[MAX_MULTI_DDR];
+};
+
+#define K3_DDRSS_MAX_ECC_REGIONS		3
+
+struct k3_ddrss_ecc_region {
+	u64 start;
+	u64 range;
 };
 
 struct k3_ddrss_desc {
@@ -959,86 +939,6 @@ U_BOOT_DRIVER(k3_ddrss) = {
 	.priv_auto		= sizeof(struct k3_ddrss_desc),
 };
 
-#if IS_ENABLED(CONFIG_K3_MULTI_DDR)
-static int k3_msmc_calculate_r0_regions(struct k3_msmc *msmc)
-{
-	u32 n1;
-	u32 size, ret = 0;
-	u32 gran = gran_bytes[msmc->gran];
-	u32 num_ddr = msmc->num_ddr;
-	struct k3_ddrss_ecc_region *range = NULL;
-	struct k3_ddrss_ecc_region R[num_ddr];
-
-	range = kzalloc(sizeof(range), GFP_KERNEL);
-	if (!range) {
-		debug("%s: failed to allocate range\n", __func__);
-		ret = -ENOMEM;
-		return ret;
-	}
-
-	k3_ddrss_ddr_inline_ecc_base_size_calc(range);
-
-	if (!range->range) {
-		ret = -EINVAL;
-		goto range_err;
-	}
-
-	memset(R, 0, num_ddr);
-
-	/* Find the first controller in the range */
-	n1 = ((range->start / gran) % num_ddr);
-	size = range->range;
-
-	if (size < gran) {
-		R[n1].start = range->start - 0x80000000;
-		R[n1].range = range->start + range->range - 0x80000000;
-	} else {
-		u32 chunk_start_addr = range->start;
-		u32 chunk_size = range->range;
-
-		while (chunk_size > 0) {
-			u32 edge;
-			u32 end = range->start + range->range;
-
-			if ((chunk_start_addr % gran) == 0)
-				edge = chunk_start_addr + gran;
-			else
-				edge = ((chunk_start_addr + (gran - 1)) & (-gran));
-
-			if (edge > end)
-				break;
-
-			if (R[n1].start == 0)
-				R[n1].start = chunk_start_addr;
-
-			R[n1].range = edge - R[n1].start;
-			chunk_size = end - edge;
-			chunk_start_addr = edge;
-
-			if (n1 == (num_ddr - 1))
-				n1 = 0;
-			else
-				n1++;
-		}
-
-		for (int i = 0; i < num_ddr; i++)
-			R[i].start = (R[i].start - 0x80000000 - (gran * i)) / num_ddr;
-	}
-
-	for (int i = 0; i < num_ddr; i++) {
-		debug("%s: Region allocation for DDR\n", __func__);
-		debug("%s: R0 for DDRSS %d: 0x%llx\n", __func__, i, R[i].start);
-		msmc->R0[i].start = R[i].start;
-		debug("%s: R0 for DDRSS %d: 0x%llx\n", __func__, i, R[i].range);
-		msmc->R0[i].range = R[i].range;
-	}
-
-range_err:
-	free(range);
-	return ret;
-}
-#endif
-
 static int k3_msmc_set_config(struct k3_msmc *msmc)
 {
 	u32 ddr_cfg0 = 0;
@@ -1118,17 +1018,6 @@ static int k3_msmc_probe(struct udevice *dev)
 	}
 	msmc->num_ddr = ret;
 
-#if IS_ENABLED(CONFIG_K3_MULTI_DDR) && IS_ENABLED(CONFIG_K3_INLINE_ECC)
-	ret = k3_msmc_calculate_r0_regions(msmc);
-	if (ret) {
-		/* Default to enabling inline ECC for entire DDR region */
-		debug("%s: calculation of inline ECC regions failed, defaulting to entire region\n",
-		      __func__);
-
-		/* Use first R0 entry as a flag to denote MSMC calculation failure */
-		msmc->R0[0].start = -1;
-	}
-#endif
 	return 0;
 }
 
