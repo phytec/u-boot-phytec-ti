@@ -127,7 +127,6 @@ struct k3_msmc {
 	enum ecc_enable enable;
 	enum emif_config config;
 	enum emif_active active;
-	u32 num_ddr;
 };
 
 #define K3_DDRSS_MAX_ECC_REGIONS		3
@@ -1010,13 +1009,6 @@ static int k3_msmc_probe(struct udevice *dev)
 		dev_err(dev, "error setting msmc config");
 		return -EINVAL;
 	}
-
-	ret = device_get_child_count(dev);
-	if (ret <= 0) {
-		dev_err(dev, "no child ddr nodes present");
-		return -EINVAL;
-	}
-	msmc->num_ddr = ret;
 
 	return 0;
 }
