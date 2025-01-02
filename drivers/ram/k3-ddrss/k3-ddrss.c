@@ -18,9 +18,10 @@
 #include <log.h>
 #include <asm/io.h>
 #include <power-domain.h>
+#include <regmap.h>
+#include <syscon.h>
 #include <wait_bit.h>
 #include <power/regulator.h>
-#include <mach/lpm.h>
 
 #include "lpddr4_obj_if.h"
 #include "lpddr4_if.h"
@@ -57,6 +58,16 @@
 #define DDRSS_V2A_INT_SET_REG_ECC1BERR_EN	BIT(3)
 #define DDRSS_V2A_INT_SET_REG_ECC2BERR_EN	BIT(4)
 #define DDRSS_V2A_INT_SET_REG_ECCM1BERR_EN	BIT(5)
+
+#define K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL			0x80d0
+#define K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL_DATA_RET_LD		BIT(31)
+#define K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL_DATA_RETENTION_MASK	GENMASK(3, 0)
+
+#define K3_WKUP_CTRL_MMR_CANUART_WAKE_STAT1			0x1830c
+#define K3_WKUP_CTRL_MMR_CANUART_WAKE_STAT1_CANUART_IO_MODE	BIT(0)
+
+#define K3_WKUP_CTRL_MMR_CANUART_WAKE_OFF_MODE_STAT		0x18318
+#define K3_WKUP_CTRL_MMR_CANUART_WAKE_OFF_MODE_STAT_MW		0x555555
 
 #define SINGLE_DDR_SUBSYSTEM	0x1
 #define MULTI_DDR_SUBSYSTEM	0x2
@@ -922,6 +933,69 @@ static void k3_ddrss_lpm_resume(struct k3_ddrss_desc *ddrss)
 		;
 }
 
+#if IS_ENABLED(CONFIG_REGMAP)
+static void k3_ddrss_deassert_retention(struct regmap *wkup_conf)
+{
+	regmap_update_bits(wkup_conf,
+			   K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL,
+			   K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL_DATA_RET_LD |
+			   K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL_DATA_RETENTION_MASK,
+			   0);
+	regmap_update_bits(wkup_conf,
+			   K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL,
+			   K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL_DATA_RET_LD,
+			   K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL_DATA_RET_LD);
+
+	while (true) {
+		u32 val;
+
+		regmap_read(wkup_conf, K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL, &val);
+		if (val & K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL_DATA_RET_LD)
+			break;
+	}
+
+	regmap_update_bits(wkup_conf,
+			   K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL,
+			   K3_WKUP_CTRL_MMR0_DDR16SS_PMCTRL_DATA_RET_LD,
+			   0);
+}
+
+static bool k3_ddrss_wkup_conf_canuart_wakeup_active(struct regmap *wkup_conf)
+{
+	u32 active;
+
+	regmap_read(wkup_conf, K3_WKUP_CTRL_MMR_CANUART_WAKE_STAT1, &active);
+
+	return !!(active & K3_WKUP_CTRL_MMR_CANUART_WAKE_STAT1_CANUART_IO_MODE);
+}
+
+static bool k3_ddrss_wkup_conf_canuart_magic_word_set(struct regmap *wkup_conf)
+{
+	u32 magic_word;
+
+	regmap_read(wkup_conf, K3_WKUP_CTRL_MMR_CANUART_WAKE_OFF_MODE_STAT,
+		    &magic_word);
+
+	return magic_word == K3_WKUP_CTRL_MMR_CANUART_WAKE_OFF_MODE_STAT_MW;
+}
+
+static bool k3_ddrss_wkup_conf_boot_is_resume(struct regmap *wkup_conf)
+{
+	return IS_ENABLED(CONFIG_K3_IODDR) &&
+		k3_ddrss_wkup_conf_canuart_wakeup_active(wkup_conf) &&
+		k3_ddrss_wkup_conf_canuart_magic_word_set(wkup_conf);
+}
+#else
+static void k3_ddrss_deassert_retention(struct regmap *wkup_conf)
+{
+}
+
+static bool k3_ddrss_wkup_conf_boot_is_resume(struct regmap *wkup_conf)
+{
+	return false;
+}
+#endif
+
 static int k3_ddrss_probe(struct udevice *dev)
 {
 	u64 end;
@@ -930,9 +1004,14 @@ static int k3_ddrss_probe(struct udevice *dev)
 	__maybe_unused struct k3_ddrss_data *ddrss_data = (struct k3_ddrss_data *)dev_get_driver_data(dev);
 	__maybe_unused struct k3_ddrss_ecc_region *range = &ddrss->ecc_range;
 	__maybe_unused struct k3_msmc *msmc_parent = NULL;
+	struct regmap *wkup_conf = NULL;
 	bool is_lpm_resume;
 
-	is_lpm_resume = wkup_ctrl_is_lpm_exit();
+#if IS_ENABLED(CONFIG_SYSCON)
+	wkup_conf = syscon_regmap_lookup_by_phandle(dev, "ti,wkup-conf");
+#endif
+	is_lpm_resume = !IS_ERR_OR_NULL(wkup_conf) &&
+		k3_ddrss_wkup_conf_boot_is_resume(wkup_conf);
 
 	debug("%s(dev=%p)\n", __func__, dev);
 
@@ -963,7 +1042,7 @@ static int k3_ddrss_probe(struct udevice *dev)
 		return ret;
 
 	if (is_lpm_resume)
-		wkup_ctrl_ddrss_pmctrl_deassert_retention();
+		k3_ddrss_deassert_retention(wkup_conf);
 
 	k3_lpddr4_start(ddrss);
 
