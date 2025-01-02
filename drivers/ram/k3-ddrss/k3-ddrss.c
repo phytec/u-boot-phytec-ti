@@ -34,11 +34,6 @@
 #define DDRSS_V2A_CTL_REG			0x0020
 #define DDRSS_ECC_CTRL_REG			0x0120
 
-#define DDRSS_V2A_CTL_REG_SDRAM_IDX_CALC(x)	((ilog2(x) - 16) << 5)
-#define DDRSS_V2A_CTL_REG_SDRAM_IDX_MASK	(~(0x1F << 0x5))
-#define DDRSS_V2A_CTL_REG_REGION_IDX_MASK	(~(0X1F))
-
-#define DDRSS_ECC_CTRL_REG_DEFAULT_VAL		0x0
 #define DDRSS_ECC_CTRL_REG_ECC_EN		BIT(0)
 #define DDRSS_ECC_CTRL_REG_RMW_EN		BIT(1)
 #define DDRSS_ECC_CTRL_REG_ECC_CK		BIT(2)
@@ -725,21 +720,6 @@ static void k3_ddrss_ddr_bank_base_size_calc(struct k3_ddrss_desc *ddrss)
 		ddrss->ddr_ram_size += ddrss->ddr_bank_size[bank];
 }
 
-static void k3_ddrss_ddr_reg_init(struct k3_ddrss_desc *ddrss)
-{
-	u32 v2a_ctl_reg, sdram_idx;
-
-	sdram_idx = DDRSS_V2A_CTL_REG_SDRAM_IDX_CALC(ddrss->ddr_ram_size);
-	v2a_ctl_reg = readl(ddrss->ddrss_ss_cfg + DDRSS_V2A_CTL_REG);
-	v2a_ctl_reg = (v2a_ctl_reg & DDRSS_V2A_CTL_REG_SDRAM_IDX_MASK) | sdram_idx;
-
-	if (IS_ENABLED(CONFIG_SOC_K3_AM642))
-		v2a_ctl_reg = (v2a_ctl_reg & DDRSS_V2A_CTL_REG_REGION_IDX_MASK) | 0xF;
-
-	writel(v2a_ctl_reg, ddrss->ddrss_ss_cfg + DDRSS_V2A_CTL_REG);
-	writel(DDRSS_ECC_CTRL_REG_DEFAULT_VAL, ddrss->ddrss_ss_cfg + DDRSS_ECC_CTRL_REG);
-}
-
 static void k3_ddrss_lpddr4_ecc_calc_reserved_mem(struct k3_ddrss_desc *ddrss)
 {
 	fdtdec_setup_mem_size_base_lowest();
@@ -802,9 +782,11 @@ static int k3_ddrss_probe(struct udevice *dev)
 	if (ret)
 		return ret;
 
-	k3_ddrss_ddr_bank_base_size_calc(ddrss);
-
-	k3_ddrss_ddr_reg_init(ddrss);
+#ifdef CONFIG_K3_AM64_DDRSS
+	/* AM64x supports only up to 2 GB SDRAM */
+	writel(0x000001EF, ddrss->ddrss_ss_cfg + DDRSS_V2A_CTL_REG);
+	writel(0x0, ddrss->ddrss_ss_cfg + DDRSS_ECC_CTRL_REG);
+#endif
 
 	ddrss->driverdt = lpddr4_getinstance();
 
