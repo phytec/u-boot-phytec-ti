@@ -101,6 +101,8 @@ int dram_init_banksize(void)
 	if (!IS_ENABLED(CONFIG_CPU_V7R))
 		return fdtdec_setup_memory_banksize();
 
+	memset(gd->bd->bi_dram, 0, sizeof(gd->bd->bi_dram[0]) * CONFIG_NR_DRAM_BANKS);
+
 	ram_size = phytec_get_am62_ddr_size_default();
 	switch (ram_size) {
 	case EEPROM_RAM_SIZE_1GB:
@@ -179,6 +181,25 @@ int update_ddrss_timings(void)
 
 int do_board_detect(void)
 {
+	int ret;
+	void *fdt = (void *)gd->fdt_blob;
+	int bank;
+
+	u64 start[CONFIG_NR_DRAM_BANKS];
+	u64 size[CONFIG_NR_DRAM_BANKS];
+
+	dram_init();
+	dram_init_banksize();
+
+	for (bank = 0; bank < CONFIG_NR_DRAM_BANKS; bank++) {
+		start[bank] = gd->bd->bi_dram[bank].start;
+		size[bank] = gd->bd->bi_dram[bank].size;
+	}
+
+	ret = fdt_fixup_memory_banks(fdt, start, size, CONFIG_NR_DRAM_BANKS);
+	if (ret)
+		return ret;
+
 	return update_ddrss_timings();
 }
 #endif
