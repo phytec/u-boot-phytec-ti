@@ -994,7 +994,7 @@ U_BOOT_DRIVER(k3_ddrss) = {
 	.priv_auto		= sizeof(struct k3_ddrss_desc),
 };
 
-#if IS_ENABLED(CONFIG_K3_MULTI_DDR) && IS_ENABLED(CONFIG_K3_INLINE_ECC)
+#if IS_ENABLED(CONFIG_K3_MULTI_DDR)
 static int k3_msmc_calculate_r0_regions(struct k3_msmc *msmc)
 {
 	u32 n1;
