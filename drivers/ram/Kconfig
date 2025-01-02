@@ -57,8 +57,6 @@ config K3_AM654_DDRSS
 config K3_DDRSS
 	bool "Enable K3 DDRSS support"
 	depends on RAM
-	select SYSCON if K3_IODDR
-	select SPL_SYSCON if SPL && K3_IODDR
 
 choice
 	depends on K3_DDRSS
