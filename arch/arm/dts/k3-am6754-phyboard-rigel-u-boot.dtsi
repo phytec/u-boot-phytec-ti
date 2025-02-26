@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: GPL-2.0-only OR MIT
+/*
+ * Common AM67x phyBOARD Rigel dts file for SPLs
+ * Copyright (C) 2025 PHYTEC America LLC - https://www.phytec.com/
+ */
+
+#include "k3-am67-phycore-som-binman.dtsi"
+
+/ {
+	chosen {
+		stdout-path = "serial2:115200n8";
+		tick-timer = &main_timer0;
+	};
+};
+
+&cpsw_port1 {
+	ti,syscon-efuse = <&cpsw_mac_syscon 0x0>;
+};
+
+&dmsc {
+	bootph-pre-ram;
+};
+
+&main_bcdma {
+	bootph-pre-ram;
+	reg = <0x00 0x485c0100 0x00 0x100>,
+	      <0x00 0x4c000000 0x00 0x20000>,
+	      <0x00 0x4a820000 0x00 0x20000>,
+	      <0x00 0x4aa40000 0x00 0x20000>,
+	      <0x00 0x4bc00000 0x00 0x100000>,
+	      <0x00 0x48600000 0x00 0x8000>,
+	      <0x00 0x484a4000 0x00 0x2000>,
+	      <0x00 0x484c2000 0x00 0x2000>;
+	reg-names = "gcfg", "bchanrt", "rchanrt", "tchanrt",
+		    "ringrt", "cfg", "tchan", "rchan";
+};
+
+&ospi0 {
+	flash@0 {
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "ospi.tiboot3";
+				reg = <0x00000 0x80000>;
+			};
+			partition@80000 {
+				label = "ospi.tispl";
+				reg = <0x080000 0x200000>;
+			};
+			partition@280000 {
+				label = "ospi.u-boot";
+				reg = <0x280000 0x400000>;
+			};
+			partition@680000 {
+				label = "ospi.env";
+				reg = <0x680000 0x40000>;
+			};
+			partition@6c0000 {
+				label = "ospi.env.backup";
+				reg = <0x6c0000 0x40000>;
+			};
+		};
+	};
+};
+
+&usb0 {
+	dr_mode = "peripheral";
+};
+
+&usbss1 {
+	status = "disabled";
+};
+
+&usb1 {
+	status = "disabled";
+};
+
+&wkup_conf {
+	cpsw_mac_syscon: ethernet-mac-syscon@200 {
+		compatible = "ti,am62p-cpsw-mac-efuse", "syscon";
+		reg = <0x200 0x8>;
+	};
+};

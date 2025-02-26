@@ -1,0 +1,14 @@
+phyCORE-AM67x
+M:	Nathan Morrisson <nmorrisson@phytec.com>
+M:	Wadim Egorov <w.egorov@phytec.de>
+S:	Maintained
+F:	arch/arm/dts/k3-am67-phycore-som-ddr4-4gb.dtsi
+F:	arch/arm/dts/k3-am67-phycore-som.dtsi
+F:	arch/arm/dts/k3-am6754-phyboard-rigel-u-boot.dtsi
+F:	arch/arm/dts/k3-am6754-phyboard-rigel.dts
+F:	arch/arm/dts/k3-am67-phycore-som-binman.dtsi
+F:	arch/arm/dts/k3-am6754-r5-phycore-som.dts
+F:	board/phytec/phycore_am67x
+F:	configs/phycore_am67x_a53_defconfig
+F:	configs/phycore_am67x_r5_defconfig
+F:	include/configs/phycore_am67x.h

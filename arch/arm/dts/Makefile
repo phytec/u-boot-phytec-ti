@@ -1432,7 +1432,9 @@ dtb-$(CONFIG_SOC_K3_J784S4) += k3-am69-sk.dtb \
 				   k3-j742s2-r5-evm.dtb
 
 dtb-$(CONFIG_SOC_K3_J722S) += k3-j722s-evm.dtb \
-			      k3-j722s-r5-evm.dtb
+			      k3-j722s-r5-evm.dtb \
+			      k3-am6754-phyboard-rigel.dtb \
+			      k3-am6754-r5-phycore-som.dtb
 
 dtb-$(CONFIG_SOC_K3_AM642) += k3-am642-evm.dtb \
 			      k3-am642-r5-evm.dtb \
