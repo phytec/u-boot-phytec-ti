@@ -32,3 +32,4 @@ obj-y += common.o security.o
 obj-$(CONFIG_SOC_K3_AM625) += am62x/
 obj-$(CONFIG_SOC_K3_AM62A7) += am62ax/
 obj-$(CONFIG_SOC_K3_AM642) += am64x/
+obj-$(CONFIG_SOC_K3_J722S) += j722s/
