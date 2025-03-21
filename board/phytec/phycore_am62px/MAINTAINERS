@@ -1,0 +1,13 @@
+phyCORE-AM62Px
+M:	John Ma <jma@phytec.com>
+M:	Wadim Egorov <w.egorov@phytec.de>
+S:	Maintained
+F:	arch/arm/dts/k3-am62p5-phycore-som.dtsi
+F:	arch/arm/dts/k3-am62p5-phyboard-lynx-u-boot.dtsi
+F:	arch/arm/dts/k3-am62p5-phyboard-lynx.dts
+F:	arch/arm/dts/k3-am62p-phycore-som-binman.dtsi
+F:	arch/arm/dts/k3-am62p5-r5-phycore-som.dts
+F:	board/phytec/phycore_am62px/
+F:	configs/phycore_am62px_a53_defconfig
+F:	configs/phycore_am62px_r5_defconfig
+F:	include/configs/phycore_am62px.h
