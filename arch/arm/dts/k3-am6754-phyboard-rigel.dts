@@ -63,6 +63,15 @@
 		};
 	};
 
+	pcie_refclk0: pcie-refclk0 {
+		compatible = "gpio-gate-clock";
+		pinctrl-names = "default";
+		pinctrl-0 = <&main_pcie_usb_sel_pins_default>;
+		clocks = <&serdes_refclk>;
+		#clock-cells = <0>;
+		enable-gpios = <&main_gpio0 22 GPIO_ACTIVE_LOW>;
+	};
+
 	vcc_1v8: regulator-vcc-1v8 {
 		compatible = "regulator-fixed";
 		regulator-name = "VCC_1V8";
@@ -183,6 +192,18 @@
 			J722S_IOPAD(0x0240, PIN_INPUT_PULLUP, 0)	/* (B24) MMC1_SDCD */
 		>;
 		bootph-all;
+	};
+
+	main_pcie_pins_default: main-pcie-pins-default {
+		pinctrl-single,pins = <
+			J722S_IOPAD(0x07c, PIN_INPUT, 7)	/* (T23) GPMC0_CLK.GPIO0_31 */
+		>;
+	};
+
+	main_pcie_usb_sel_pins_default: main-pcie-usb-sel-pins-default {
+		pinctrl-single,pins = <
+			J722S_IOPAD(0x058, PIN_INPUT, 7)	/* (T22) GPMC0_AD7.GPIO0_22 */
+		>;
 	};
 
 	main_uart0_pins_default: main-uart0-default-pins {
@@ -399,6 +420,16 @@
 	status = "okay";
 };
 
+&pcie0_rc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&main_pcie_pins_default>;
+	num-lanes = <1>;
+	phys = <&serdes1_pcie_link>;
+	phy-names = "pcie-phy";
+	reset-gpios = <&main_gpio0 31 GPIO_ACTIVE_HIGH>;
+	status = "okay";
+};
+
 &oldi1_dss1 {
 	status = "okay";
 };
@@ -416,7 +447,8 @@
 };
 
 &serdes0_ln_ctrl {
-	idle-states = <J722S_SERDES0_LANE0_USB>;
+	idle-states = <J722S_SERDES0_LANE0_USB>,
+		      <J722S_SERDES1_LANE0_PCIE0_LANE0>;
 };
 
 &serdes0 {
@@ -429,6 +461,20 @@
 		cdns,phy-type = <PHY_TYPE_USB3>;
 		resets = <&serdes_wiz0 1>;
 	};
+};
+
+&serdes1 {
+	serdes1_pcie_link: phy@0 {
+		reg = <0>;
+		cdns,num-lanes = <1>;
+		#phy-cells = <0>;
+		cdns,phy-type = <PHY_TYPE_PCIE>;
+		resets = <&serdes_wiz1 1>;
+	};
+};
+
+&serdes_wiz1 {
+	clocks = <&k3_clks 280 0>, <&k3_clks 280 1>, <&pcie_refclk0>;
 };
 
 &usbss0 {
