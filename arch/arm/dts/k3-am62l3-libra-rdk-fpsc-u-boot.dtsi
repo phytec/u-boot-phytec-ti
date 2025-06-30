@@ -17,3 +17,7 @@
 &scmi {
 	bootph-all;
 };
+
+&usb0 {
+	dr_mode = "peripheral";
+};
