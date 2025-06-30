@@ -16,8 +16,16 @@ config TARGET_AM62L3_EVM
 	select OF_UPSTREAM
 	select OF_SYSTEM_SETUP
 
+config TARGET_PHYCORE_AM62LX
+	bool "PHYTEC phyCORE-AM62Lx"
+	select ARM64
+	select BINMAN
+	select OF_UPSTREAM
+	select OF_SYSTEM_SETUP
+
 endchoice
 
 source "board/ti/am62lx/Kconfig"
+source "board/phytec/phycore_am62lx/Kconfig"
 
 endif
