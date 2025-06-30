@@ -12,11 +12,13 @@ extern struct phytec_eeprom_data eeprom_data;
 
 #if IS_ENABLED(CONFIG_PHYTEC_AM62_SOM_DETECTION) || \
 	IS_ENABLED(CONFIG_PHYTEC_AM62A_SOM_DETECTION) || \
+	IS_ENABLED(CONFIG_PHYTEC_AM62L_SOM_DETECTION) || \
 	IS_ENABLED(CONFIG_PHYTEC_AM64_SOM_DETECTION)
 
 /* Check if the SoM is actually one of the following products:
  * - phyCORE-AM62x
  * - phyCORE-AM62Ax
+ * - phyCORE-AM62Lx
  * - phyCORE-AM64x
  *
  * Returns 0 in case it's a known SoM. Otherwise, returns -1.
@@ -44,6 +46,9 @@ int phytec_am6_detect(struct phytec_eeprom_data *data)
 		return 0;
 
 	if (som == PHYTEC_AM62AX_SOM && soc_is_am62ax())
+		return 0;
+
+	if (som == PHYTEC_AM62LX_SOM && soc_is_am62lx())
 		return 0;
 
 	if (som == PHYTEC_AM64X_SOM && soc_is_am64x())
