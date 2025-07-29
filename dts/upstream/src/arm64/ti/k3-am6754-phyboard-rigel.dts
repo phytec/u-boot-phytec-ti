@@ -194,6 +194,7 @@
 			J722S_IOPAD(0x01e8, PIN_INPUT_PULLUP, 0)	/* (C24) I2C1_SCL */
 			J722S_IOPAD(0x01ec, PIN_INPUT_PULLUP, 0)	/* (A22) I2C1_SDA */
 		>;
+		bootph-all;
 	};
 
 	main_mcan0_pins_default: main-mcan0-default-pins {
@@ -540,6 +541,10 @@
 	};
 };
 
+&serdes_wiz0 {
+	status = "okay";
+};
+
 &serdes1 {
 	status = "okay";
 
@@ -554,6 +559,7 @@
 
 &serdes_wiz1 {
 	clocks = <&k3_clks 280 0>, <&k3_clks 280 1>, <&pcie_refclk0>;
+	status = "okay";
 };
 
 &usbss0 {
