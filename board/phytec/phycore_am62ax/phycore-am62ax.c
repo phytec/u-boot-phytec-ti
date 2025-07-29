@@ -8,6 +8,7 @@
 #include <asm/io.h>
 #include <spl.h>
 #include <fdt_support.h>
+#include <mach/k3-ddr.h>
 
 #include "../common/am6_som_detection.h"
 
@@ -18,7 +19,13 @@ int board_init(void)
 
 int dram_init(void)
 {
-	return fdtdec_setup_mem_size_base();
+	int ret;
+
+	ret = fdtdec_setup_mem_size_base();
+	if (ret)
+		return ret;
+
+	return k3_mem_map_init();
 }
 
 int dram_init_banksize(void)
