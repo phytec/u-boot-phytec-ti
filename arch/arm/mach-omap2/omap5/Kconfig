@@ -47,6 +47,7 @@ config TARGET_PHYCORE_AM57X
 	select CMD_DDR3
 	select DRA7XX
 	select PHYS_64BIT
+	select TI_EDMA3
 	imply DM_THERMAL
 	imply SCSI
 	imply SPL_THERMAL
