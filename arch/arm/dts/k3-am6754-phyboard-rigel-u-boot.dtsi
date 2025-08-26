@@ -101,14 +101,6 @@
 	dr_mode = "peripheral";
 };
 
-&usbss1 {
-	status = "disabled";
-};
-
-&usb1 {
-	status = "disabled";
-};
-
 &wkup_conf {
 	cpsw_mac_syscon: ethernet-mac-syscon@200 {
 		compatible = "ti,am62p-cpsw-mac-efuse", "syscon";
