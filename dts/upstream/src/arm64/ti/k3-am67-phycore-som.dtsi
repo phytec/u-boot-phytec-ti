@@ -358,11 +358,6 @@
 	serial_flash: flash@0 {
 		compatible = "jedec,spi-nor";
 		reg = <0x0>;
-		/*
-		 * HACK: Use a reset GPIO for 1623.0 SoMs because
-		 * there is a missing pullup resistor on the reset.
-		 */
-		reset-gpios = <&main_gpio0 14 GPIO_ACTIVE_LOW>;
 		spi-tx-bus-width = <8>;
 		spi-rx-bus-width = <8>;
 		spi-max-frequency = <25000000>;
@@ -470,9 +465,9 @@
 		};
 	};
 
-	vdd_core: regulator-vdd-core@40 {
+	vdd_core: regulator-vdd-core@44 {
 		compatible = "ti,tps62873";
-		reg = <0x40>;
+		reg = <0x44>;
 		bootph-pre-ram;
 		regulator-name = "VDD_CORE";
 		regulator-min-microvolt = <850000>;
