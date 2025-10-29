@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-2.0+
+#
+# Copyright (C) 2025 PHYTEC America LLC - https://www.phytec.com/
+#
+
+if TARGET_PHYCORE_AM67X_R5 || TARGET_PHYCORE_AM67X_A53
+
+config SYS_BOARD
+       default "phycore_am67x"
+
+config SYS_VENDOR
+       default "phytec"
+
+config SYS_CONFIG_NAME
+       default "phycore_am67x"
+
+source "board/phytec/common/Kconfig"
+
+endif
+
+if TARGET_PHYCORE_AM67X_R5
+
+config SPL_LDSCRIPT
+	default "arch/arm/mach-omap2/u-boot-spl.lds"
+
+endif
