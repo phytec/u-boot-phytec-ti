@@ -232,6 +232,7 @@ static int distro_efi_try_bootflow_files(struct udevice *dev,
 
 		ret = bootmeth_common_read_file(dev, bflow, overlay_file,
 						overlay_addr,
+						(enum bootflow_img_t)IH_TYPE_FLATDT,
 						&size);
 		if (ret) {
 			log_debug("Failed loading overlay %s\n", overlay_file);
