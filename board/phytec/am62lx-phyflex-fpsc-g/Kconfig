@@ -1,0 +1,23 @@
+# SPDX-License-Identifier:     GPL-2.0+
+#
+# Copyright (C) 2025 PHYTEC Messtechnik GmbH
+# Author: Dominik Haller <d.haller@phytec.de>
+
+if TARGET_PHYFLEX_AM62LX
+
+config SYS_BOARD
+       default "am62lx-phyflex-fpsc-g"
+
+config SYS_VENDOR
+       default "phytec"
+
+config SYS_CONFIG_NAME
+       default "am62lx_phyflex_fpsc_g"
+
+config ENV_SOURCE_FILE
+       default "am62lx_phyflex_fpsc_g"
+
+source "board/phytec/common/Kconfig"
+source "board/phytec/common/k3/Kconfig"
+
+endif
