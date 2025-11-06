@@ -79,6 +79,12 @@ static u8 dram_get_size(void)
 	struct phytec_eeprom_data data;
 	int ret;
 
+	if (IS_ENABLED(CONFIG_PHYFLEX_AM62LX_RAM_SIZE_FIX)) {
+		if (IS_ENABLED(CONFIG_PHYFLEX_AM62LX_RAM_SIZE_1GB))
+			return EEPROM_RAM_SIZE_1GB;
+		else if (IS_ENABLED(CONFIG_PHYFLEX_AM62LX_RAM_SIZE_2GB))
+			return EEPROM_RAM_SIZE_2GB;
+	}
 	ret = phytec_eeprom_data_setup(&data, CONFIG_EEPROM_BUS, EEPROM_ADDR);
 	if (!ret && data.valid)
 		return phytec_get_am6_ddr_size(&data);
