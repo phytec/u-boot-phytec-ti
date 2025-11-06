@@ -17,6 +17,31 @@ config SYS_CONFIG_NAME
 config ENV_SOURCE_FILE
        default "am62lx_phyflex_fpsc_g"
 
+config PHYFLEX_AM62LX_RAM_SIZE_FIX
+        bool "Set phyFLEX-AM62Lx RAM size instead of detecting"
+        default false
+        help
+          RAM size is automatic being detected with the help of
+          the EEPROM introspection data. Set RAM size to a fixed value
+          instead.
+
+choice
+        prompt "phyFLEX-AM62Lx RAM size"
+        depends on PHYFLEX_AM62LX_RAM_SIZE_FIX
+        default PHYFLEX_AM62LX_RAM_SIZE_1GB
+
+config PHYFLEX_AM62LX_RAM_SIZE_1GB
+        bool "1GB RAM"
+        help
+          Set RAM size to 1GB for phyFLEX-AM62Lx.
+
+config PHYFLEX_AM62LX_RAM_SIZE_2GB
+        bool "2GB RAM"
+        help
+          Set RAM size to 2GB for phyFLEX-AM62Lx.
+
+endchoice
+
 source "board/phytec/common/Kconfig"
 source "board/phytec/common/k3/Kconfig"
 
