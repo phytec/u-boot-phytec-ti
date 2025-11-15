@@ -48,7 +48,7 @@ int board_init(void)
 	return 0;
 }
 
-#if defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_SPL_BUILD) && !IS_ENABLED(CONFIG_TARGET_PHYCORE_AM62PX_R5)
 void spl_perform_fixups(struct spl_image_info *spl_image)
 {
 	if (IS_ENABLED(CONFIG_K3_DDRSS) && IS_ENABLED(CONFIG_K3_INLINE_ECC))
