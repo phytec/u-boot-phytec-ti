@@ -61,7 +61,7 @@ void spl_board_init(void)
 	       MCU_CTRL_DEVICE_CLKOUT_32K_CTRL);
 }
 
-#if defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_SPL_BUILD) && !IS_ENABLED(CONFIG_TARGET_PHYCORE_AM67X_R5)
 void spl_perform_fixups(struct spl_image_info *spl_image)
 {
 	if (IS_ENABLED(CONFIG_K3_DDRSS) && IS_ENABLED(CONFIG_K3_INLINE_ECC))
