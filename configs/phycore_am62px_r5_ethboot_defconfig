@@ -1,4 +1,4 @@
-#include<configs/phycore_am62px_r5_defconfig>
+#include <configs/phycore_am62px_r5_defconfig>
 
 CONFIG_SPL_GPIO=y
 CONFIG_SPL_BOARD_INIT=y
