@@ -56,7 +56,9 @@ void spl_perform_fixups(struct spl_image_info *spl_image)
 	else
 		fixup_memory_node(spl_image);
 }
+#endif
 
+#if IS_ENABLED(CONFIG_SPL_BOARD_INIT)
 void spl_board_init(void)
 {
 	u32 val;
