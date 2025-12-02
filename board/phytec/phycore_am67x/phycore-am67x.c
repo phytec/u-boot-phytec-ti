@@ -47,6 +47,7 @@ int board_init(void)
 	return 0;
 }
 
+#if IS_ENABLED(CONFIG_SPL_BOARD_INIT)
 void spl_board_init(void)
 {
 	u32 val;
@@ -60,6 +61,7 @@ void spl_board_init(void)
 	writel(MCU_CTRL_DEVICE_CLKOUT_LFOSC_SELECT_VAL,
 	       MCU_CTRL_DEVICE_CLKOUT_32K_CTRL);
 }
+#endif
 
 #if defined(CONFIG_SPL_BUILD) && !IS_ENABLED(CONFIG_TARGET_PHYCORE_AM67X_R5)
 void spl_perform_fixups(struct spl_image_info *spl_image)
