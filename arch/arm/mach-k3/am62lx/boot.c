@@ -80,3 +80,37 @@ u32 get_boot_device(void)
 		return get_primary_bootmedia(devstat);
 	return get_backup_bootmedia(devstat);
 }
+
+const char *get_reset_reason(void)
+{
+	u32 reset_reason = readl(CTRLMMR_WKUP_RST_SRC);
+
+	/* After reading reset source register, software must clear it */
+	if (reset_reason)
+		writel(reset_reason, CTRLMMR_WKUP_RST_SRC);
+
+	switch (reset_reason) {
+	case 0:
+		return "POR";
+	case RST_SRC_RESET_PIN:
+		return "RESETz";
+	case RST_SRC_SW_WARM_RST:
+		return "SW_WARM";
+	case RST_SRC_SMS_COLD_RST:
+		return "SMS_COLD";
+	case RST_SRC_SMS_WARM_RST:
+		return "SMS_WARM";
+	case RST_SRC_DM_WDT0_RST:
+		return "WDOG0";
+	case RST_SRC_DM_WDT1_RST:
+		return "WDOG1";
+	case RST_SRC_THERMAL_RST:
+		return "THERMAL";
+	case RST_SRC_DEBUG_RST:
+		return "DEBUG";
+	case RST_SRC_DDRSS_RST:
+		return "DDRSS";
+	}
+
+	return "UNKNOWN";
+}
