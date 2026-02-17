@@ -34,6 +34,23 @@
 		standby-gpios = <&gpio_exp0 7 GPIO_ACTIVE_HIGH>;
 	};
 
+	usb0_connector: connector {
+		compatible ="gpio-usb-b-connector", "usb-c-connector";
+		label = "USB-C";
+		data-role = "dual";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&main_usbc_power_pins_default>;
+
+		id-gpios = <&main_gpio1 50 GPIO_ACTIVE_HIGH>;
+
+		port {
+			usb0_con: endpoint {
+				remote-endpoint = <&usb0_ep>;
+			};
+		};
+	};
+
 	hdmi0: connector-hdmi {
 		compatible = "hdmi-connector";
 		label = "hdmi";
@@ -306,9 +323,9 @@
 		>;
 	};
 
-	usb_pd_int_pins_default: usb-pd-int-default-pins {
+	main_usbc_power_pins_default: main-usbc-power-default-pins {
 		pinctrl-single,pins = <
-			AM62PX_IOPAD(0x0088, PIN_INPUT, 7) /* (R24) GPMC0_OEn_REn.GPIO0_33 */
+			AM62PX_IOPAD(0x0254, PIN_INPUT, 7) /* (G22) USB0_DRVVBUS.GPIO1_50 */
 		>;
 	};
 };
@@ -336,18 +353,33 @@
 };
 
 &dss0 {
-	bootph-all;
+	status = "disabled";
+};
+
+&dss1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&main_dpi_pins_default>;
+	clocks = <&k3_clks 232 8>,
+		 <&k3_clks 232 0>,
+		 <&k3_clks 232 4>;
+
+	assigned-clocks = <&k3_clks 241 0>,	/* DSS1-VP0 */
+			  <&k3_clks 240 0>,	/* DSS1-VP1 */
+			  <&k3_clks 245 0>;	/* DPI Output */
+
+	assigned-clock-parents = <&k3_clks 241 2>,	/* PLL 17 HDMI */
+				 <&k3_clks 240 1>,	/* PLL 18 DSI */
+				 <&k3_clks 245 2>;	/* DSS1-DPI0 */
+
 	status = "okay";
 };
 
-&dss0_ports {
-	/* DSS0-VP2: DPI/HDMI Output */
-	hdmi0_dss: port@1 {
-		reg = <1>;
+&dss1_ports {
+	/* DSS1-VP0: DPI/HDMI Output */
+	port@0 {
+		reg = <0>;
 
-		dss0_dpi1_out: endpoint {
+		dss1_dpi0_out: endpoint {
 			remote-endpoint = <&sii9022a_in>;
 		};
 	};
@@ -418,6 +450,13 @@
 
 		bootph-all;
 
+		p0-hog {
+			/* P0 - HDMI_RESETn */
+			gpio-hog;
+			gpios = <0 GPIO_ACTIVE_HIGH>;
+			output-high;
+		};
+
 		p5-hog {
 			/* P5 - USB_HUB_GLOBAL_RSTz */
 			gpio-hog;
@@ -450,28 +489,6 @@
 		bootph-all;
 	};
 
-	usb-pd@22 {
-		compatible = "ti,tps6598x";
-		reg = <0x22>;
-		interrupt-parent = <&main_gpio0>;
-		interrupts = <33 IRQ_TYPE_EDGE_FALLING>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&usb_pd_int_pins_default>;
-
-		connector {
-			compatible = "usb-c-connector";
-			label = "USB-C";
-			self-powered;
-			data-role = "dual";
-			power-role = "sink";
-			port {
-				usb_con_hs: endpoint {
-					remote-endpoint = <&typec_hs>;
-				};
-			};
-		};
-	};
-
 	sii9022a: bridge-hdmi@3b {
 		compatible = "sil,sii9022";
 		reg = <0x3b>;
@@ -480,7 +497,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&hdmi_int_pins_default>;
 		#sound-dai-cells = <0>;
-		sil,i2s-data-lanes = < 0 >;
+		sil,i2s-data-lanes = <0>;
 
 		ports {
 			#address-cells = <1>;
@@ -489,13 +506,13 @@
 			/*
 			 * HDMI can be serviced with 3 potential VPs -
 			 * (DSS0 VP1 / DSS1 VP0 / DSS1 VP1).
-			 * For now, we will service it with DSS0 VP1.
+			 * For now, we will service it with DSS1 VP0.
 			 */
 			port@0 {
 				reg = <0>;
 
 				sii9022a_in: endpoint {
-					remote-endpoint = <&dss0_dpi1_out>;
+					remote-endpoint = <&dss1_dpi0_out>;
 					bus-width = <16>;
 				};
 			};
@@ -601,11 +618,13 @@
 };
 
 &usb0 {
+	dr_mode = "otg";
 	usb-role-switch;
+	maximum-speed = "high-speed";
 
 	port {
-		typec_hs: endpoint {
-			remote-endpoint = <&usb_con_hs>;
+		usb0_ep: endpoint {
+			remote-endpoint = <&usb0_con>;
 		};
 	};
 };
