@@ -11,5 +11,6 @@ PHYTEC
    phycore-am62x
    phycore-am62ax
    phycore-am64x
+   phycore-am68x
    phycore-imx8mm
    phycore-imx8mp
