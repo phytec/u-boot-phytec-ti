@@ -57,6 +57,7 @@
 #define TISCI_MSG_PROC_AUTH_BOOT_IMAGE	0xc120
 #define TISCI_MSG_GET_PROC_BOOT_STATUS	0xc400
 #define TISCI_MSG_WAIT_PROC_BOOT_STATUS	0xc401
+#define TISCI_MSG_PROC_REPLAY_CERT	0xc402
 
 /* Resource Management Requests */
 #define TI_SCI_MSG_GET_RESOURCE_RANGE	0x1500
@@ -84,6 +85,24 @@
 #define TISCI_MSG_FWL_SET		0x9000
 #define TISCI_MSG_FWL_GET		0x9001
 #define TISCI_MSG_FWL_CHANGE_OWNER	0x9002
+
+/* LPM requests */
+#define TISCI_MSG_SYNC_RESUME			(0x0302U)
+#define TISCI_MSG_CONTINUE_RESUME		(0x0303U)
+#define TISCI_MSG_CORE_RESUME			(0x0304U)
+#define TISCI_MSG_ABORT_ENTER_SLEEP		(0x0305U)
+#define TISCI_MSG_LPM_WAKE_REASON		(0x0306U)
+#define TISCI_MSG_SET_IO_ISOLATION		(0x0307U)
+#define TISCI_MSG_MIN_CONTEXT_RESTORE	(0x0308)
+#define TISCI_MSG_LPM_SET_DEVICE_CONSTRAINT	(0x0309U)
+#define TISCI_MSG_LPM_SET_LATENCY_CONSTRAINT	(0x030AU)
+#define TISCI_MSG_LPM_GET_DEVICE_CONSTRAINT	(0x030BU)
+#define TISCI_MSG_LPM_GET_LATENCY_CONSTRAINT	(0x030CU)
+#define TISCI_MSG_LPM_GET_NEXT_SYS_MODE		(0x030DU)
+#define TISCI_MSG_LPM_GET_NEXT_HOST_STATE	(0x030EU)
+#define TISCI_MSG_LPM_ENCRYPT			(0x030FU)
+#define TISCI_MSG_LPM_DECRYPT			(0x0310U)
+#define TISCI_MSG_LPM_SAVE_ADDR			(0x0313U)
 
 /**
  * struct ti_sci_msg_hdr - Generic Message Header for All messages and responses
@@ -1586,6 +1605,79 @@ struct ti_sci_msg_min_restore_context_req {
 	struct ti_sci_msg_hdr	hdr;
 	u32			ctx_lo;
 	u32			ctx_hi;
+} __packed;
+
+/*
+ * struct ti_sci_msg_core_resume_req - Request for TISCI_MSG_CORE_RESUME.
+ *
+ * @hdr:			Generic Header
+ *
+ * This message is to be sent to start the TFA on the main core.
+ * The TIFS will launch the TFA from the entrypoint saved via the ENTER_SLEEP
+ * message.
+ */
+struct ti_sci_msg_core_resume_req {
+	struct ti_sci_msg_hdr	hdr;
+} __packed;
+
+/**
+ * struct ti_sci_msg_core_resume_resp - Response for TISCI_MSG_CORE_RESUME.
+ *
+ * @hdr:			Generic Header
+ */
+struct ti_sci_msg_core_resume_resp {
+	struct ti_sci_msg_hdr	hdr;
+} __packed;
+
+/**
+ * struct ti_sci_msg_decrypt_tfa_req - Request for TISCI_MSG_LPM_DECRYPT.
+ *
+ * @hdr:			Generic Header
+ * @unencrypted_address:	Address where the TFA should be decrypted
+ * @encrypted_address:		Address where the TFA lies encrypted
+ *
+ * This message is to be sent when the system is resuming from suspend, in order
+ * to restore the TFA.
+ * The TIFS will decrypt the TFA at specified location and restore it in SRAM.
+ */
+struct ti_sci_msg_decrypt_tfa_req {
+	struct ti_sci_msg_hdr	hdr;
+	u64			unencrypted_address;
+} __packed;
+
+/**
+ * struct ti_sci_msg_decrypt_tfa_resp - Response for TISCI_MSG_LPM_DECRYPT.
+ *
+ * @hdr:			Generic Header
+ */
+struct ti_sci_msg_decrypt_tfa_resp {
+	struct ti_sci_msg_hdr	hdr;
+} __packed;
+
+/**
+ * struct tisci_msg_lpm_save_ctx_addr_req - Request for TISCI_MSG_LPM_SAVE_ADDR.
+ *
+ * @hdr:			Generic Header
+ * @ctx_addr:	Address where the LPM data is to be saved
+ * @size:		Size of the context save memory region
+ *
+ * This message is sent to TIFS to inform it about the addresse where it
+ * will save the context to in case of system suspend and where to get the
+ * context back from when resuming the system
+ */
+struct tisci_msg_lpm_save_ctx_addr_req {
+	struct ti_sci_msg_hdr	hdr;
+	u64			ctx_addr;
+	u32			size;
+} __packed;
+
+/**
+ * struct tisci_msg_lpm_save_ctx_addr_resp - Response for TISCI_MSG_SAVE_ADDR.
+ *
+ * @hdr:			Generic Header
+ */
+struct tisci_msg_lpm_save_ctx_addr_resp {
+	struct ti_sci_msg_hdr	hdr;
 } __packed;
 
 #endif /* __TI_SCI_H */
