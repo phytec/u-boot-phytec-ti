@@ -259,7 +259,7 @@
 
 						firewall-4760-1 {
 							/* nb_slv0__mem0 Foreground Firewall */
-							insert-template = <&firewall_armv8_atf_fg>;
+							insert-template = <&firewall_armv8_atf_tifs_fg>;
 							id = <4760>;
 							region = <1>;
 						};
@@ -272,7 +272,7 @@
 
 						firewall-4761-1 {
 							/* nb_slv1__mem0 Foreground Firewall */
-							insert-template = <&firewall_armv8_atf_fg>;
+							insert-template = <&firewall_armv8_atf_tifs_fg>;
 							id = <4761>;
 							region = <1>;
 						};

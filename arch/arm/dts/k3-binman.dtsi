@@ -499,7 +499,21 @@
 		start_address = <0x0 CONFIG_K3_ATF_LOAD_ADDR>;
 		end_address = <0x0 (CONFIG_K3_ATF_LOAD_ADDR + CONFIG_K3_ATF_RESERVED_SIZE - 1)>;
 	};
-	firewall_armv8_optee_fg: template-8 {
+	firewall_armv8_atf_tifs_fg: template-8 {
+		control = <(FWCTRL_EN | FWCTRL_LOCK |
+					FWCTRL_CACHE)>;
+		permissions = <((FWPRIVID_ARMV8 << FWPRIVID_SHIFT) |
+						FWPERM_SECURE_PRIV_RWCD |
+						FWPERM_SECURE_USER_RWCD)>,
+					<((FWPRIVID_TIFS << FWPRIVID_SHIFT) |
+						FWPERM_SECURE_PRIV_RWCD |
+						FWPERM_SECURE_USER_RWCD |
+						FWPERM_NON_SECURE_PRIV_RWCD |
+						FWPERM_NON_SECURE_USER_RWCD)>;
+		start_address = <0x0 0x70000000>;
+		end_address = <0x0 0x7001ffff>;
+	};
+	firewall_armv8_optee_fg: template-9 {
 		control = <(FWCTRL_EN | FWCTRL_LOCK |
 					FWCTRL_CACHE)>;
 		permissions = <((FWPRIVID_ARMV8 << FWPRIVID_SHIFT) |
@@ -509,7 +523,7 @@
 		end_address = <0x0 (CONFIG_K3_OPTEE_LOAD_ADDR + CONFIG_K3_OPTEE_RESERVED_SIZE - 1)>;
 	};
 
-	ti_falcon_template: template-9 {
+	ti_falcon_template: template-10 {
 		filename = "tifalcon.bin";
 		pad-byte = <0xff>;
 

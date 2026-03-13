@@ -7,6 +7,7 @@
 #define DTS_ARM64_TI_K3_FIREWALL_H
 
 #define FWPRIVID_ALL    0xc3
+#define FWPRIVID_TIFS	0xca
 #define FWPRIVID_ARMV8  1
 #define FWPRIVID_SHIFT  16
 
