@@ -16,6 +16,9 @@
 #include <spl.h>
 #include <remoteproc.h>
 #include <elf.h>
+#include <clk.h>
+#include <power-domain.h>
+#include <dm/read.h>
 
 #include "../common.h"
 
@@ -46,6 +49,23 @@ static const char *image_os_match[IMAGE_AMT] = {
 #endif
 
 static struct image_info fit_image_info[IMAGE_AMT];
+
+struct lpm_addr_info mem_addr_lpm;
+
+__weak int board_is_resuming(void)
+{
+	return 0;
+}
+
+__weak void lpm_process(void)
+{
+	return;
+}
+
+__weak int extract_lpm_region(void)
+{
+	return -EINVAL;
+}
 
 void init_env(void)
 {
@@ -139,6 +159,25 @@ void release_resources_for_core_shutdown(void)
 	}
 }
 
+void save_certificate(void)
+{
+	int ret;
+
+	if (!fit_image_info[IMAGE_ID_ATF].image_start || !fit_image_info[IMAGE_ID_OPTEE].image_start || !fit_image_info[IMAGE_ID_DM_FW].image_start) {
+		pr_err("Invalid images to save\n");
+		return;
+	}
+
+	ret = extract_lpm_region();
+	if (ret)
+		pr_err("Cannot find valid LPM address range..\n");
+	else {
+		memcpy(mem_addr_lpm.atf_cert_addr, (void *)fit_image_info[IMAGE_ID_ATF].image_start, fit_image_info[IMAGE_ID_ATF].image_len);
+		memcpy(mem_addr_lpm.optee_cert_addr, (void *)fit_image_info[IMAGE_ID_OPTEE].image_start, fit_image_info[IMAGE_ID_OPTEE].image_len);
+		memcpy(mem_addr_lpm.dm_save_addr, (void *)fit_image_info[IMAGE_ID_DM_FW].image_start, fit_image_info[IMAGE_ID_DM_FW].image_len);
+	}
+}
+
 void __noreturn jump_to_image(struct spl_image_info *spl_image)
 {
 	typedef void __noreturn (*image_entry_noargs_t)(void);
@@ -186,6 +225,7 @@ void __noreturn jump_to_image(struct spl_image_info *spl_image)
 	if (ret)
 		panic("%s: ATF failed to load on rproc (%d)\n", __func__, ret);
 
+	lpm_process();
 #if CONFIG_IS_ENABLED(FIT_IMAGE_POST_PROCESS)
 	/* Authenticate ATF */
 	void *image_addr = (void *)fit_image_info[IMAGE_ID_ATF].image_start;
@@ -268,6 +308,82 @@ void disable_linefill_optimization(void)
 	asm("mrc p15, 0, %0, c1, c0, 1" : "=r" (actlr));
 	actlr |= (1 << 13); /* Set DLFO bit  */
 	asm("mcr p15, 0, %0, c1, c0, 1" : : "r" (actlr));
+}
+
+u32 resume_to_dm_f(void)
+{
+	struct ti_sci_handle *ti_sci = get_ti_sci_handle();
+	u32 loadaddr = 0, save_addr = 0;
+	int ret = 0;
+
+	loadaddr = (u32)mem_addr_lpm.dm_save_addr;
+	if (!valid_elf_image(loadaddr))
+		panic("%s: DM-Firmware image is not valid, it cannot be loaded\n",
+		      __func__);
+	loadaddr = load_elf_image_phdr(loadaddr);
+	save_addr = (uintptr_t)mem_addr_lpm.context_save_addr;
+	ret = ti_sci->ops.lpm_ops.lpm_save_addr(ti_sci, save_addr, mem_addr_lpm.size);
+	if (ret)
+		panic("TIFS lpm save addr fail : %x\n", ret);
+	/*
+	 * TIFS minimal context restore
+	 * This restores also the firewall
+	*/
+	ret = ti_sci->ops.lpm_ops.min_context_restore(ti_sci, 0);
+	if (ret)
+		panic("TIFS min_context_restore failed (%d)\n", ret);
+	/*
+	 * Restore TFA in msmc memory
+	 */
+	ret = ti_sci->ops.lpm_ops.decrypt_tfa(ti_sci,
+					      CONFIG_K3_ATF_LOAD_ADDR);
+	if (ret)
+		panic("%s: TIFS failed to decrytp TFA : %x\n", __func__, ret);
+		/* restore TFA resume vectore address in main core */
+	ret = ti_sci->ops.lpm_ops.core_resume(ti_sci);
+	if (ret)
+		panic("ATF failed to resume (%d)\n", ret);
+
+	return loadaddr;
+}
+
+void resume_rproc_f(void)
+{
+	struct power_domain rproc_pwrdmn;
+	unsigned long gtc_rate;
+	struct udevice *dev;
+	struct clk gtc_clk;
+	void *gtc_base;
+	int ret;
+
+	ret = uclass_get_device_by_seq(UCLASS_REMOTEPROC, 1, &dev);
+	if (ret)
+		panic("Unknown remote processor 1 (%d)\n", ret);
+
+	ret = power_domain_get_by_index(dev, &rproc_pwrdmn, 1);
+	if (ret)
+		panic("power_domain_get_rproc() failed: %d\n", ret);
+
+	ret = clk_get_by_index(dev, 0, &gtc_clk);
+	if (ret)
+		panic("clk_get failed: %d\n", ret);
+
+	gtc_base = dev_read_addr_ptr(dev);
+	if (!gtc_base)
+		panic("Get GTC address failed\n");
+
+	gtc_rate = clk_get_rate(&gtc_clk);
+
+#define GTC_CNTCR_REG	0x0
+#define GTC_CNTFID0_REG	0x20
+#define GTC_CNTR_EN	0x3
+	/* TFA expect the Global Timebase Counter to be set-up */
+	writel((u32)gtc_rate, gtc_base + GTC_CNTFID0_REG);
+	writel(GTC_CNTR_EN, gtc_base + GTC_CNTCR_REG);
+
+	ret = power_domain_on(&rproc_pwrdmn);
+	if (ret)
+		panic("power_domain_on failed: %d\n", ret);
 }
 
 int remove_fwl_region(struct fwl_data *fwl)

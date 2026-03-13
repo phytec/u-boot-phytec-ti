@@ -15,6 +15,7 @@
 
 #define K3_FIREWALL_BACKGROUND_BIT	(8)
 #define K3_SPEED_GRADE_UNKNOWN		'\0'
+#define FW_IMAGE_SIZE 0x80000
 
 struct fwl_data {
 	const char *name;
@@ -41,6 +42,16 @@ enum k3_device_type {
 	K3_DEVICE_TYPE_HS_SE,
 };
 
+struct lpm_addr_info {
+	u32 *context_save_addr;
+	u32 *atf_cert_addr;
+	u32 *optee_cert_addr;
+	u32 *dm_save_addr;
+	u32 size;
+};
+
+extern struct lpm_addr_info mem_addr_lpm;
+
 void setup_k3_mpu_regions(void);
 int early_console_init(void);
 void disable_linefill_optimization(void);
@@ -60,6 +71,9 @@ struct ti_sci_handle *get_ti_sci_handle(void);
 void do_board_detect(void);
 void ti_secure_image_check_binary(void **p_image, size_t *p_size);
 int shutdown_mcu_r5_core1(void);
+void save_certificate(void);
+u32 resume_to_dm_f(void);
+void resume_rproc_f(void);
 
 #if IS_ENABLED(CONFIG_SPL_OS_BOOT_SECURE) && !IS_ENABLED(CONFIG_ARM64)
 int k3_r5_falcon_bootmode(void);
