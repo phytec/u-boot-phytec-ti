@@ -80,7 +80,7 @@
 	ti,am65x-oldi-io-ctrl = <&dss_oldi_io_ctrl>;
 
 	clocks = <&k3_clks 186 6>,
-	 <&dss_vp1_clk>,
+	 <&k3_clks 186 0>,
 	 <&k3_clks 186 2>;
 };
 
