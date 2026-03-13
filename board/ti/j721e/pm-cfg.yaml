@@ -7,6 +7,94 @@
 ---
 
 pm-cfg:
-        rev:
-                boardcfg_abi_maj: 0x0
-                boardcfg_abi_min: 0x1
+        pm_boardcfg:
+                rev:
+                        boardcfg_abi_maj: 0x1
+                        boardcfg_abi_min: 0x1
+                lpm_cfg:
+                        subhdr:
+                                magic: 0x4C41
+                                size: 0x0C
+                        suspend_initiator: 0xA
+                        lpm_mode: 0x5
+                        lpm_rsvd1: 0x0
+                        lpm_rsvd2: 0x0
+                pll_cfg:
+                        subhdr:
+                                magic: 0xC31E
+                                size: 0x54
+                        pll_cfg_entries:
+                                -  # 1
+                                        dev_id: 0xA
+                                        clk_id: 0xA
+                                        pll_freq: 0xA
+                                -  # 2
+                                        dev_id: 0xA
+                                        clk_id: 0xA
+                                        pll_freq: 0xA
+                                -  # 3
+                                        dev_id: 0xA
+                                        clk_id: 0xA
+                                        pll_freq: 0xA
+                                -  # 4
+                                        dev_id: 0xA
+                                        clk_id: 0xA
+                                        pll_freq: 0xA
+                                -  # 5
+                                        dev_id: 0xA
+                                        clk_id: 0xA
+                                        pll_freq: 0xA
+                dev_cfg:
+                        subhdr:
+                                magic: 0x74B1
+                                size: 0x40
+                        dev_cfg_entries:
+                                -  # 1
+                                        dev_id: 0xA
+                                        state: 0xA
+                                        flag: 0xA
+                                -  # 2
+                                        dev_id: 0xA
+                                        state: 0xA
+                                        flag: 0xA
+                                -  # 3
+                                        dev_id: 0xA
+                                        state: 0xA
+                                        flag: 0xA
+                                -  # 4
+                                        dev_id: 0xA
+                                        state: 0xA
+                                        flag: 0xA
+                                -  # 5
+                                        dev_id: 0xA
+                                        state: 0xA
+                                        flag: 0xA
+                rsvd_pmic_cfg:
+                        subhdr:
+                                magic: 0x8A1D
+                                size: 0x10
+                        pmic_rsvd1: 0xA
+                        pmic_rsvd2: 0xA
+                        pmic_rsvd3: 0xA
+                rsvd_cfg:
+                        subhdr:
+                                magic: 0x3CFA
+                                size: 0x12
+                        rsvd1: 0x0
+                        rsvd2: 0x0
+                        rsvd3: 0x0
+                        reserved_entry_size: 0x10
+
+        reserved_entries:
+                -
+                        reserved1: 4
+                        reserved2: 93
+                        reserved3: 7744
+                        reserved4: 26
+                        reserved5: 0
+                -
+                        reserved1: 4
+                        reserved2: 93
+                        reserved3: 7744
+                        reserved4: 26
+                        reserved5: 0
