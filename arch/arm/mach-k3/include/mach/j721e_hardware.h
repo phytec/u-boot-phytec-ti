@@ -47,6 +47,7 @@
 
 /* MCU SCRATCHPAD usage */
 #define TI_SRAM_SCRATCH_BOARD_EEPROM_START	CONFIG_SYS_K3_MCU_SCRATCHPAD_BASE
+#define TI_SRAM_SCRATCH_LPM_START    0x40280000
 
 #if defined(CONFIG_SYS_K3_SPL_ATF) && !defined(__ASSEMBLY__)
 
@@ -62,6 +63,14 @@ static const u32 put_device_ids[] = {
 
 #define J721E_DEV_MCU_ARMSS0_CPU0		250
 #define J721E_DEV_MCU_ARMSS0_CPU1		251
+
+struct lpm_scratch_space {
+	u16 wake_src;
+	u16 reserved;
+} __packed;
+
+#define TI_SRAM_LPM_SCRATCH ((struct lpm_scratch_space *)\
+				TI_SRAM_SCRATCH_LPM_START)
 
 static const u32 put_core_ids[] = {
 	J721E_DEV_MCU_ARMSS0_CPU1,

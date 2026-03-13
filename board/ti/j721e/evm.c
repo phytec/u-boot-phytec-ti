@@ -474,8 +474,10 @@ err_free_gpio:
 #if (IS_ENABLED(CONFIG_SPL_BUILD) && IS_ENABLED(CONFIG_TARGET_J7200_R5_EVM))
 
 #define SCRATCH_PAD_REG_3 0xCB
-
 #define MAGIC_SUSPEND 0xBA
+#define LPM_WAKE_SOURCE_PMIC_GPIO 0x91
+#define LPM_WAKE_SOURCE_MAIN_IO   0x80
+
 static void clear_isolation(void)
 {
 	int ret;
@@ -501,12 +503,14 @@ int board_is_resuming(void)
 	struct udevice *pmica;
 	struct udevice *pmicb;
 	u32 pmctrl_val = readl(PMCTRL_IO_1);
+	struct lpm_scratch_space *lpm_scratch = (struct lpm_scratch_space *)TI_SRAM_LPM_SCRATCH;
 	int ret;
 
 	if (gd_k3_resuming() >= 0)
 		goto end;
 
 	if ((pmctrl_val & IO_ISO_STATUS) == IO_ISO_STATUS) {
+		lpm_scratch->wake_src = LPM_WAKE_SOURCE_MAIN_IO;
 		clear_isolation();
 		gd_set_k3_resuming(1);
 		debug("Resuming from IO_DDR mode\n");
@@ -531,6 +535,7 @@ int board_is_resuming(void)
 
 	if (pmic_reg_read(pmica, SCRATCH_PAD_REG_3) == MAGIC_SUSPEND) {
 		debug("%s: board is resuming\n", __func__);
+		lpm_scratch->wake_src = LPM_WAKE_SOURCE_PMIC_GPIO;
 		gd_set_k3_resuming(1);
 
 		/* clean magic suspend */
@@ -538,6 +543,8 @@ int board_is_resuming(void)
 			printf("Failed to clean magic value for suspend detection in PMICA\n");
 	} else {
 		debug("%s: board is booting (no resume detected)\n", __func__);
+		lpm_scratch->wake_src = 0;
+		lpm_scratch->reserved = 0;
 		gd_set_k3_resuming(0);
 	}
 end:
