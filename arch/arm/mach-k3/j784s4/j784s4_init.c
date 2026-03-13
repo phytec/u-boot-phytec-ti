@@ -24,7 +24,11 @@
 #include "../sysfw-loader.h"
 #include "../common.h"
 
-#define J784S4_MAX_DDR_CONTROLLERS	4
+#if IS_ENABLED(CONFIG_TARGET_J742S2_R5_EVM)
+#define MAX_DDR_CONTROLLERS	2
+#else
+#define MAX_DDR_CONTROLLERS	4
+#endif
 
 #define CTRL_MMR_CFG0_AUDIO_REFCLK1_CTRL	0x001082e4
 #define AUDIO_REFCLK1_DEFAULT			0x1c
@@ -305,8 +309,8 @@ void k3_mem_init(void)
 	int ret, ctrl = 0;
 
 	if (IS_ENABLED(CONFIG_K3_J721E_DDRSS)) {
-		struct udevice *devs[J784S4_MAX_DDR_CONTROLLERS];
-		struct k3_ddrss_regs regs[J784S4_MAX_DDR_CONTROLLERS];
+		struct udevice *devs[MAX_DDR_CONTROLLERS];
+		struct k3_ddrss_regs regs[MAX_DDR_CONTROLLERS];
 
 		ret = uclass_get_device(UCLASS_RAM, 0, &dev);
 		if (ret)
@@ -315,7 +319,7 @@ void k3_mem_init(void)
 		devs[0] = dev;
 		ctrl++;
 
-		while (ctrl < J784S4_MAX_DDR_CONTROLLERS) {
+		while (ctrl < MAX_DDR_CONTROLLERS) {
 			ret = uclass_next_device_err(&dev);
 			if (ret == -ENODEV)
 				break;
@@ -328,7 +332,7 @@ void k3_mem_init(void)
 
 		if (board_is_resuming()) {
 			/* exit DDRs from retention */
-			for (ctrl = 0; ctrl < J784S4_MAX_DDR_CONTROLLERS; ctrl++) {
+			for (ctrl = 0; ctrl < MAX_DDR_CONTROLLERS; ctrl++) {
 				k3_ddrss_lpddr4_exit_retention(devs[ctrl],
 							       &regs[ctrl]);
 			}
@@ -337,11 +341,11 @@ void k3_mem_init(void)
 			k3_deassert_DDR_RET();
 
 			/* restore DDR max frequency */
-			for (ctrl = 0; ctrl < J784S4_MAX_DDR_CONTROLLERS; ctrl++)
+			for (ctrl = 0; ctrl < MAX_DDR_CONTROLLERS; ctrl++)
 				k3_ddrss_lpddr4_change_freq(devs[ctrl]);
 
 			/* exit DDR from low power */
-			for (ctrl = 0; ctrl < J784S4_MAX_DDR_CONTROLLERS; ctrl++) {
+			for (ctrl = 0; ctrl < MAX_DDR_CONTROLLERS; ctrl++) {
 				k3_ddrss_lpddr4_exit_low_power(devs[ctrl],
 							       &regs[ctrl]);
 			}
