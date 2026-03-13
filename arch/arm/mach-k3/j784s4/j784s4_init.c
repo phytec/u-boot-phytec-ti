@@ -303,6 +303,8 @@ void board_init_f(ulong dummy)
 {
 	struct udevice *dev;
 	int ret;
+	/* init resume flag */
+	gd_set_k3_resuming(-1);
 
 	k3_spl_init();
 
