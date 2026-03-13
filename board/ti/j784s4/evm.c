@@ -20,7 +20,9 @@
 #include <spl.h>
 #include <asm/arch/k3-ddr.h>
 #include <power/pmic.h>
+#include <wait_bit.h>
 #include "../common/fdt_ops.h"
+#include "../common.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -115,14 +117,42 @@ int board_late_init(void)
 
 #define MAGIC_SUSPEND 0xBA
 
+static void clear_isolation(void)
+{
+	int ret;
+	const void *wait_reg = (const void *)(WKUP_CTRL_MMR0_BASE + MCU_GEN_WAKE_STAT1);
+
+	/* un-set the magic word for MCU_GENERAL IOs */
+	writel(IO_ISO_MAGIC_VAL, WKUP_CTRL_MMR0_BASE + MCU_GEN_WAKE_CTRL);
+	writel((IO_ISO_MAGIC_VAL + 0x1), WKUP_CTRL_MMR0_BASE + MCU_GEN_WAKE_CTRL);
+	writel(IO_ISO_MAGIC_VAL, WKUP_CTRL_MMR0_BASE + MCU_GEN_WAKE_CTRL);
+
+	/* wait for MCU_GEN_IO_MODE bit to be cleared */
+	ret = wait_for_bit_32(wait_reg,
+			      MCU_GEN_WAKE_STAT1_MCU_GEN_IO_MODE,
+			      false,
+			      DEISOLATION_TIMEOUT_MS,
+			      false);
+	if (ret < 0)
+		pr_err("Deisolation timeout");
+}
+
 /* in board_init_f(), there's no BSS, so we can't use global/static variables */
 int board_is_resuming(void)
 {
 	struct udevice *pmic;
+	u32 pmctrl_val = readl(WKUP_CTRL_MMR0_BASE + PMCTRL_IO_0);
 	int err;
 
 	if (gd_k3_resuming() >= 0)
 		goto end;
+
+	if ((pmctrl_val & IO_ISO_STATUS) == IO_ISO_STATUS) {
+		clear_isolation();
+		gd_set_k3_resuming(1);
+		debug("board is resuming from IO_DDR mode\n");
+		return gd_k3_resuming();
+	}
 
 	err = uclass_get_device_by_name(UCLASS_PMIC,
 					"pmic@48", &pmic);
