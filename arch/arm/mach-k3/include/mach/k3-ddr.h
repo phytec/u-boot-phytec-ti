@@ -35,6 +35,8 @@ int dram_init_banksize(void);
 void fixup_ddr_driver_for_ecc(struct spl_image_info *spl_image);
 void fixup_memory_node(struct spl_image_info *spl_image);
 
+int board_is_resuming(void);
+
 /* LPDDR4 power management functions */
 void k3_ddrss_lpddr4_exit_retention(struct udevice *dev, struct k3_ddrss_regs *regs);
 void k3_ddrss_lpddr4_change_freq(struct udevice *dev);
