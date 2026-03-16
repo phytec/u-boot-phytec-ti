@@ -264,7 +264,7 @@ void board_prep_linux(struct bootm_headers *images)
 
 void enable_caches(void)
 {
-	void *fdt = (void *)gd->fdt_blob;
+	void __maybe_unused *fdt = (void *)gd->fdt_blob;
 	int ret;
 
 	ret = mem_map_from_dram_banks(K3_MEM_MAP_FIRST_BANK_IDX, K3_MEM_MAP_LEN,
@@ -273,6 +273,15 @@ void enable_caches(void)
 	if (ret)
 		debug("%s: Failed to setup dram banks\n", __func__);
 
+#if (IS_ENABLED(CONFIG_SOC_K3_AM62L3) && IS_ENABLED(CONFIG_XPL_BUILD))
+	mmu_setup();
+	mmu_change_region_attr_nobreak(CONFIG_K3_ATF_LOAD_ADDR,
+				       CONFIG_K3_ATF_RESERVED_SIZE,
+				       PTE_TYPE_FAULT);
+	mmu_change_region_attr_nobreak(CONFIG_K3_OPTEE_LOAD_ADDR,
+				       CONFIG_K3_OPTEE_RESERVED_SIZE,
+				       PTE_TYPE_FAULT);
+#else
 	ret = fdt_fixup_reserved(fdt);
 	if (ret)
 		printf("%s: Failed to perform reserved-memory fixups (%s)\n",
@@ -293,6 +302,7 @@ void enable_caches(void)
 			printf("%s: Failed to unmap optee reserved mem (%d)\n",
 			       __func__, ret);
 	}
+#endif
 
 	icache_enable();
 	dcache_enable();
