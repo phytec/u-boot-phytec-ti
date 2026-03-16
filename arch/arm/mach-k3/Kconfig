@@ -162,6 +162,7 @@ config K3_ATF_LOAD_ADDR
 
 config K3_ATF_RESERVED_SIZE
 	hex "Reserved memory size for ATF"
+	default 0x200000 if SOC_K3_AM62L3
 	default 0x80000 if (SOC_K3_AM625 || SOC_K3_AM62A7 || SOC_K3_AM62P5 || SOC_K3_J722S)
 	default 0x20000
 	help

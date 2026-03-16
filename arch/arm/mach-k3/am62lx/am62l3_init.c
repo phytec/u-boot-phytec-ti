@@ -25,6 +25,7 @@ void board_init_f(ulong dummy)
 	}
 
 	preloader_console_init();
+	spl_enable_cache();
 	debug("am62lx_init: %s done\n", __func__);
 }
 
