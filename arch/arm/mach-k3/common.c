@@ -413,6 +413,9 @@ void spl_enable_cache(void)
 	gd->ram_top = CFG_SYS_SDRAM_BASE;
 	int ret = 0;
 
+	/* dram_init_banksize populates bd, so init it first */
+	spl_set_bd();
+
 	dram_init();
 	dram_init_banksize();
 
