@@ -1,3 +1,5 @@
 #include <configs/am62lx_evm_defconfig>
 
 CONFIG_DEFAULT_DEVICE_TREE="ti/k3-am62l3-minimal"
+CONFIG_USE_PREBOOT=y
+CONFIG_PREBOOT="run set_minimal_mem"
