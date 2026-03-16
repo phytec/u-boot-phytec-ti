@@ -29,7 +29,7 @@
 		};
 	};
 
-	display {
+	microtips_mf101hie_panel: display {
 		bootph-all;
 		status="okay";
 		compatible = "microtips,mf-101hiebcaf0", "panel-simple";
