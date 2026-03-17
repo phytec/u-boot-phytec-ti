@@ -118,3 +118,7 @@
 		spi-max-frequency = <25000000>;
 	};
 };
+
+&main_cpsw1 {
+	status = "disabled";
+};
