@@ -64,7 +64,7 @@ const struct dpll_params dpll_core_opp100 = {
 
 const struct dpll_params dpll_mpu_opp[NUM_CRYSTAL_FREQ][NUM_OPPS] = {
 	{	/* 19.2 MHz */
-		{125, 3, 2, -1, -1, -1, -1},	/* OPP 50 */
+		{125, 7, 1, -1, -1, -1, -1},	/* OPP 50 */
 		{-1, -1, -1, -1, -1, -1, -1},	/* OPP RESERVED	*/
 		{125, 3, 1, -1, -1, -1, -1},	/* OPP 100 */
 		{150, 3, 1, -1, -1, -1, -1},	/* OPP 120 */
@@ -72,7 +72,7 @@ const struct dpll_params dpll_mpu_opp[NUM_CRYSTAL_FREQ][NUM_OPPS] = {
 		{625, 11, 1, -1, -1, -1, -1}	/* OPP NT */
 	},
 	{	/* 24 MHz */
-		{25, 0, 2, -1, -1, -1, -1},	/* OPP 50 */
+		{25, 1, 1, -1, -1, -1, -1},	/* OPP 50 */
 		{-1, -1, -1, -1, -1, -1, -1},	/* OPP RESERVED	*/
 		{25, 0, 1, -1, -1, -1, -1},	/* OPP 100 */
 		{30, 0, 1, -1, -1, -1, -1},	/* OPP 120 */
@@ -80,7 +80,7 @@ const struct dpll_params dpll_mpu_opp[NUM_CRYSTAL_FREQ][NUM_OPPS] = {
 		{125, 2, 1, -1, -1, -1, -1}	/* OPP NT */
 	},
 	{	/* 25 MHz */
-		{24, 0, 2, -1, -1, -1, -1},	/* OPP 50 */
+		{12, 0, 1, -1, -1, -1, -1},	/* OPP 50 */
 		{-1, -1, -1, -1, -1, -1, -1},	/* OPP RESERVED	*/
 		{24, 0, 1, -1, -1, -1, -1},	/* OPP 100 */
 		{144, 4, 1, -1, -1, -1, -1},	/* OPP 120 */
@@ -88,7 +88,7 @@ const struct dpll_params dpll_mpu_opp[NUM_CRYSTAL_FREQ][NUM_OPPS] = {
 		{40, 0, 1, -1, -1, -1, -1}	/* OPP NT */
 	},
 	{	/* 26 MHz */
-		{300, 12, 2, -1, -1, -1, -1},	/* OPP 50 */
+		{150, 12, 1, -1, -1, -1, -1},	/* OPP 50 */
 		{-1, -1, -1, -1, -1, -1, -1},	/* OPP RESERVED	*/
 		{300, 12, 1, -1, -1, -1, -1},	/* OPP 100 */
 		{360, 12, 1, -1, -1, -1, -1},	/* OPP 120 */
