@@ -1,33 +1,33 @@
 // SPDX-License-Identifier: GPL-2.0-only OR MIT
 /*
- * Copyright (C) 2025 PHYTEC America LLC
+ * Copyright (C) 2026 PHYTEC America LLC
  * Author: John Ma <jma@phytec.com>
  *
+ * Product homepage:
+ * https://www.phytec.com/product/phyflex-am62px/
  */
 
 #include <dt-bindings/gpio/gpio.h>
-#include <dt-bindings/leds/common.h>
 #include <dt-bindings/net/ti-dp83867.h>
 
 / {
-	model = "PHYTEC phyCORE-AM62P5";
-	compatible = "phytec,am62p-phycore-som", "ti,am62p5";
+	model = "PHYTEC phyFLEX-AM62P FPSC-Gamma";
+	compatible = "phytec,am62p-phyflex-fpsc-g", "ti,am62p5";
 
 	aliases {
 		ethernet0 = &cpsw_port1;
 		gpio0 = &main_gpio0;
 		gpio1 = &main_gpio1;
-		i2c0 = &wkup_i2c0;
+		i2c1 = &wkup_i2c0;
 		mmc0 = &sdhci0;
 		rtc0 = &i2c_som_rtc;
 		rtc1 = &wkup_rtc0;
-		spi0 = &ospi0;
 	};
 
 	memory@80000000 {
 		/* 2G RAM */
-		reg = <0x00000000 0x80000000 0x00000000 0x80000000>;
 		device_type = "memory";
+		reg = <0x00000000 0x80000000 0x00000000 0x80000000>;
 		bootph-all;
 	};
 
@@ -61,16 +61,6 @@
 			no-map;
 		};
 
-		secure_tfa_ddr: tfa@9e780000 {
-			reg = <0x00 0x9e780000 0x00 0x80000>;
-			no-map;
-		};
-
-		secure_ddr: optee@9e800000 {
-			reg = <0x00 0x9e800000 0x00 0x01800000>; /* for OP-TEE */
-			no-map;
-		};
-
 		wkup_r5fss0_core0_dma_memory_region: r5f-dma-memory@9c800000 {
 			compatible = "shared-dma-pool";
 			reg = <0x00 0x9c800000 0x00 0x100000>;
@@ -82,6 +72,16 @@
 			reg = <0x00 0x9c900000 0x00 0x1e00000>;
 			no-map;
 		};
+
+		secure_tfa_ddr: tfa@9e780000 {
+			reg = <0x00 0x9e780000 0x00 0x80000>;
+			no-map;
+		};
+
+		secure_ddr: optee@9e800000 {
+			reg = <0x00 0x9e800000 0x00 0x01800000>; /* for OP-TEE */
+			no-map;
+		};
 	};
 
 	vcc_5v0_som: regulator-vcc-5v0-som {
@@ -91,19 +91,6 @@
 		regulator-max-microvolt = <5000000>;
 		regulator-always-on;
 		regulator-boot-on;
-	};
-
-	leds {
-		compatible = "gpio-leds";
-		pinctrl-names = "default";
-		pinctrl-0 = <&leds_pins_default>;
-
-		led-0 {
-			color = <LED_COLOR_ID_GREEN>;
-			gpios = <&main_gpio0 13 GPIO_ACTIVE_HIGH>;
-			linux,default-trigger = "heartbeat";
-			function = LED_FUNCTION_HEARTBEAT;
-		};
 	};
 
 	opp-table {
@@ -143,32 +130,9 @@
 		bootph-all;
 	};
 
-	ospi0_pins_default: ospi0-default-pins {
-		pinctrl-single,pins = <
-			AM62PX_IOPAD(0x0000, PIN_OUTPUT, 0) /* (P23) OSPI0_CLK */
-			AM62PX_IOPAD(0x002c, PIN_OUTPUT, 0) /* (M25) OSPI0_CSn0 */
-			AM62PX_IOPAD(0x000c, PIN_INPUT, 0) /* (L25) OSPI0_D0 */
-			AM62PX_IOPAD(0x0010, PIN_INPUT, 0) /* (N24) OSPI0_D1 */
-			AM62PX_IOPAD(0x0014, PIN_INPUT, 0) /* (N25) OSPI0_D2 */
-			AM62PX_IOPAD(0x0018, PIN_INPUT, 0) /* (M24) OSPI0_D3 */
-			AM62PX_IOPAD(0x001c, PIN_INPUT, 0) /* (N21) OSPI0_D4 */
-			AM62PX_IOPAD(0x0020, PIN_INPUT, 0) /* (N22) OSPI0_D5 */
-			AM62PX_IOPAD(0x0024, PIN_INPUT, 0) /* (P21) OSPI0_D6 */
-			AM62PX_IOPAD(0x0028, PIN_INPUT, 0) /* (N20) OSPI0_D7 */
-			AM62PX_IOPAD(0x0008, PIN_INPUT, 0) /* (P22) OSPI0_DQS */
-		>;
-		bootph-all;
-	};
-
-	leds_pins_default: leds-default-pins {
-		pinctrl-single,pins = <
-			AM62PX_IOPAD(0x0034, PIN_OUTPUT, 7) /* (L22) OSPI0_CSn2.GPIO0_13 */
-		>;
-	};
-
 	pmic_irq_pins_default: pmic-irq-default-pins {
 	       pinctrl-single,pins = <
-			AM62PX_IOPAD(0x01f4, PIN_INPUT, 7) /* (C23) EXTINTn.GPIO1_31 */
+			AM62PX_IOPAD(0x01f4, PIN_INPUT, 0) /* (C23) EXTINTn */
 	       >;
 	};
 };
@@ -186,9 +150,9 @@
 	bootph-all;
 	status = "okay";
 
-	cpsw3g_phy1: ethernet-phy@1 {
+	cpsw3g_phy1: ethernet-phy@0 {
 		compatible = "ethernet-phy-id2000.a231", "ethernet-phy-ieee802.3-c22";
-		reg = <1>;
+		reg = <0>;
 		ti,rx-internal-delay = <DP83867_RGMIIDCTL_2_00_NS>;
 		ti,fifo-depth = <DP83867_PHYCR_FIFO_DEPTH_4_B_NIB>;
 		ti,min-output-impedance;
@@ -227,8 +191,8 @@
 &mcu_pmx0 {
 	wkup_i2c0_pins_default: wkup-i2c0-default-pins {
 		pinctrl-single,pins = <
-			AM62PX_MCU_IOPAD(0x04c, PIN_INPUT_PULLUP, 0) /* (A13) WKUP_I2C0_SCL */
-			AM62PX_MCU_IOPAD(0x050, PIN_INPUT_PULLUP, 0) /* (C11) WKUP_I2C0_SDA */
+			AM62PX_MCU_IOPAD(0x04c, PIN_INPUT, 0) /* (A13) WKUP_I2C0_SCL */
+			AM62PX_MCU_IOPAD(0x050, PIN_INPUT, 0) /* (C11) WKUP_I2C0_SDA */
 		>;
 		bootph-all;
 	};
@@ -242,26 +206,6 @@
 	mboxes = <&mailbox0_cluster1 &mbox_mcu_r5_0>;
 	memory-region = <&mcu_r5fss0_core0_dma_memory_region>,
 			<&mcu_r5fss0_core0_memory_region>;
-};
-
-&ospi0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&ospi0_pins_default>;
-	status = "okay";
-
-	serial_flash: flash@0 {
-		compatible = "jedec,spi-nor";
-		reg = <0x0>;
-		spi-tx-bus-width = <8>;
-		spi-rx-bus-width = <8>;
-		spi-max-frequency = <25000000>;
-		cdns,tshsl-ns = <60>;
-		cdns,tsd2d-ns = <60>;
-		cdns,tchsh-ns = <60>;
-		cdns,tslch-ns = <60>;
-		cdns,read-delay = <0>;
-		bootph-all;
-	};
 };
 
 &sdhci0 {
@@ -290,13 +234,13 @@
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&pmic_irq_pins_default>;
-		interrupt-parent = <&main_gpio1>;
-		interrupts = <31 IRQ_TYPE_EDGE_FALLING>;
+		interrupt-parent = <&gic500>;
+		interrupts = <GIC_SPI 224 IRQ_TYPE_LEVEL_HIGH>;
 		interrupt-controller;
 		#interrupt-cells = <1>;
 
-		ti,power-button;
 		system-power-controller;
+		ti,power-button;
 
 		regulators {
 			vdd_3v3_som: buck1 {
@@ -373,12 +317,6 @@
 		compatible = "atmel,24c32";
 		pagesize = <32>;
 		reg = <0x50>;
-	};
-
-	som_eeprom_opt: eeprom@51 {
-		compatible = "atmel,24c32";
-		pagesize = <32>;
-		reg = <0x51>;
 	};
 
 	i2c_som_rtc: rtc@52 {
