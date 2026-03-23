@@ -225,6 +225,7 @@ int board_late_init(void)
 #endif
 
 #if IS_ENABLED(CONFIG_OF_LIBFDT) && IS_ENABLED(CONFIG_OF_BOARD_SETUP)
+#if IS_ENABLED(CONFIG_PHYTEC_SOM_DETECTION)
 static int fdt_apply_overlay_from_fit(const char *overlay_path, void *fdt)
 {
 	u64 loadaddr;
@@ -294,15 +295,19 @@ fixup_error:
 	pr_err("Failed to apply SoM overlays\n");
 	goto cleanup;
 }
+#endif
 
 int ft_board_setup(void *blob, struct bd_info *bd)
 {
+#if IS_ENABLED(CONFIG_PHYTEC_SOM_DETECTION)
 	struct phytec_eeprom_data data;
 	int ret;
 
 	fdt_apply_som_overlays(blob);
+#endif
 	fdt_copy_fixed_partitions(blob);
 
+#if IS_ENABLED(CONFIG_PHYTEC_SOM_DETECTION)
 	ret = phytec_eeprom_data_setup(&data, CONFIG_EEPROM_BUS, EEPROM_ADDR);
 	if (ret || !data.valid)
 		return 0;
@@ -311,6 +316,7 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 	if (ret)
 		pr_err("%s: Failed to add PHYTEC information to fdt.\n",
 		       __func__);
+#endif
 
 	return 0;
 }
