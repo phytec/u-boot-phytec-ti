@@ -44,9 +44,28 @@ config TARGET_PHYCORE_AM62PX_R5
 	select BINMAN
 	imply SYS_K3_SPL_ATF
 
+config TARGET_PHYFLEX_AM62PX_A53
+	bool "PHYTEC phyFLEX-AM62Px running on A53"
+	select ARM64
+	select BINMAN
+	select OF_SYSTEM_SETUP
+	imply OF_UPSTREAM
+
+config TARGET_PHYFLEX_AM62PX_R5
+	bool "PHYTEC phyFLEX-AM62Px running on R5"
+	select CPU_V7R
+	select SYS_THUMB_BUILD
+	select K3_LOAD_SYSFW
+	select RAM
+	select SPL_RAM
+	select K3_DDRSS
+	select BINMAN
+	imply SYS_K3_SPL_ATF
+
 endchoice
 
 source "board/ti/am62px/Kconfig"
 source "board/phytec/phycore_am62px/Kconfig"
+source "board/phytec/am62px-phyflex-fpsc-g/Kconfig"
 
 endif

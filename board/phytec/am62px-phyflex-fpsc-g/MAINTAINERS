@@ -1,0 +1,12 @@
+phyFLEX-AM62Px
+M:	John Ma <jma@phytec.com>
+M:	Wadim Egorov <w.egorov@phytec.de>
+S:	Maintained
+F:	arch/arm/dts/k3-am62p-phyflex-fpsc-g-lpddr4-2gb.dtsi
+F:	arch/arm/dts/k3-am62p5-phyflex-libra-rdk-u-boot.dtsi
+F:	arch/arm/dts/k3-am62p-phyflex-fpsc-g-binman.dtsi
+F:	arch/arm/dts/k3-am62p5-r5-phyflex-fpsc-g-2gb.dts
+F:	board/phytec/am62px-phyflex-fpsc-g/
+F:	configs/am62px_phyflex_fpsc_g_a53_defconfig
+F:	configs/am62px_phyflex_fpsc_g_r5_defconfig
+F:	include/configs/am62px-phyflex-fpsc-g.h
