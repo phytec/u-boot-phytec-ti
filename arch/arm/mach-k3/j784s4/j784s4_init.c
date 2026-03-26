@@ -285,7 +285,7 @@ void lpm_process(void)
 	struct ti_sci_handle *ti_sci = get_ti_sci_handle();
 	save_certificate();
 
-	ret = ti_sci->ops.lpm_ops.lpm_save_addr(ti_sci, (u32)mem_addr_lpm.context_save_addr, mem_addr_lpm.size);
+	ret = ti_sci->ops.lpm_ops.lpm_save_addr(ti_sci, (uintptr_t)mem_addr_lpm.context_save_addr, mem_addr_lpm.size);
 	if (ret)
 		pr_err("TIFS lpm save addr fail\n");
 }
@@ -313,7 +313,7 @@ int extract_lpm_region(void)
 		return -ENODEV;
     }
 
-	mem_addr_lpm.context_save_addr = (u32 *)lpm_reg_addr;
+	mem_addr_lpm.context_save_addr = (u32 *)(uintptr_t) lpm_reg_addr;
 	mem_addr_lpm.atf_cert_addr =  (u32 *)((uintptr_t)mem_addr_lpm.context_save_addr + FW_IMAGE_SIZE);
 	mem_addr_lpm.optee_cert_addr = (u32 *)((uintptr_t)mem_addr_lpm.atf_cert_addr + FW_IMAGE_SIZE);
 	mem_addr_lpm.dm_save_addr = (u32 *)((uintptr_t)mem_addr_lpm.optee_cert_addr + (2*FW_IMAGE_SIZE));
@@ -374,7 +374,8 @@ void k3_mem_init(void)
 
 		if (board_is_resuming()) {
 			typedef void __noreturn (*image_entry_noargs_t)(void);
-			u32 loadaddr, size_int;
+			u32 loadaddr;
+			size_t size_int;
 			void *image_addr;
 			/* exit DDRs from retention */
 			for (ctrl = 0; ctrl < MAX_DDR_CONTROLLERS; ctrl++) {
@@ -412,7 +413,7 @@ void k3_mem_init(void)
 			printf("Starting ATF on ARM64 core...\n\n");
 			resume_rproc_f();
 
-			image_entry_noargs_t image_entry = (image_entry_noargs_t)loadaddr;
+			image_entry_noargs_t image_entry = (image_entry_noargs_t)(uintptr_t)loadaddr;
 			image_entry();
 		}
 		printf("Initialized %d DRAM controllers\n", ctrl);

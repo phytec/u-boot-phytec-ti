@@ -343,7 +343,7 @@ void do_dt_magic(void)
 #define DDR_RET_CLK BIT(2)
 #define PMIC_NSLEEP_REG 0x86
 
-static void k3_deassert_DDR_RET(void)
+static void __maybe_unused k3_deassert_DDR_RET(void)
 {
 	struct udevice *pmica;
 	struct udevice *pmicb;
