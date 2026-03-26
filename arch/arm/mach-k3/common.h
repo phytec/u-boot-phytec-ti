@@ -75,9 +75,12 @@ void save_certificate(void);
 u32 resume_to_dm_f(void);
 void resume_rproc_f(void);
 
-#if IS_ENABLED(CONFIG_SPL_OS_BOOT_SECURE) && !IS_ENABLED(CONFIG_ARM64)
+#if IS_ENABLED(CONFIG_SPL_OS_BOOT_SECURE)
+int k3_falcon_fdt_fixup(void *fdt);
+#if !IS_ENABLED(CONFIG_ARM64)
 int k3_r5_falcon_bootmode(void);
 int k3_r5_falcon_prep(void);
+#endif
 #endif
 
 #if (IS_ENABLED(CONFIG_K3_QOS))
