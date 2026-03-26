@@ -418,6 +418,44 @@ static void qsgmii_daughtercard_env_update(void)
 	}
 }
 
+void configure_serdes_sierra(void)
+{
+	struct udevice *dev, *link_dev;
+	struct phy link;
+	int ret, count, i;
+	int link_count = 0;
+
+	if (!IS_ENABLED(CONFIG_PHY_CADENCE_SIERRA))
+		return;
+
+	ret = uclass_get_device_by_driver(UCLASS_MISC,
+					  DM_DRIVER_GET(sierra_phy_provider),
+					  &dev);
+	if (ret) {
+		printf("Sierra init failed:%d\n", ret);
+		return;
+	}
+
+	count = device_get_child_count(dev);
+	for (i = 0; i < count; i++) {
+		ret = device_get_child(dev, i, &link_dev);
+		if (ret) {
+			printf("probe of sierra child node %d failed: %d\n", i, ret);
+			return;
+		}
+		if (link_dev->driver->id == UCLASS_PHY) {
+			link.dev = link_dev;
+			link.id = link_count++;
+
+			ret = generic_phy_power_on(&link);
+			if (ret) {
+				printf("phy_power_on failed!!: %d\n", ret);
+				return;
+			}
+		}
+	}
+}
+
 int board_late_init(void)
 {
 	if (IS_ENABLED(CONFIG_TI_I2C_BOARD_DETECT)) {
@@ -427,6 +465,9 @@ int board_late_init(void)
 		/* Check for and probe any plugged-in daughtercards */
 		if (board_is_j721e_som() || board_is_j7200_som())
 			probe_daughtercards();
+
+		if (board_is_j721e_som())
+			configure_serdes_sierra();
 
 		/* Update env for power-on-reset of the QSGMII Daughtercard */
 		qsgmii_daughtercard_env_update();
