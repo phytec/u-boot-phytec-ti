@@ -54,7 +54,7 @@ struct ti_sci_handle *get_ti_sci_handle(void)
 	return (struct ti_sci_handle *)ti_sci_get_handle_from_sysfw(dev);
 }
 
-#ifdef CONFIG_SPL_OS_BOOT
+#if IS_ENABLED(CONFIG_SPL_OS_BOOT) && IS_ENABLED(CONFIG_ARM64)
 void *board_spl_fit_buffer_addr(ulong fit_size, int sectors, int bl_len)
 {
 	return (void *)CONFIG_SPL_LOAD_FIT_ADDRESS;
