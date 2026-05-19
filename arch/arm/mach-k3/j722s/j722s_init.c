@@ -14,6 +14,7 @@
 
 #include "../sysfw-loader.h"
 #include "../common.h"
+#include "../lpm-common.h"
 
 struct fwl_data cbass_main_fwls[] = {
 	{ "FSS_DAT_REG3", 7, 8 },
@@ -156,6 +157,11 @@ static void k3_spl_init(void)
 		k3_dm_print_ver();
 }
 
+__weak bool j7xx_board_is_resuming(void)
+{
+	return 0;
+}
+
 static void k3_mem_init(void)
 {
 	struct udevice *dev;
@@ -186,6 +192,9 @@ void board_init_f(ulong dummy)
 
 	k3_spl_init();
 	k3_mem_init();
+	if (j7xx_board_is_resuming())
+		k3_do_resume(); /* no return */
+
 	setup_qos();
 
 	if (IS_ENABLED(CONFIG_ESM_K3)) {
