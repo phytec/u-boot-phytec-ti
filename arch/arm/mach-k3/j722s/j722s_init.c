@@ -85,6 +85,8 @@ static void k3_spl_init(void)
 	 */
 	store_boot_info_from_rom();
 
+	ctrl_mmr_unlock();
+
 	/* Init DM early */
 	ret = spl_early_init();
 	if (ret)
