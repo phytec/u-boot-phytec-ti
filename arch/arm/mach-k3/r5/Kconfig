@@ -1,6 +1,10 @@
 config K3_LOAD_SYSFW
 	bool
 
+config K3_LPM
+	bool
+	default y if SOC_K3_J721E || SOC_K3_J7200 || SOC_K3_J784S4
+
 config K3_OPP_LOW
 	depends on ARCH_K3 && K3_AVS0
 	bool "Enable OPP_LOW on supported TI K3 SoCs"

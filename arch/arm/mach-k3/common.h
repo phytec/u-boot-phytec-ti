@@ -8,6 +8,7 @@
 
 #include <asm/armv7_mpu.h>
 #include <asm/hardware.h>
+#include <image.h>
 #include <mach/security.h>
 
 /* keep ram_top in the 32-bit address space */
@@ -15,7 +16,22 @@
 
 #define K3_FIREWALL_BACKGROUND_BIT	(8)
 #define K3_SPEED_GRADE_UNKNOWN		'\0'
-#define FW_IMAGE_SIZE 0x80000
+
+#if IS_ENABLED(CONFIG_SYS_K3_SPL_ATF)
+enum {
+	IMAGE_ID_ATF,
+	IMAGE_ID_OPTEE,
+	IMAGE_ID_SPL,
+	IMAGE_ID_DM_FW,
+	IMAGE_ID_TIFSSTUB_HS,
+	IMAGE_ID_TIFSSTUB_FS,
+	IMAGE_ID_TIFSSTUB_GP,
+	IMAGE_ID_HSM,
+	IMAGE_AMT,
+};
+
+extern struct image_info fit_image_info[IMAGE_AMT];
+#endif
 
 struct fwl_data {
 	const char *name;
@@ -42,16 +58,6 @@ enum k3_device_type {
 	K3_DEVICE_TYPE_HS_SE,
 };
 
-struct lpm_addr_info {
-	u32 *context_save_addr;
-	u32 *atf_cert_addr;
-	u32 *optee_cert_addr;
-	u32 *dm_save_addr;
-	u32 size;
-};
-
-extern struct lpm_addr_info mem_addr_lpm;
-
 void setup_k3_mpu_regions(void);
 int early_console_init(void);
 void disable_linefill_optimization(void);
@@ -71,9 +77,6 @@ struct ti_sci_handle *get_ti_sci_handle(void);
 void do_board_detect(void);
 void ti_secure_image_check_binary(void **p_image, size_t *p_size);
 int shutdown_mcu_r5_core1(void);
-void save_certificate(void);
-u32 resume_to_dm_f(void);
-void resume_rproc_f(void);
 
 #if IS_ENABLED(CONFIG_SPL_OS_BOOT_SECURE)
 int k3_falcon_fdt_fixup(void *fdt);

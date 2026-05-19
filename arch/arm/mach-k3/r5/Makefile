@@ -13,6 +13,7 @@ obj-$(CONFIG_SOC_K3_J722S) += j722s/
 obj-$(CONFIG_SOC_K3_J784S4) += j784s4/
 
 obj-y += common.o
+obj-$(CONFIG_K3_LPM) += lpm-common.o
 obj-y += lowlevel_init.o
 obj-y += r5_mpu.o
 
