@@ -139,22 +139,22 @@ static void clear_isolation(void)
 }
 
 /* in board_init_f(), there's no BSS, so we can't use global/static variables */
-int board_is_resuming(void)
+bool j7xx_board_is_resuming(void)
 {
 	struct udevice *pmic;
 	u32 pmctrl_val = readl(WKUP_CTRL_MMR0_BASE + PMCTRL_IO_0);
 	struct lpm_scratch_space *lpm_scratch = (struct lpm_scratch_space *)TI_SRAM_LPM_SCRATCH;
 	int err;
 
-	if (gd_k3_resuming() >= 0)
+	if (gd_k3_resuming() != K3_RESUME_STATE_UNKNOWN)
 		goto end;
 
 	if ((pmctrl_val & IO_ISO_STATUS) == IO_ISO_STATUS) {
 		lpm_scratch->wake_src = LPM_WAKE_SOURCE_MCU_IO;
 		clear_isolation();
-		gd_set_k3_resuming(1);
+		gd_set_k3_resuming(K3_RESUME_STATE_RESUMING);
 		debug("board is resuming from IO_DDR mode\n");
-		return gd_k3_resuming();
+		goto end;
 	}
 
 	err = uclass_get_device_by_name(UCLASS_PMIC,
@@ -168,7 +168,7 @@ int board_is_resuming(void)
 	if (pmic_reg_read(pmic, SCRATCH_PAD_REG_3) == MAGIC_SUSPEND) {
 		debug("%s: board is resuming\n", __func__);
 		lpm_scratch->wake_src = LPM_WAKE_SOURCE_PMIC_GPIO;
-		gd_set_k3_resuming(1);
+		gd_set_k3_resuming(K3_RESUME_STATE_RESUMING);
 
 		/* clean magic suspend */
 		if (pmic_reg_write(pmic, SCRATCH_PAD_REG_3, 0))
@@ -177,10 +177,10 @@ int board_is_resuming(void)
 		debug("%s: board is booting (no resume detected)\n", __func__);
 		lpm_scratch->wake_src = 0;
 		lpm_scratch->reserved = 0;
-		gd_set_k3_resuming(0);
+		gd_set_k3_resuming(K3_RESUME_STATE_BOOTING);
 	}
 end:
-	return gd_k3_resuming();
+	return gd_k3_resuming() == K3_RESUME_STATE_RESUMING;
 }
 
 #endif /* CONFIG_SPL_BUILD && CONFIG_TARGET_J784s4_R5_EVM */

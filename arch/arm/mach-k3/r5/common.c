@@ -52,7 +52,7 @@ static struct image_info fit_image_info[IMAGE_AMT];
 
 struct lpm_addr_info mem_addr_lpm;
 
-__weak int board_is_resuming(void)
+__weak bool j7xx_board_is_resuming(void)
 {
 	return 0;
 }

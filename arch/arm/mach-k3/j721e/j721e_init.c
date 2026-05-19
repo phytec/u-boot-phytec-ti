@@ -385,9 +385,6 @@ void board_init_f(ulong dummy)
 	struct udevice *dev;
 #endif
 
-	/* init resume flag */
-	gd_set_k3_resuming(-1);
-
 	/*
 	 * Cannot delay this further as there is a chance that
 	 * K3_BOOT_PARAM_TABLE_INDEX can be over written by SPL MALLOC section.
@@ -499,7 +496,7 @@ void board_init_f(ulong dummy)
 	if (ret)
 		panic("DRAM init failed: %d\n", ret);
 
-	if (board_is_resuming()) {
+	if (j7xx_board_is_resuming()) {
 		typedef void __noreturn (*image_entry_noargs_t)(void);
 		u32 loadaddr, size_int;
 		void *image_addr;

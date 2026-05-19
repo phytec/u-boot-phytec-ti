@@ -445,7 +445,7 @@ static int k3_ddrss_ofdata_to_priv(struct udevice *dev)
 
 #if defined(CONFIG_K3_J721E_DDRSS)
 
-int __weak board_is_resuming(void)
+bool __weak j7xx_board_is_resuming(void)
 {
 	return 0;
 }
@@ -1176,7 +1176,7 @@ static int k3_ddrss_probe(struct udevice *dev)
 		ddrss_data->ddrss_deassert_retention();
 
 #if defined(CONFIG_K3_J721E_DDRSS)
-	if (board_is_resuming())
+	if (j7xx_board_is_resuming())
 		return 0;
 #endif
 	k3_lpddr4_start(ddrss);

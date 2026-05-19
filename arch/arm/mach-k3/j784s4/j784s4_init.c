@@ -372,7 +372,7 @@ void k3_mem_init(void)
 			ctrl++;
 		}
 
-		if (board_is_resuming()) {
+		if (j7xx_board_is_resuming()) {
 			typedef void __noreturn (*image_entry_noargs_t)(void);
 			u32 loadaddr;
 			size_t size_int;
@@ -426,8 +426,6 @@ void board_init_f(ulong dummy)
 {
 	struct udevice *dev;
 	int ret;
-	/* init resume flag */
-	gd_set_k3_resuming(-1);
 
 	k3_spl_init();
 
