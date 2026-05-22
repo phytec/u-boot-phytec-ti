@@ -352,6 +352,40 @@ int board_late_init(void)
 
 #if (IS_ENABLED(CONFIG_SPL_BUILD) && IS_ENABLED(CONFIG_TARGET_J721S2_R5_EVM) && IS_ENABLED(CONFIG_PMIC_TPS65941))
 
+#define FSM_NSLEEP_TRIGGERS	0x86
+
+/*
+ * Set PMIC NSLEEP triggers bits to prevent transition to S2R state while
+ * clearing interrupts.
+ */
+static void pmic_set_nsleep_triggers(void)
+{
+	struct udevice *pmic_a, *pmic_b;
+	int err;
+
+	err = uclass_get_device_by_name(UCLASS_PMIC,
+					"pmic@48", &pmic_a);
+	if (err) {
+		printf("Getting PMIC-A init failed: %d\n", err);
+		return;
+	}
+
+	err = uclass_get_device_by_name(UCLASS_PMIC,
+					"pmic@4c", &pmic_b);
+	if (err) {
+		printf("Getting PMIC-B init failed: %d\n", err);
+		return;
+	}
+
+	err = pmic_reg_write(pmic_a, FSM_NSLEEP_TRIGGERS, 0x03);
+	if (err)
+		printf("Failed to set NSLEEP triggers bits on PMIC-A\n");
+
+	err = pmic_reg_write(pmic_b, FSM_NSLEEP_TRIGGERS, 0x03);
+	if (err)
+		printf("Failed to set NSLEEP triggers bits on PMIC-B\n");
+}
+
 #define SCRATCH_PAD_REG_3 0xCB
 
 #define MAGIC_SUSPEND 0xBA
@@ -380,6 +414,8 @@ bool j7xx_board_is_resuming(void)
 		/* clean magic suspend */
 		if (pmic_reg_write(pmic, SCRATCH_PAD_REG_3, 0))
 			printf("Failed to clean magic value for suspend detection in PMIC-A\n");
+
+		pmic_set_nsleep_triggers();
 	} else {
 		debug("%s: board is booting (no resume detected)\n", __func__);
 		gd_set_k3_resuming(K3_RESUME_STATE_BOOTING);
