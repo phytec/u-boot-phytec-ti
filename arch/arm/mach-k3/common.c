@@ -295,7 +295,6 @@ void enable_caches(void)
 		       __func__, fdt_strerror(ret));
 
 	mmu_setup();
-	mmu_enable();
 
 	if (CONFIG_K3_ATF_LOAD_ADDR >= CFG_SYS_SDRAM_BASE) {
 		ret = mmu_unmap_reserved_mem("tfa", true);
@@ -312,6 +311,7 @@ void enable_caches(void)
 	}
 #endif
 
+	mmu_enable();
 	icache_enable();
 	dcache_enable();
 }
