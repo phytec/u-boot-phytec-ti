@@ -17,7 +17,9 @@
 #include <env.h>
 #include <fdt_support.h>
 #include <spl.h>
+#include <wait_bit.h>
 #include <asm/arch/k3-ddr.h>
+#include <asm/arch/am62xx-j722s-lpm-hardware.h>
 #include "../common/fdt_ops.h"
 
 #if IS_ENABLED(CONFIG_SPL_BUILD)
@@ -87,15 +89,88 @@ extern void ctrl_mmr_unlock(void);
 
 #define SCRATCH_PAD_REG_3 0xCB
 #define MAGIC_SUSPEND 0xBA
+#define LPM_WAKE_SOURCE_PMIC_GPIO 0x91
+#define LPM_WAKE_SOURCE_MCU_IO    0x81
+
+static int clear_io_isolation(void)
+{
+	const void *wait_reg = (const void *)(WKUP_CTRL_MMR0_BASE +
+					      WKUP_CTRL_MMR_CANUART_WAKE_STAT1);
+	int ret;
+	u32 reg = 0;
+
+	/* Program magic word */
+	reg = readl(WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_CANUART_WAKE_CTRL);
+	reg |= WKUP_CTRL_MMR_CANUART_WAKE_CTRL_MW << WKUP_CTRL_MMR_CANUART_WAKE_CTRL_MW_SHIFT;
+	writel(reg, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_CANUART_WAKE_CTRL);
+
+	/* Set enable bit. */
+	reg |= WKUP_CTRL_MMR_CANUART_WAKE_CTRL_MW_LOAD_EN;
+	writel(reg, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_CANUART_WAKE_CTRL);
+
+	/* Clear enable bit. */
+	reg &= ~WKUP_CTRL_MMR_CANUART_WAKE_CTRL_MW_LOAD_EN;
+	writel(reg, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_CANUART_WAKE_CTRL);
+
+	/* wait for CAN_ONLY_IO signal to be 0 */
+	ret = wait_for_bit_32(wait_reg,
+			      WKUP_CTRL_MMR_CANUART_WAKE_STAT1_CANUART_IO_MODE,
+			      false,
+			      CLKSTOP_TRANSITION_TIMEOUT_MS,
+			      false);
+	if (ret < 0)
+		return ret;
+
+	/* Reset magic word */
+	writel(0, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_CANUART_WAKE_CTRL);
+
+	/* Remove WKUP IO isolation */
+	reg = readl(WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_0);
+	reg = reg & WKUP_CTRL_MMR_PMCTRL_IO_0_WRITE_MASK & ~WKUP_CTRL_MMR_PMCTRL_IO_0_GLOBAL_WUEN_0;
+	writel(reg, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_0);
+
+	/* clear global IO isolation */
+	reg = readl(WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_0);
+	reg = reg & WKUP_CTRL_MMR_PMCTRL_IO_0_WRITE_MASK & ~WKUP_CTRL_MMR_PMCTRL_IO_0_IO_ISO_CTRL_0;
+	writel(reg, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_0);
+
+	/* Remove main domain IO isolation */
+	reg = readl(WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_1);
+	reg = reg & WKUP_CTRL_MMR_PMCTRL_IO_0_WRITE_MASK & ~WKUP_CTRL_MMR_PMCTRL_IO_0_GLOBAL_WUEN_0;
+	writel(reg, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_1);
+
+	/* clear global IO isolation for main domain IOs */
+	reg = readl(WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_1);
+	reg = reg & WKUP_CTRL_MMR_PMCTRL_IO_0_WRITE_MASK & ~WKUP_CTRL_MMR_PMCTRL_IO_0_IO_ISO_CTRL_0;
+	writel(reg, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_1);
+
+	/* Release all IOs from deepsleep mode and clear IO daisy chain control */
+	writel(0, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_DEEPSLEEP_CTRL);
+	writel(0, WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_GLB);
+
+	return 0;
+}
 
 /* in board_init_f(), there's no BSS, so we can't use global/static variables */
 bool j7xx_board_is_resuming(void)
 {
 	struct udevice *pmic, *i2c;
 	int err;
+	u32 pmctrl0_val = readl(WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_0);
+	u32 pmctrl1_val = readl(WKUP_CTRL_MMR0_BASE + WKUP_CTRL_MMR_PMCTRL_IO_1);
 
 	if (gd_k3_resuming() != K3_RESUME_STATE_UNKNOWN)
 		goto end;
+
+	if (((pmctrl0_val & WKUP_CTRL_MMR_PMCTRL_IO_0_IO_ISO_STATUS_0) ==
+	     WKUP_CTRL_MMR_PMCTRL_IO_0_IO_ISO_STATUS_0) ||
+	    ((pmctrl1_val & WKUP_CTRL_MMR_PMCTRL_IO_0_IO_ISO_STATUS_0) ==
+	     WKUP_CTRL_MMR_PMCTRL_IO_0_IO_ISO_STATUS_0)) {
+		debug("%s: board is resuming from IO_DDR mode\n", __func__);
+		clear_io_isolation();
+		gd_set_k3_resuming(K3_RESUME_STATE_RESUMING);
+		goto end;
+	}
 
 	/*
 	 * On HS-SE devices, i2c access fails unless MMR registers are unlocked.
@@ -117,7 +192,7 @@ bool j7xx_board_is_resuming(void)
 	debug("%s: PMIC is detected (%s)\n", __func__, pmic->name);
 
 	if (dm_i2c_reg_read(pmic, SCRATCH_PAD_REG_3) == MAGIC_SUSPEND) {
-		debug("%s: board is resuming\n", __func__);
+		debug("%s: board is resuming from SOC_OFF mode\n", __func__);
 		gd_set_k3_resuming(K3_RESUME_STATE_RESUMING);
 
 		/* clean magic suspend */
