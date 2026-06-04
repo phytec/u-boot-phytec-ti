@@ -650,6 +650,10 @@ u32 get_sys_clk_index(void);
 void enable_basic_clocks(void);
 void enable_basic_uboot_clocks(void);
 
+#if CONFIG_IS_ENABLED(SCSI)
+void enable_sata_clocks(void);
+#endif
+
 void enable_usb_clocks(int index);
 void disable_usb_clocks(int index);
 

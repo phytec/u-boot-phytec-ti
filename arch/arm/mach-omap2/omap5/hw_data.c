@@ -577,6 +577,34 @@ void enable_basic_uboot_clocks(void)
 			 1);
 }
 
+#if CONFIG_IS_ENABLED(SCSI)
+void enable_sata_clocks(void)
+{
+	u32 const clk_domains_sata[] = {
+		0
+	};
+
+	u32 const clk_modules_hw_auto_sata[] = {
+		(*prcm)->cm_l3init_ocp2scp3_clkctrl,
+		0
+	};
+
+	u32 const clk_modules_explicit_en_sata[] = {
+		(*prcm)->cm_l3init_sata_clkctrl,
+		0
+	};
+
+	do_enable_clocks(clk_domains_sata,
+			 clk_modules_hw_auto_sata,
+			 clk_modules_explicit_en_sata,
+			 1);
+
+	/* Enable optional functional clock (SATA ref clk) */
+	setbits_le32((*prcm)->cm_l3init_sata_clkctrl,
+		     SATA_CLKCTRL_OPTFCLKEN_MASK);
+}
+#endif
+
 #ifdef CONFIG_TI_EDMA3
 void enable_edma3_clocks(void)
 {
