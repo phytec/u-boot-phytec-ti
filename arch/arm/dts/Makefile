@@ -472,6 +472,10 @@ dtb-$(CONFIG_TARGET_AM57XX_EVM) += am57xx-beagle-x15.dtb \
 	am572x-idk.dtb	\
 	am571x-idk.dtb
 
+dtb-$(CONFIG_TARGET_PHYCORE_AM57X) += \
+	am57xx-phytec-pcm-948.dtb \
+	am5728-phytec-pcm-948-40A00111I.dtb
+
 dtb-$(CONFIG_ARCH_LS1021A) += ls1021a-qds-duart.dtb \
 	ls1021a-qds-lpuart.dtb \
 	ls1021a-twr-duart.dtb ls1021a-twr-lpuart.dtb \
