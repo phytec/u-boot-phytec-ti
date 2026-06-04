@@ -251,6 +251,32 @@ int phytec_eeprom_data_init(struct phytec_eeprom_data *data,
 		goto err;
 	}
 
+#if IS_ENABLED(CONFIG_PHYTEC_AM57_EEPROM_APIV0)
+	struct phytec_am57_eeprom_apiv0_data *am57_apiv0 =
+		(struct phytec_am57_eeprom_apiv0_data *)data;
+	/* Only do remapping if header magic is matching */
+	if (am57_apiv0->header == PHYTEC_AM57_EEPROM_APIV0_MAGIC) {
+		/* Do the remapping from am57_apiv0 to apiv0 structure */
+		data->payload.api_rev = am57_apiv0->api_version;
+		data->payload.data.data_api0.pcb_rev = am57_apiv0->som_pcb_rev;
+		data->payload.data.data_api0.som_type = am57_apiv0->mod_version;
+		data->payload.data.data_api0.ksp_no = am57_apiv0->kspno;
+
+		/* api0 has 16 bytes for kit options while am57_apiv0 has only 11 */
+		for (i = 0; i < 16; i++) {
+			if (i <= 11)
+				data->payload.data.data_api0.opt[i] = am57_apiv0->kit_opt[i];
+			else
+				/* Last 5 bytes are unused, set them to zero */
+				data->payload.data.data_api0.opt[i] = 0x0;
+		}
+
+		/* MAC */
+		for (i = 0; i < 6; i++)
+			data->payload.data.data_api0.mac[i] = am57_apiv0->mac[i];
+	}
+#endif
+
 	if (data->payload.api_rev >= PHYTEC_API_REV2) {
 		ret = phytec_eeprom_data_init_v2(data);
 		if (ret)
