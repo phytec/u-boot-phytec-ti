@@ -11,6 +11,7 @@
 #include <fdtdec.h>
 
 #define PHYTEC_MAX_OPTIONS	17
+#define PHYTEC_AM57XX_SOM	57
 #define PHYTEC_EEPROM_INVAL	0xff
 
 #define PHYTEC_API2_DATA_LEN	32
