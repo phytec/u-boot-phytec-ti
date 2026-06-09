@@ -224,12 +224,11 @@
 							region = <2>;
 						};
 
-						firewall-5142-0 {
-							/* nb_slv2__mem0 Background Firewall - 0 */
-							insert-template = <&firewall_bg_3>;
-							id = <5142>;
-							region = <0>;
-						};
+						/*	firewall-5142-0 {
+						 *		nb_slv2__mem0 Background Firewall - 0
+						 *		Already configured by the secure entity
+						 *	};
+						 */
 
 						firewall-5142-1 {
 							/* nb_slv2__mem0 Foreground Firewall */
@@ -238,12 +237,11 @@
 							region = <1>;
 						};
 
-						firewall-5143-0 {
-							/* nb_slv3__mem0 Background Firewall - 0 */
-							insert-template = <&firewall_bg_3>;
-							id = <5143>;
-							region = <0>;
-						};
+						/*	firewall-5143-0 {
+						 *		nb_slv3__mem0 Background Firewall - 0
+						 *		Already configured by the secure entity
+						 *	};
+						 */
 
 						firewall-5143-1 {
 							/* nb_slv3__mem0 Foreground Firewall */
