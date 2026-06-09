@@ -58,9 +58,12 @@ static int extract_lpm_region(void)
 	}
 
 	mem_addr_lpm.context_save_addr = (u32 *)lpm_reg_addr;
-	mem_addr_lpm.atf_cert_addr = mem_addr_lpm.context_save_addr + FW_IMAGE_SIZE;
-	mem_addr_lpm.optee_cert_addr = mem_addr_lpm.atf_cert_addr + FW_IMAGE_SIZE;
-	mem_addr_lpm.dm_save_addr = mem_addr_lpm.optee_cert_addr + (2 * FW_IMAGE_SIZE);
+	mem_addr_lpm.atf_cert_addr =
+		(u32 *)((u8 *)mem_addr_lpm.context_save_addr + FW_IMAGE_SIZE);
+	mem_addr_lpm.optee_cert_addr =
+		(u32 *)((u8 *)mem_addr_lpm.atf_cert_addr + FW_IMAGE_SIZE);
+	mem_addr_lpm.dm_save_addr =
+		(u32 *)((u8 *)mem_addr_lpm.optee_cert_addr + (2 * FW_IMAGE_SIZE));
 	mem_addr_lpm.size = lpm_reg_size;
 
 	return 0;
