@@ -185,7 +185,7 @@
 
 						firewall-5140-1 {
 							/* nb_slv0__mem0 Foreground Firewall */
-							insert-template = <&firewall_armv8_atf_fg>;
+							insert-template = <&firewall_armv8_atf_tifs_fg>;
 							id = <5140>;
 							region = <1>;
 						};
@@ -198,7 +198,7 @@
 
 						firewall-5141-1 {
 							/* nb_slv1__mem0 Foreground Firewall */
-							insert-template = <&firewall_armv8_atf_fg>;
+							insert-template = <&firewall_armv8_atf_tifs_fg>;
 							id = <5141>;
 							region = <1>;
 						};
