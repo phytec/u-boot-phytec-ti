@@ -995,6 +995,12 @@ int sdhci_setup_cfg(struct mmc_config *cfg, struct sdhci_host *host,
 		caps_1 &= ~(SDHCI_SUPPORT_SDR104 | SDHCI_SUPPORT_SDR50 |
 			    SDHCI_SUPPORT_DDR50);
 
+#if CONFIG_IS_ENABLED(DM_MMC)
+	if (dev_read_bool(host->mmc->dev, "no-1-8-v"))
+		caps_1 &= ~(SDHCI_SUPPORT_SDR104 | SDHCI_SUPPORT_SDR50 |
+			    SDHCI_SUPPORT_DDR50);
+#endif
+
 	if (caps_1 & (SDHCI_SUPPORT_SDR104 | SDHCI_SUPPORT_SDR50 |
 		      SDHCI_SUPPORT_DDR50))
 		cfg->host_caps |= MMC_CAP(UHS_SDR12) | MMC_CAP(UHS_SDR25);
