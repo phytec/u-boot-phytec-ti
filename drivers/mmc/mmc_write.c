@@ -14,6 +14,11 @@
 #include <linux/math64.h>
 #include "mmc_private.h"
 
+#define MULTI_BLK_WRITE_FAIL 1
+#define SINGLE_BLK_WRITE_FAIL 2
+#define STOP_TRANSMISSION_FAIL 4
+#define POLL_FOR_READY_FAIL 8
+
 static ulong mmc_erase_t(struct mmc *mmc, ulong start, lbaint_t blkcnt, u32 args)
 {
 	struct mmc_cmd cmd;
@@ -149,9 +154,34 @@ ulong mmc_berase(struct blk_desc *block_dev, lbaint_t start, lbaint_t blkcnt)
 	return blk;
 }
 
+static int mmc_stop_trans(struct mmc *mmc, int *write_status)
+{
+	if (mmc_host_is_spi(mmc))
+		return 0;
+
+	if (mmc_send_stop_transmission(mmc, true)) {
+		*write_status |= STOP_TRANSMISSION_FAIL;
+		return -1;
+	}
+	return 0;
+}
+
+static int mmc_wait_for_ready(struct mmc *mmc, int timeout_ms, int *write_status)
+{
+	if (mmc_poll_for_busy(mmc, timeout_ms)) {
+		*write_status |= POLL_FOR_READY_FAIL;
+		return -1;
+	}
+	return 0;
+}
+
 static ulong mmc_write_blocks(struct mmc *mmc, lbaint_t start,
 		lbaint_t blkcnt, const void *src)
 {
+	bool use_multi_block = (blkcnt > 1);
+	lbaint_t blocks_per_xfer = blkcnt;
+	lbaint_t blocks_written = 0;
+	int write_status = 0;
 	struct mmc_cmd cmd;
 	struct mmc_data data;
 	int timeout_ms = 1000;
@@ -165,53 +195,65 @@ static ulong mmc_write_blocks(struct mmc *mmc, lbaint_t start,
 
 	if (blkcnt == 0)
 		return 0;
-	else if (blkcnt == 1)
-		cmd.cmdidx = MMC_CMD_WRITE_SINGLE_BLOCK;
-	else
-		cmd.cmdidx = MMC_CMD_WRITE_MULTIPLE_BLOCK;
 
-	if (mmc->high_capacity)
-		cmd.cmdarg = start;
-	else
-		cmd.cmdarg = start * mmc->write_bl_len;
-
-	cmd.resp_type = MMC_RSP_R1;
-
-	data.src = src;
-	data.blocks = blkcnt;
 	data.blocksize = mmc->write_bl_len;
 	data.flags = MMC_DATA_WRITE;
 
-	err = mmc_send_cmd(mmc, &cmd, &data);
-	if (err) {
-		printf("mmc write failed\n");
-		/*
-		 * Don't return 0 here since the emmc will still be in data
-		 * transfer mode continue to send the STOP_TRANSMISSION command
-		 */
-	}
+	while (blocks_written < blkcnt) {
+		if (use_multi_block)
+			cmd.cmdidx = MMC_CMD_WRITE_MULTIPLE_BLOCK;
+		else
+			cmd.cmdidx = MMC_CMD_WRITE_SINGLE_BLOCK;
 
-	/* SPI multiblock writes terminate using a special
-	 * token, not a STOP_TRANSMISSION request.
-	 */
-	if (!mmc_host_is_spi(mmc) && blkcnt > 1) {
-		cmd.cmdidx = MMC_CMD_STOP_TRANSMISSION;
-		cmd.cmdarg = 0;
-		cmd.resp_type = MMC_RSP_R1b;
-		if (mmc_send_cmd(mmc, &cmd, NULL)) {
-			printf("mmc fail to send stop cmd\n");
-			return 0;
+		if (mmc->high_capacity)
+			cmd.cmdarg = start + blocks_written;
+		else
+			cmd.cmdarg = (start + blocks_written) * mmc->write_bl_len;
+
+		cmd.resp_type = MMC_RSP_R1;
+
+		data.src = src + (blocks_written * mmc->write_bl_len);
+		data.blocks = blocks_per_xfer;
+
+		err = mmc_send_cmd(mmc, &cmd, &data);
+		if (err) {
+			if (use_multi_block) {
+				write_status |= MULTI_BLK_WRITE_FAIL;
+				if (mmc_stop_trans(mmc, &write_status))
+					break;
+				if (mmc_wait_for_ready(mmc, timeout_ms, &write_status))
+					break;
+				/* Switch to single-block retry */
+				use_multi_block = 0;
+				blocks_per_xfer = 1;
+				continue;
+			} else {
+				write_status |= SINGLE_BLK_WRITE_FAIL;
+				break;
+			}
 		}
+		blocks_written += blocks_per_xfer;
+		if (use_multi_block && blocks_written == blkcnt)
+			mmc_stop_trans(mmc, &write_status);
+		mmc_wait_for_ready(mmc, timeout_ms, &write_status);
 	}
 
-	/* Waiting for the ready status */
-	if (mmc_poll_for_busy(mmc, timeout_ms))
+	mmc_wait_for_ready(mmc, timeout_ms, &write_status);
+
+	if (write_status)
+		printf("\nMMC write: multi: %s, single: %s, stop trans: %s, "
+		       "poll ready: %s (wrote 0x%lx/0x%lx blocks)\n",
+		       write_status & MULTI_BLK_WRITE_FAIL ? "F" : "P",
+		       write_status & SINGLE_BLK_WRITE_FAIL ? "F" : "P",
+		       write_status & STOP_TRANSMISSION_FAIL ? "F" : "P",
+		       write_status & POLL_FOR_READY_FAIL ? "F" : "P",
+		       blocks_written, blkcnt);
+
+	if (blocks_written != blkcnt ||
+	    (write_status & (STOP_TRANSMISSION_FAIL | POLL_FOR_READY_FAIL)))
 		return 0;
 
-	if (err)
-		return 0;
-
-	return blkcnt;
+	return blocks_written;
 }
 
 #if CONFIG_IS_ENABLED(BLK)
