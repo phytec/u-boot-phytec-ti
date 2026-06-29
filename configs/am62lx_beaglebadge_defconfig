@@ -1,6 +1,6 @@
 #include <configs/am62lx_evm_defconfig>
 
-CONFIG_DEFAULT_DEVICE_TREE="ti/k3-am62l3-badge"
+CONFIG_DEFAULT_DEVICE_TREE="ti/k3-am62l3-beaglebadge"
 CONFIG_SPI_FLASH_ISSI=y
 CONFIG_SPI_FLASH_SPANSION=n
 CONFIG_SPI_FLASH_S28HX_T=n
