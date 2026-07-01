@@ -18,6 +18,7 @@ config TARGET_AM62L3_EVM
 
 endchoice
 
+source "board/beagle/beaglebadge/Kconfig"
 source "board/ti/am62lx/Kconfig"
 
 endif

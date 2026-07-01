@@ -1,0 +1,32 @@
+# SPDX-License-Identifier:     GPL-2.0+
+#
+# Copyright (C) 2026 Texas Instruments Incorporated - https://www.ti.com/
+#
+
+choice
+	prompt "BeagleBoard.org AM62L3 based BeagleBadge board"
+	optional
+
+config TARGET_AM62L3_BEAGLEBADGE
+	bool "BeagleBoard.org AM62L3 BeagleBadge"
+	select ARM64
+	select BINMAN
+	select OF_UPSTREAM
+	select OF_SYSTEM_SETUP
+
+endchoice
+
+if TARGET_AM62L3_BEAGLEBADGE
+
+config SYS_BOARD
+       default "beaglebadge"
+
+config SYS_VENDOR
+       default "beagle"
+
+config SYS_CONFIG_NAME
+       default "beaglebadge"
+
+source "board/ti/common/Kconfig"
+
+endif
