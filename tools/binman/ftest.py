@@ -7192,6 +7192,11 @@ fdt         fdtmap                Extract the devicetree blob from the fdtmap
         configlen_noheader = TI_BOARD_CONFIG_DATA * 4
         self.assertGreater(data, configlen_noheader)
 
+    def testTIBoardConfigCombinedSwRev(self):
+        """Test that sw-rev property is honoured in combined board config"""
+        data = self._DoReadFile('vendor/ti_board_cfg_combined_sw_rev.dts')
+        self.assertEqual(2, data[1])
+
     def testTIBoardConfigNoDataType(self):
         """Test that error is thrown when data type is not supported"""
         with self.assertRaises(ValueError) as e:
