@@ -18,7 +18,6 @@
 #include <mmc.h>
 #include <remoteproc.h>
 #include <k3_bist.h>
-#include <power/pmic.h>
 #include <mach/k3-ddr.h>
 
 #include "../sysfw-loader.h"
@@ -280,30 +279,6 @@ void k3_spl_init(void)
 		k3_dm_print_ver();
 }
 
-#define DDR_RET_VAL BIT(5)
-#define GPIO_OUT_1 0x3D
-#define PMIC_NSLEEP_REG 0x86
-
-static void k3_deassert_DDR_RET(void)
-{
-	struct udevice *pmic;
-	int regval;
-	int err;
-
-	err = uclass_get_device_by_name(UCLASS_PMIC,
-					"pmic@48", &pmic);
-	if (err) {
-		printf("Getting PMIC init failed: %d\n", err);
-		return;
-	}
-
-	/* Set DDR_RET Signal Low on PMIC B */
-	regval = pmic_reg_read(pmic, GPIO_OUT_1) & ~DDR_RET_VAL;
-
-	pmic_reg_write(pmic, GPIO_OUT_1, regval);
-	pmic_reg_write(pmic, PMIC_NSLEEP_REG, 0x3);
-}
-
 void k3_mem_init(void)
 {
 	struct udevice *dev;
@@ -339,7 +314,7 @@ void k3_mem_init(void)
 			}
 
 			/* de-assert DDR_RET pin */
-			k3_deassert_DDR_RET();
+			k3_deassert_ddr_ret();
 
 			/* restore DDR max frequency */
 			for (ctrl = 0; ctrl < MAX_DDR_CONTROLLERS; ctrl++)

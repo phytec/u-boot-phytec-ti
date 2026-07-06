@@ -117,6 +117,9 @@ int board_late_init(void)
 #define MAGIC_SUSPEND 0xBA
 #define LPM_WAKE_SOURCE_PMIC_GPIO 0x91
 #define LPM_WAKE_SOURCE_MCU_IO    0x81
+#define GPIO_OUT_1 0x3D
+#define DDR_RET_VAL BIT(5)
+#define PMIC_FSM_NSLEEP_TRIGGERS 0x86
 
 static void clear_isolation(void)
 {
@@ -181,6 +184,26 @@ bool j7xx_board_is_resuming(void)
 	}
 end:
 	return gd_k3_resuming() == K3_RESUME_STATE_RESUMING;
+}
+
+void k3_deassert_ddr_ret(void)
+{
+	struct udevice *pmic;
+	int regval;
+	int err;
+
+	err = uclass_get_device_by_name(UCLASS_PMIC,
+					"pmic@48", &pmic);
+	if (err) {
+		printf("Getting PMIC init failed: %d\n", err);
+		return;
+	}
+
+	/* Set DDR_RET Signal Low on PMIC B */
+	regval = pmic_reg_read(pmic, GPIO_OUT_1) & ~DDR_RET_VAL;
+
+	pmic_reg_write(pmic, GPIO_OUT_1, regval);
+	pmic_reg_write(pmic, PMIC_FSM_NSLEEP_TRIGGERS, 0x3);
 }
 
 #endif /* CONFIG_SPL_BUILD && CONFIG_TARGET_J784s4_R5_EVM */

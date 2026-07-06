@@ -355,6 +355,10 @@ int board_late_init(void)
 
 #define SCRATCH_PAD_REG_3 0xCB
 #define MAGIC_SUSPEND 0xBA
+#define GPIO_OUT_1 0x3D
+#define DDR_RET_VAL BIT(3)
+#define PMIC_FSM_NSLEEP_TRIGGERS 0x86
+
 
 static void clear_isolation(void)
 {
@@ -415,6 +419,40 @@ bool j7xx_board_is_resuming(void)
 	}
 end:
 	return gd_k3_resuming() == K3_RESUME_STATE_RESUMING;
+}
+
+void k3_deassert_ddr_ret(void)
+{
+	struct udevice *pmic_a, *pmic_b;
+	int regval;
+	int err;
+
+	err = uclass_get_device_by_name(UCLASS_PMIC,
+					"pmic@48", &pmic_a);
+	if (err) {
+		printf("Getting PMIC@48 init failed: %d\n", err);
+		return;
+	}
+
+	err = uclass_get_device_by_name(UCLASS_PMIC,
+					"pmic@4c", &pmic_b);
+	if (err) {
+		printf("Getting PMIC@4c init failed: %d\n", err);
+		return;
+	}
+	/* Set DDR_RET Signal Low on PMIC B */
+	regval = pmic_reg_read(pmic_b, GPIO_OUT_1) & ~DDR_RET_VAL;
+	regval &= ~(1 << (4 - 1));
+	pmic_reg_write(pmic_b, GPIO_OUT_1, regval);
+
+	/* Transition the PMICs to Active mode */
+	err = pmic_reg_write(pmic_a, PMIC_FSM_NSLEEP_TRIGGERS, 0x03);
+	if (err)
+		printf("Failed to set NSLEEP triggers bits on PMIC-A\n");
+
+	err = pmic_reg_write(pmic_b, PMIC_FSM_NSLEEP_TRIGGERS, 0x03);
+	if (err)
+		printf("Failed to set NSLEEP triggers bits on PMIC-B\n");
 }
 
 #endif /* CONFIG_SPL_BUILD && CONFIG_TARGET_J721S2_R5_EVM && CONFIG_PMIC_TPS65941 */

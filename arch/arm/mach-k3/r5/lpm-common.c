@@ -101,6 +101,8 @@ static int save_certificate(void)
 	return 0;
 }
 
+__weak void k3_deassert_ddr_ret(void) {}
+
 void k3_lpm_process(void)
 {
 	int ret = 0;

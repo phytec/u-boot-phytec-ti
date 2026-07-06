@@ -11,5 +11,6 @@
 
 void __noreturn k3_do_resume(void);
 void k3_lpm_process(void);
+void k3_deassert_ddr_ret(void);
 
 #endif
