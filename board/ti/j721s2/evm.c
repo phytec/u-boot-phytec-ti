@@ -23,6 +23,7 @@
 #include <dm/root.h>
 #include <asm/arch/k3-ddr.h>
 #include <power/pmic.h>
+#include <wait_bit.h>
 
 #include "../common/board_detect.h"
 #include "../common/fdt_ops.h"
@@ -352,52 +353,45 @@ int board_late_init(void)
 
 #if (IS_ENABLED(CONFIG_SPL_BUILD) && IS_ENABLED(CONFIG_TARGET_J721S2_R5_EVM) && IS_ENABLED(CONFIG_PMIC_TPS65941))
 
-#define FSM_NSLEEP_TRIGGERS	0x86
-
-/*
- * Set PMIC NSLEEP triggers bits to prevent transition to S2R state while
- * clearing interrupts.
- */
-static void pmic_set_nsleep_triggers(void)
-{
-	struct udevice *pmic_a, *pmic_b;
-	int err;
-
-	err = uclass_get_device_by_name(UCLASS_PMIC,
-					"pmic@48", &pmic_a);
-	if (err) {
-		printf("Getting PMIC-A init failed: %d\n", err);
-		return;
-	}
-
-	err = uclass_get_device_by_name(UCLASS_PMIC,
-					"pmic@4c", &pmic_b);
-	if (err) {
-		printf("Getting PMIC-B init failed: %d\n", err);
-		return;
-	}
-
-	err = pmic_reg_write(pmic_a, FSM_NSLEEP_TRIGGERS, 0x03);
-	if (err)
-		printf("Failed to set NSLEEP triggers bits on PMIC-A\n");
-
-	err = pmic_reg_write(pmic_b, FSM_NSLEEP_TRIGGERS, 0x03);
-	if (err)
-		printf("Failed to set NSLEEP triggers bits on PMIC-B\n");
-}
-
 #define SCRATCH_PAD_REG_3 0xCB
-
 #define MAGIC_SUSPEND 0xBA
+
+static void clear_isolation(void)
+{
+	int ret;
+	const void *wait_reg = (const void *)(WKUP_CTRL_MMR0_BASE + HYPERNET_WAKE_STAT1);
+
+	/* un-set the magic word for Main IOs */
+	writel(IO_ISO_MAGIC_VAL, WKUP_CTRL_MMR0_BASE + HYPERNET_WAKE_CTRL);
+	writel((IO_ISO_MAGIC_VAL + 0x1), WKUP_CTRL_MMR0_BASE + HYPERNET_WAKE_CTRL);
+	writel(IO_ISO_MAGIC_VAL, WKUP_CTRL_MMR0_BASE + HYPERNET_WAKE_CTRL);
+
+	/* wait for MAIN_IO_MODE bit to be cleared */
+	ret = wait_for_bit_32(wait_reg,
+			      HYPERNET_WAKE_STAT1_MCU_GEN_IO_MODE,
+			      false,
+			      DEISOLATION_TIMEOUT_MS,
+			      false);
+	if (ret)
+		pr_err("De-isolation timeout");
+}
 
 /* in board_init_f(), there's no BSS, so we can't use global/static variables */
 bool j7xx_board_is_resuming(void)
 {
 	struct udevice *pmic;
 	int err;
+	u32 pmctrl_val = readl(WKUP_CTRL_MMR0_BASE + PMCTRL_IO_1);
 
 	if (gd_k3_resuming() != K3_RESUME_STATE_UNKNOWN)
 		goto end;
+
+	if ((pmctrl_val & IO_ISO_STATUS) == IO_ISO_STATUS) {
+		clear_isolation();
+		gd_set_k3_resuming(K3_RESUME_STATE_RESUMING);
+		debug("board is resuming from IO_DDR mode\n");
+		goto end;
+	}
 
 	err = uclass_get_device_by_name(UCLASS_PMIC,
 					"pmic@48", &pmic);
@@ -408,14 +402,13 @@ bool j7xx_board_is_resuming(void)
 	debug("%s: PMIC-A is detected (%s)\n", __func__, pmic->name);
 
 	if (pmic_reg_read(pmic, SCRATCH_PAD_REG_3) == MAGIC_SUSPEND) {
-		debug("%s: board is resuming\n", __func__);
+		debug("%s: board is resuming from SOC_OFF mode\n", __func__);
 		gd_set_k3_resuming(K3_RESUME_STATE_RESUMING);
 
 		/* clean magic suspend */
 		if (pmic_reg_write(pmic, SCRATCH_PAD_REG_3, 0))
 			printf("Failed to clean magic value for suspend detection in PMIC-A\n");
 
-		pmic_set_nsleep_triggers();
 	} else {
 		debug("%s: board is booting (no resume detected)\n", __func__);
 		gd_set_k3_resuming(K3_RESUME_STATE_BOOTING);
