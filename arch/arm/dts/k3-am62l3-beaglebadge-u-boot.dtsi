@@ -14,3 +14,27 @@
 &scmi {
 	bootph-all;
 };
+
+#include "k3-am62l3-evm-capsule.dtsi"
+
+#define BEAGELBADGE_TIBOOT3_IMAGE_GUID_STR "0F498FDE-D6A5-53F6-A987-34B18367F87F"
+#define BEAGELBADGE_SPL_IMAGE_GUID_STR "0C989265-2034-54A9-A2CB-10CF4AD621B9"
+#define BEAGELBADGE_UBOOT_IMAGE_GUID_STR "783F68D7-06A4-5AEC-83AA-FAA1A810EA88"
+
+&capsule_tiboot3 {
+       efi-capsule {
+               image-guid = BEAGELBADGE_TIBOOT3_IMAGE_GUID_STR;
+       };
+};
+
+&capsule_tispl {
+       efi-capsule {
+               image-guid = BEAGELBADGE_SPL_IMAGE_GUID_STR;
+       };
+};
+
+&capsule_uboot {
+       efi-capsule {
+               image-guid = BEAGELBADGE_UBOOT_IMAGE_GUID_STR;
+       };
+};
