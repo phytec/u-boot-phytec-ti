@@ -21,6 +21,7 @@
 #define BOOT_DEVICE_XSPI_FAST		0x0D
 #define BOOT_DEVICE_XSPI		0x0E
 #define BOOT_DEVICE_NOBOOT		0x0F
+#define BOOT_DEVICE_NOR			BOOT_DEVICE_SPI_NAND
 
 /* U-Boot used aliases */
 #define BOOT_DEVICE_SPINAND		0x10

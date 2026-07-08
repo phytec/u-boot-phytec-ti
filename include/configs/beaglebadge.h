@@ -12,4 +12,6 @@
 
 #include <configs/ti_armv7_common.h>
 
+#define CFG_SYS_UBOOT_BASE CONFIG_TEXT_BASE
+
 #endif /* __CONFIG_BEAGLEBADGE_H */
