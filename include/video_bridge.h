@@ -34,6 +34,16 @@ struct video_bridge_ops {
 	int (*attach)(struct udevice *dev);
 
 	/**
+	 * enable() - enable a video bridge after the display pipeline is active
+	 *
+	 * Called after the display controller starts streaming pixel data.
+	 * This is optional op.
+	 *
+	 * @return 0 if OK, -ve on error
+	 */
+	int (*enable)(struct udevice *dev);
+
+	/**
 	 * check_attached() - check if a bridge is correctly attached
 	 *
 	 * This method is optional - if not provided then the hotplug GPIO
@@ -89,6 +99,13 @@ struct video_bridge_ops {
 int video_bridge_attach(struct udevice *dev);
 
 /**
+ * video_bridge_enable() - enable a video bridge after display pipeline is active
+ *
+ * Return: 0 if OK, -ve on error
+ */
+int video_bridge_enable(struct udevice *dev);
+
+/**
  * video_bridge_set_backlight() - Set the backlight brightness
  *
  * @percent:	brightness percentage (0=off, 100=full brightness)
@@ -131,6 +148,11 @@ int video_bridge_get_display_timing(struct udevice *dev,
 int video_bridge_read_edid(struct udevice *dev, u8 *buf, int buf_size);
 #else
 static inline int video_bridge_attach(struct udevice *dev)
+{
+	return -ENOSYS;
+}
+
+static inline int video_bridge_enable(struct udevice *dev)
 {
 	return -ENOSYS;
 }

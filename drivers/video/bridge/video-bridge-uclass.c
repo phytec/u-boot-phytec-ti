@@ -33,6 +33,16 @@ int video_bridge_attach(struct udevice *dev)
 	return ops->attach(dev);
 }
 
+int video_bridge_enable(struct udevice *dev)
+{
+	struct video_bridge_ops *ops = video_bridge_get_ops(dev);
+
+	if (!ops->enable)
+		return -EOPNOTSUPP;
+
+	return ops->enable(dev);
+}
+
 int video_bridge_get_display_timing(struct udevice *dev,
 				    struct display_timing *timings)
 {
