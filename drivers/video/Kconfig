@@ -847,6 +847,8 @@ config BACKLIGHT_SAMSUNG_CMC623
 
 source "drivers/video/ti/Kconfig"
 
+source "drivers/video/cadence/Kconfig"
+
 source "drivers/video/exynos/Kconfig"
 
 config LOGICORE_DP_TX

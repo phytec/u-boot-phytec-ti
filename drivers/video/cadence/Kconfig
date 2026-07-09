@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: GPL-2.0+
+
+config CDNS_DSI
+	bool "Enable Cadence DSI host driver"
+	depends on VIDEO
+	select MIPI_DPHY_HELPERS
+	select VIDEO_MIPI_DSI
+	help
+	  Enable support for the Cadence MIPI DSI host controller.
+	  This driver supports the Cadence DSI IP used on TI K3 SoCs
+	  such as J721E and J722S.
+
+config CDNS_DSI_J721E
+	bool "Enable Cadence DSI TI J721E platform support"
+	depends on CDNS_DSI
+	help
+	  Enable TI J721E platform-specific wrapper support for the
+	  Cadence DSI host controller.
+
+config SPL_CDNS_DSI
+	bool "Enable Cadence DSI host driver in SPL"
+	depends on SPL_VIDEO
+	select MIPI_DPHY_HELPERS
+	select SPL_VIDEO_MIPI_DSI
+	help
+	  Enable support for the Cadence MIPI DSI host controller in SPL.
+	  Required for DSI display output during the SPL stage.
+
+config SPL_CDNS_DSI_J721E
+	bool "Enable Cadence DSI TI J721E platform support in SPL"
+	depends on SPL_CDNS_DSI
+	help
+	  Enable TI J721E platform-specific wrapper support for the
+	  Cadence DSI host controller in SPL.
