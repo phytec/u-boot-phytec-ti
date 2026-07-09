@@ -10,7 +10,7 @@ obj-y += socionext/
 
 obj-$(CONFIG_$(PHASE_)PHY) += phy-uclass.o
 obj-$(CONFIG_$(PHASE_)NOP_PHY) += nop-phy.o
-obj-$(CONFIG_MIPI_DPHY_HELPERS) += phy-core-mipi-dphy.o
+obj-$(CONFIG_$(PHASE_)MIPI_DPHY_HELPERS) += phy-core-mipi-dphy.o
 obj-$(CONFIG_AB8500_USB_PHY) += phy-ab8500-usb.o
 obj-$(CONFIG_APPLE_ATCPHY) += phy-apple-atc.o
 obj-$(CONFIG_BCM6318_USBH_PHY) += bcm6318-usbh-phy.o
@@ -41,6 +41,7 @@ obj-$(CONFIG_PHY_NPCM_USB) += phy-npcm-usb.o
 obj-$(CONFIG_$(PHASE_)PHY_IMX8MQ_USB) += phy-imx8mq-usb.o
 obj-$(CONFIG_PHY_IMX8M_PCIE) += phy-imx8m-pcie.o
 obj-$(CONFIG_PHY_XILINX_ZYNQMP) += phy-zynqmp.o
+obj-$(CONFIG_$(PHASE_)CDNS_MIPI_DPHY) += cdns-dphy.o
 obj-y += cadence/
 obj-y += ti/
 obj-y += qcom/

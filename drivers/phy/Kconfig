@@ -64,6 +64,11 @@ config MIPI_DPHY_HELPERS
 	help
 	  Provides a number of helpers a core functions for MIPI D-PHY drivers.
 
+config SPL_MIPI_DPHY_HELPERS
+	bool "MIPI D-PHY support helpers in SPL"
+	help
+	  Provides MIPI D-PHY helper functions for SPL builds.
+
 config AB8500_USB_PHY
 	bool "AB8500 USB PHY Driver"
 	depends on PHY && PMIC_AB8500
@@ -111,6 +116,24 @@ config BCM_SR_PCIE_PHY
 	help
 	  Enable this to support the Broadcom Stingray PCIe PHY
 	  If unsure, say N.
+
+config CDNS_MIPI_DPHY
+	bool "Cadence MIPI D-PHY driver"
+	depends on PHY
+	select MIPI_DPHY_HELPERS
+	help
+	  Enable this to support the Cadence MIPI D-PHY. This driver supports
+	  both the reference implementation (cdns,dphy) and the TI J721E
+	  integration (ti,j721e-dphy).
+
+config SPL_CDNS_MIPI_DPHY
+	bool "Cadence MIPI D-PHY driver in SPL"
+	depends on SPL_PHY
+	select SPL_MIPI_DPHY_HELPERS
+	help
+	  Enable this to support the Cadence MIPI D-PHY in SPL. This driver
+	  supports both the reference implementation (cdns,dphy) and the TI
+	  J721E integration (ti,j721e-dphy).
 
 config PHY_DA8XX_USB
 	tristate "TI DA8xx USB PHY Driver"
