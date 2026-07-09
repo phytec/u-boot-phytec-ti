@@ -736,7 +736,7 @@ bool is_pipeline_components_enabled(ofnode endpoint, ofnode prev)
 	if (!ofnode_valid(ports) || !ofnode_valid(ports_parent))
 		return false;
 
-	if (strstr(ofnode_get_name(ports_parent), "dss"))
+	if (strstr(ofnode_get_name(ports_parent), "dss")) {
 		/*
 		 * If we reach dss again, return true. In the case of a dual-link OLDI,
 		 * we have 2 ports. While traversing oldi@0, this API also traverses oldi@1
@@ -745,6 +745,7 @@ bool is_pipeline_components_enabled(ofnode endpoint, ofnode prev)
 		 * if dss is reached, return true.
 		 */
 		return true;
+	}
 
 	/*
 	 *Traverse all endpoints of the ports node.

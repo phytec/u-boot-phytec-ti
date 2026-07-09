@@ -129,6 +129,7 @@ struct tidss_drv_priv {
 	struct tidss_oldi *oldis[TIDSS_MAX_OLDI_TXES];
 	u8 active_hw_vps[TIDSS_MAX_PORTS];
 	u8 active_pipelines;
+	struct udevice *bridge_dev;
 };
 
 struct tidss_oldi;
