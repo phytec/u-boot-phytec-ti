@@ -1,0 +1,165 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * TI SN65DSI86 DSI-to-eDP bridge U-Boot overlay for J722S EVM
+ * Copyright (C) 2026 Texas Instruments Incorporated - https://www.ti.com/
+ */
+
+/ {
+	edp0_refclk: clock-edp0-refclk {
+		bootph-all;
+		#clock-cells = <0>;
+		compatible = "fixed-clock";
+		clock-frequency = <19200000>;
+	};
+
+	vsys_io_1v8: regulator-vsys-io-1v8 {
+		bootph-all;
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_io_1v8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	vsys_io_1v2: regulator-vsys-io-1v2 {
+		bootph-all;
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_io_1v2";
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+};
+
+&dss1 {
+	bootph-all;
+	status = "okay";
+	/delete-property/ pinctrl-names;
+	/delete-property/ pinctrl-0;
+};
+
+&dss1_ports {
+	bootph-all;
+	status = "okay";
+	/* VP1: DSI output to dsi0 */
+	port@1 {
+		bootph-all;
+		dss1_dpi1_out: endpoint {
+			bootph-all;
+			remote-endpoint = <&dsi0_in>;
+		};
+	};
+};
+
+&dp0_pwr_3v3 {
+	bootph-all;
+};
+
+&dp0 {
+	bootph-all;
+	dp-pwr-supply = <&dp0_pwr_3v3>;
+
+	ports {
+		bootph-all;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			bootph-all;
+			reg = <0>;
+			endpoint {
+				bootph-all;
+				remote-endpoint = <&dp0_out>;
+			};
+		};
+	};
+};
+
+&main_i2c1 {
+	bootph-all;
+};
+
+&exp2 {
+	bootph-all;
+	/delete-property/ pinctrl-names;
+	/delete-property/ pinctrl-0;
+	p00-hog {
+		bootph-all;
+		gpio-hog;
+		gpios = <0 GPIO_ACTIVE_HIGH>;
+		output-low;
+		line-name = "DSI_Mux_SEL_2";
+	};
+};
+
+&dsi_edp_bridge {
+	bootph-all;
+	status = "okay";
+	clock-names = "refclk";
+	clocks = <&edp0_refclk>;
+	enable-gpios = <&exp2 1 GPIO_ACTIVE_HIGH>;
+	vpll-supply = <&vsys_io_1v8>;
+	vccio-supply = <&vsys_io_1v8>;
+	vcca-supply = <&vsys_io_1v2>;
+	vcc-supply = <&vsys_io_1v2>;
+};
+
+&dsi_edp_bridge_ports {
+	bootph-all;
+	status = "okay";
+	port@0 {
+		bootph-all;
+		dp0_in: endpoint {
+			bootph-all;
+			remote-endpoint = <&dsi0_out>;
+			data-lanes = <0 1>;
+		};
+	};
+
+	port@1 {
+		bootph-all;
+		dp0_out: endpoint {
+			bootph-all;
+			remote-endpoint = <&dp0_connector_in>;
+			data-lanes = <0 1 2 3>;
+			lane-polarities = <0 0 0 0>;
+		};
+	};
+};
+
+&dphy_tx0 {
+	bootph-all;
+	status = "okay";
+};
+
+&dsi0 {
+	bootph-all;
+	status = "okay";
+
+	ports {
+		bootph-all;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			bootph-all;
+			dsi0_out: endpoint {
+				bootph-all;
+				remote-endpoint = <&dp0_in>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			bootph-all;
+			dsi0_in: endpoint {
+				bootph-all;
+				remote-endpoint = <&dss1_dpi1_out>;
+			};
+		};
+	};
+};
