@@ -109,9 +109,32 @@ config VIDEO_BRIDGE_DP_CONNECTOR
 	  (DisplayPort vs eDP).
 
 config SPL_VIDEO_BRIDGE_DP_CONNECTOR
-	bool "Support DisplayPort connector stub in SPL"
-	depends on SPL_VIDEO_BRIDGE
+        bool "Support DisplayPort connector stub in SPL"
+        depends on SPL_VIDEO_BRIDGE
+        help
+          Enable the dp-connector stub driver in SPL. Required when the
+          eDP bridge driver needs to walk the OF graph during SPL to
+          detect the connector type (DisplayPort vs eDP).
+
+config VIDEO_BRIDGE_TI_SN65DSI86
+	bool "Support TI SN65DSI86 DSI-to-eDP bridge"
+	depends on VIDEO_BRIDGE && DM_GPIO
+	select DM_I2C
+	select VIDEO_MIPI_DSI
 	help
-	  Enable the dp-connector stub driver in SPL. Required when the
-	  eDP bridge driver needs to walk the OF graph during SPL to
-	  detect the connector type (DisplayPort vs eDP).
+	  TI SN65DSI86 DSI-to-eDP/DP bridge driver for J722S EVM.
+	  Reads EDID via AUX channel, performs link training, and
+	  streams video over eDP/DisplayPort. Enables the bridge so
+	  a splash screen can be shown on eDP panels during U-Boot.
+
+config SPL_VIDEO_BRIDGE_TI_SN65DSI86
+	bool "Support TI SN65DSI86 DSI-to-eDP bridge in SPL"
+	depends on SPL_VIDEO_BRIDGE
+	select SPL_DM_I2C
+	select SPL_VIDEO_MIPI_DSI
+	help
+	  TI SN65DSI86 DSI-to-eDP/DP bridge driver for SPL. Reads EDID via
+	  AUX channel, performs link training, and streams video over
+	  eDP/DisplayPort. Required for eDP splash screen display before
+	  main U-Boot. Enables the bridge at SPL stage so a splash screen
+	  can be shown on eDP panels early in the boot process.
