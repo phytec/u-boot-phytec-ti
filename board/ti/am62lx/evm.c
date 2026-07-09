@@ -8,12 +8,41 @@
 
 #include <asm/arch/hardware.h>
 #include <asm/io.h>
+#include <cpu_func.h>
 #include <dm/uclass.h>
 #include <env.h>
 #include <fdt_support.h>
+#include <splash.h>
 #include <spl.h>
+#include <video.h>
 
 #include "../common/fdt_ops.h"
+
+#if IS_ENABLED(CONFIG_SPL_BUILD)
+void spl_board_init(void)
+{
+	enable_caches();
+	if (IS_ENABLED(CONFIG_SPL_SPLASH_SCREEN) && IS_ENABLED(CONFIG_SPL_BMP))
+		splash_display();
+}
+#endif
+
+#if CONFIG_IS_ENABLED(SPLASH_SCREEN)
+static struct splash_location default_splash_locations[] = {
+	{
+		.name		= "mmc",
+		.storage	= SPLASH_STORAGE_MMC,
+		.flags		= SPLASH_STORAGE_FS,
+		.devpart	= "1:1",
+	},
+};
+
+int splash_screen_prepare(void)
+{
+	return splash_source_load(default_splash_locations,
+				  ARRAY_SIZE(default_splash_locations));
+}
+#endif
 
 int board_init(void)
 {
