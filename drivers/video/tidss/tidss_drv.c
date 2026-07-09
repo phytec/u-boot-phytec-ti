@@ -125,6 +125,36 @@ const struct dss_features dss_am625_feats = {
 	.vid_order = { 1, 0 },
 };
 
+/* TIDSS AM62L Features */
+const struct dss_features dss_am62l_feats = {
+	.max_pclk_khz = {
+		[DSS_VP_DPI] = 165000,
+	},
+
+	.subrev = DSS_AM62L,
+
+	.common = "common",
+	.common_regs = tidss_am62x_common_regs,
+
+	.num_vps = 1,
+	.vp_name = { "vp1" },
+	.ovr_name = { "ovr1" },
+	.vpclk_name = { "vp1" },
+	.vp_bus_type = { DSS_VP_DPI },
+
+	.vp_feat = { .color = {
+			.has_ctm = true,
+			.gamma_size = 256,
+			.gamma_type = TIDSS_GAMMA_8BIT,
+		},
+	},
+
+	.num_planes = 1,
+	.vid_name = { "vidl1" },
+	.vid_lite = { true },
+	.vid_order = { 0 },
+};
+
 /* Wrapper functions to write and read TI_DSS registers */
 static void dss_write(struct tidss_drv_priv *priv, u16 reg, u32 val)
 {
@@ -477,6 +507,11 @@ void dss_vp_enable(struct tidss_drv_priv *priv, u32 hw_videoport, struct display
 		     FLD_VAL(timing->vactive.typ - 1, 27, 16));
 
 	VP_REG_FLD_MOD(priv, hw_videoport, DSS_VP_CONTROL, 1, 0, 0);
+
+	if (priv->feat->subrev == DSS_AM62L &&
+	    priv->feat->vp_bus_type[hw_videoport] == DSS_VP_DPI && priv->bridge_dev) {
+		VP_REG_FLD_MOD(priv, hw_videoport, DSS_VP_CONTROL, 0, 6, 6);
+	}
 }
 
 enum c8_to_c12_mode { C8_TO_C12_REPLICATE, C8_TO_C12_MAX, C8_TO_C12_MIN };
@@ -926,11 +961,10 @@ static int tidss_drv_probe(struct udevice *dev)
 
 	priv->dev = dev;
 
-	priv->feat = &dss_am625_feats;
-    /*
-     * set your plane format based on your bmp image
-     * Supported 24bpp and 32bpp bmpimages
-     */
+	if (device_is_compatible(dev, "ti,am62l-dss"))
+		priv->feat = &dss_am62l_feats;
+	else
+		priv->feat = &dss_am625_feats;
 
 	priv->pixel_format = DSS_FORMAT_XRGB8888;
 
@@ -1177,6 +1211,7 @@ static int tidss_drv_bind(struct udevice *dev)
 static const struct udevice_id tidss_drv_ids[] = {
 	{ .compatible = "ti,am625-dss" },
 	{ .compatible = "ti,am62p-dss" },
+	{ .compatible = "ti,am62l-dss" },
 	{ }
 };
 

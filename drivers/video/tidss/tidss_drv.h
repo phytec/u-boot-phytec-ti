@@ -57,6 +57,7 @@ enum dss_subrevision {
 	DSS_AM65X,
 	DSS_J721E,
 	DSS_AM625,
+	DSS_AM62L,
 };
 
 struct tidss_vp_feat {
@@ -78,7 +79,7 @@ struct dss_color_lut {
 };
 
 struct dss_vp_data {
-	u32 *gamma_table;
+	u32 gamma_table[256];
 };
 
 struct dss_features {
