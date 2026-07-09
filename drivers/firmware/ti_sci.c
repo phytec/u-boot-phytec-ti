@@ -16,7 +16,9 @@
 #include <dm/device_compat.h>
 #include <dm/devres.h>
 #include <dm/lists.h>
+#include <linux/arm-smccc.h>
 #include <linux/bitops.h>
+#include <linux/bug.h>
 #include <linux/compat.h>
 #include <linux/err.h>
 #include <linux/soc/ti/k3-sec-proxy.h>
@@ -67,6 +69,7 @@ struct ti_sci_desc {
 	int max_rx_timeout_ms;
 	int max_msgs;
 	int max_msg_size;
+	bool use_mbox;
 };
 
 /**
@@ -79,6 +82,8 @@ struct ti_sci_desc {
  * @xfer:	xfer info
  * @list:	list head
  * @is_secure:	Determines if the communication is through secure threads.
+ * @smc_rx_msg:	Buffer to receive response for the SMC transfer path.
+ *		NULL when .use_mbox = true.
  * @host_id:	Host identifier representing the compute entity
  * @seq:	Seq id used for verification for tx and rx message.
  */
@@ -93,6 +98,7 @@ struct ti_sci_info {
 	struct list_head list;
 	struct list_head dev_list;
 	bool is_secure;
+	u8 *smc_rx_msg;
 	u8 host_id;
 	u8 seq;
 };
@@ -104,6 +110,8 @@ struct ti_sci_exclusive_dev {
 };
 
 #define handle_to_ti_sci_info(h) container_of(h, struct ti_sci_info, handle)
+
+#define K3_SIP_TISCI_XFER	0xC2000004
 
 /**
  * ti_sci_setup_one_xfer() - Setup one message type
@@ -223,15 +231,8 @@ static bool ti_sci_is_response_ack(void *r)
 	return hdr->flags & TI_SCI_FLAG_RESP_GENERIC_ACK ? true : false;
 }
 
-/**
- * ti_sci_do_xfer() - Do one transfer
- * @info:	Pointer to SCI entity information
- * @xfer:	Transfer to initiate and wait for response
- *
- * Return: 0 if all went fine, else return appropriate error.
- */
-static int ti_sci_do_xfer(struct ti_sci_info *info,
-				 struct ti_sci_xfer *xfer)
+static int ti_sci_do_xfer_mbox(struct ti_sci_info *info,
+			       struct ti_sci_xfer *xfer)
 {
 	struct k3_sec_proxy_msg *msg = &xfer->tx_message;
 	u8 secure_buf[info->desc->max_msg_size];
@@ -276,6 +277,75 @@ static int ti_sci_do_xfer(struct ti_sci_info *info,
 	}
 
 	return ret;
+}
+
+#ifdef CONFIG_ARM64
+static int ti_sci_do_xfer_smc(struct ti_sci_info *info,
+			      struct ti_sci_xfer *xfer)
+{
+	struct k3_sec_proxy_msg *msg = &xfer->tx_message;
+	struct arm_smccc_1_2_regs args, res;
+	int ret;
+
+	args.a0 = K3_SIP_TISCI_XFER;
+	args.a1 = msg->len;
+	args.a2 = xfer->rx_len;
+	memcpy(&args.a3, msg->buf, msg->len);
+
+	arm_smccc_1_2_smc(&args, &res);
+
+	/*
+	 * a0 contains -ve errno on error, 0 otherwise.
+	 * Convert unsigned long register value to signed long.
+	 * Then truncate to int for return value.
+	 */
+	ret = (int)((long)res.a0);
+	if (ret != 0) {
+		dev_err(info->dev, "SiP call failed with err = %d\n", ret);
+		return ret;
+	}
+
+	if (xfer->rx_len) {
+		/* Copy response into info->smc_rx_msg */
+		if (WARN_ON(!info->smc_rx_msg))
+			return -ENOMEM;
+		if (WARN_ON(xfer->rx_len > info->desc->max_msg_size))
+			return -ERANGE;
+
+		memcpy(info->smc_rx_msg, &res.a1, xfer->rx_len);
+		xfer->tx_message.buf = (u32 *)info->smc_rx_msg;
+		xfer->tx_message.len = xfer->rx_len;
+
+		if (!ti_sci_is_response_ack(xfer->tx_message.buf)) {
+			dev_err(info->dev, "Message not acknowledged\n");
+			ret = -ENODEV;
+		}
+	}
+
+	return ret;
+}
+#else
+static int ti_sci_do_xfer_smc(struct ti_sci_info *info,
+			      struct ti_sci_xfer *xfer)
+{
+	return -EINVAL;
+}
+#endif
+
+/**
+ * ti_sci_do_xfer() - Do one transfer
+ * @info:	Pointer to SCI entity information
+ * @xfer:	Transfer to initiate and wait for response
+ *
+ * Return: 0 if all went fine, else return appropriate error.
+ */
+static int ti_sci_do_xfer(struct ti_sci_info *info,
+			  struct ti_sci_xfer *xfer)
+{
+	if (info->desc->use_mbox)
+		return ti_sci_do_xfer_mbox(info, xfer);
+	else
+		return ti_sci_do_xfer_smc(info, xfer);
 }
 
 /**
@@ -3110,25 +3180,27 @@ static int ti_sci_of_to_info(struct udevice *dev, struct ti_sci_info *info)
 {
 	int ret;
 
-	ret = mbox_get_by_name(dev, "tx", &info->chan_tx);
-	if (ret) {
-		dev_err(dev, "%s: Acquiring Tx channel failed. ret = %d\n",
-			__func__, ret);
-		return ret;
-	}
+	if (info->desc->use_mbox) {
+		ret = mbox_get_by_name(dev, "tx", &info->chan_tx);
+		if (ret) {
+			dev_err(dev, "%s: Acquiring Tx channel failed. ret = %d\n",
+				__func__, ret);
+			return ret;
+		}
 
-	ret = mbox_get_by_name(dev, "rx", &info->chan_rx);
-	if (ret) {
-		dev_err(dev, "%s: Acquiring Rx channel failed. ret = %d\n",
-			__func__, ret);
-		return ret;
-	}
+		ret = mbox_get_by_name(dev, "rx", &info->chan_rx);
+		if (ret) {
+			dev_err(dev, "%s: Acquiring Rx channel failed. ret = %d\n",
+				__func__, ret);
+			return ret;
+		}
 
-	/* Notify channel is optional. Enable only if populated */
-	ret = mbox_get_by_name(dev, "notify", &info->chan_notify);
-	if (ret) {
-		dev_dbg(dev, "%s: Acquiring notify channel failed. ret = %d\n",
-			__func__, ret);
+		/* Notify channel is optional. Enable only if populated */
+		ret = mbox_get_by_name(dev, "notify", &info->chan_notify);
+		if (ret) {
+			dev_dbg(dev, "%s: Acquiring notify channel failed. ret = %d\n",
+				__func__, ret);
+		}
 	}
 
 	info->host_id = dev_read_u32_default(dev, "ti,host-id",
@@ -3163,6 +3235,17 @@ static int ti_sci_probe(struct udevice *dev)
 
 	info->dev = dev;
 	info->seq = 0xA;
+
+	/*
+	 * For the SMC transfer path (!use_mbox), allocate a dedicated receive
+	 * buffer. Mbox devices let the sec_proxy driver manage its own receive
+	 * buffer, so they don't need this.
+	 */
+	if (!info->desc->use_mbox) {
+		info->smc_rx_msg = devm_kzalloc(dev, info->desc->max_msg_size, GFP_KERNEL);
+		if (!info->smc_rx_msg)
+			return -ENOMEM;
+	}
 
 	INIT_LIST_HEAD(&info->dev_list);
 
@@ -3361,6 +3444,7 @@ static const struct ti_sci_desc ti_sci_pmmc_k2g_desc = {
 	/* Limited by MBOX_TX_QUEUE_LEN. K2G can handle upto 128 messages! */
 	.max_msgs = 20,
 	.max_msg_size = 64,
+	.use_mbox = true,
 };
 
 /* Description for AM654 */
@@ -3371,6 +3455,18 @@ static const struct ti_sci_desc ti_sci_pmmc_am654_desc = {
 	/* Limited by MBOX_TX_QUEUE_LEN. K2G can handle upto 128 messages! */
 	.max_msgs = 20,
 	.max_msg_size = 60,
+	.use_mbox = true,
+};
+
+/* Description for AM62L */
+static const struct ti_sci_desc ti_sci_pmmc_am62l_desc = {
+	.default_host_id = 12,
+	/* Conservative duration */
+	.max_rx_timeout_ms = 10000,
+	/* No queueing in SMC path */
+	.max_msgs = 1,
+	.max_msg_size = 52,
+	.use_mbox = false,
 };
 
 /* Description for J721e DM to DMSC communication */
@@ -3379,6 +3475,7 @@ static const struct ti_sci_desc ti_sci_dm_j721e_desc = {
 	.max_rx_timeout_ms = 10000,
 	.max_msgs = 20,
 	.max_msg_size = 60,
+	.use_mbox = true,
 };
 
 static const struct udevice_id ti_sci_ids[] = {
@@ -3389,6 +3486,10 @@ static const struct udevice_id ti_sci_ids[] = {
 	{
 		.compatible = "ti,am654-sci",
 		.data = (ulong)&ti_sci_pmmc_am654_desc
+	},
+	{
+		.compatible = "ti,am62l-sci",
+		.data = (ulong)&ti_sci_pmmc_am62l_desc
 	},
 	{ /* Sentinel */ },
 };
