@@ -15,6 +15,7 @@
 #include <video.h>
 #include <errno.h>
 #include <panel.h>
+#include <video_bridge.h>
 #include <reset.h>
 #include <malloc.h>
 #include <fdtdec.h>
@@ -594,8 +595,10 @@ static void dss_ovr_set_plane(struct tidss_drv_priv *priv,
 			      u32 hw_plane, u32 hw_ovr,
 			      u32 x, u32 y, u32 layer)
 {
+	u32 hw_id = priv->feat->vid_order[hw_plane];
+
 	OVR_REG_FLD_MOD(priv, hw_ovr, DSS_OVR_ATTRIBUTES(layer),
-			0x1, 4, 1);
+			hw_id, 4, 1);
 	OVR_REG_FLD_MOD(priv, hw_ovr, DSS_OVR_ATTRIBUTES(layer),
 			x, 17, 6);
 	OVR_REG_FLD_MOD(priv, hw_ovr, DSS_OVR_ATTRIBUTES(layer),
@@ -615,19 +618,27 @@ static void dss_vid_csc_enable(struct tidss_drv_priv *priv, u32 hw_plane,
 	VID_REG_FLD_MOD(priv, hw_plane, DSS_VID_ATTRIBUTES, !!enable, 9, 9);
 }
 
-int dss_plane_setup(struct tidss_drv_priv *priv, u32 hw_plane, u32 hw_videoport)
+int dss_plane_setup(struct tidss_drv_priv *priv, u32 hw_plane, u32 hw_videoport,
+		    u32 width, u32 height)
 {
 	VID_REG_FLD_MOD(priv, hw_plane, DSS_VID_ATTRIBUTES,
 			priv->pixel_format, 6, 1);
 
 	dss_vid_write(priv, hw_plane, DSS_VID_PICTURE_SIZE,
-		      ((LCD_MAX_WIDTH - 1) | ((LCD_MAX_HEIGHT - 1) << 16)));
+		      ((width - 1) | ((height - 1) << 16)));
+
+	if (!priv->feat->vid_lite[hw_plane])
+		dss_vid_write(priv, hw_plane, DSS_VID_SIZE,
+			      ((width - 1) | ((height - 1) << 16)));
+
+	dss_vid_write(priv, hw_plane, DSS_VID_PIXEL_INC, 1);
+	dss_vid_write(priv, hw_plane, DSS_VID_ROW_INC, 1);
 
 	dss_vid_csc_enable(priv, hw_plane, false);
 
 	dss_vid_write(priv, hw_plane, DSS_VID_GLOBAL_ALPHA, 0xFF);
 
-	VID_REG_FLD_MOD(priv, hw_plane, DSS_VID_ATTRIBUTES, 1, 28, 28);
+	VID_REG_FLD_MOD(priv, hw_plane, DSS_VID_ATTRIBUTES, 0, 28, 28);
 	return 0;
 }
 
@@ -832,6 +843,7 @@ static int tidss_drv_probe(struct udevice *dev)
 	struct udevice *panel = NULL;
 	struct display_timing timings;
 	unsigned int i;
+	u32 hw_plane = 0;
 	int ret = 0;
 	const char *mode;
 
@@ -877,17 +889,23 @@ static int tidss_drv_probe(struct udevice *dev)
 	}
 
 	mode = ofnode_read_string(dev_ofnode(panel), "data-mapping");
-	if (!mode) {
-		debug("%s: Could not read mode property\n", dev->name);
-		return -EINVAL;
-	}
 
 	uc_priv->bpix = VIDEO_BPP32;
 
-	if (!strcmp(mode, "vesa-24"))
+	if (!mode) {
+		debug("%s: no data-mapping property, defaulting to RGB888_1X24\n",
+		      dev->name);
+		priv->bus_format = &dss_bus_formats[3];
+	} else if (!strcmp(mode, "vesa-24")) {
 		priv->bus_format = &dss_bus_formats[7];
-	else
+	} else if (!strcmp(mode, "jeida-24")) {
 		priv->bus_format = &dss_bus_formats[8];
+	} else if (!strcmp(mode, "jeida-18")) {
+		priv->bus_format = &dss_bus_formats[6];
+	} else {
+		dev_err(dev, "unsupported data-mapping: %s\n", mode);
+		return -EINVAL;
+	}
 
 	/* Common address */
 	priv->base_common = dev_remap_addr_name(dev, priv->feat->common);
@@ -907,14 +925,15 @@ static int tidss_drv_probe(struct udevice *dev)
 	dss_vid_write(priv, 0, DSS_VID_BA_EXT_1, (u64)uc_plat->base >> 32);
 
 	for (i = 0; i < priv->active_pipelines; i++) {
-		ret = dss_plane_setup(priv, 0, priv->active_hw_vps[i]);
+		ret = dss_plane_setup(priv, hw_plane, priv->active_hw_vps[i],
+				      timings.hactive.typ, timings.vactive.typ);
 		if (ret) {
-			dss_plane_enable(priv, 0, false);
-				return ret;
+			dss_plane_enable(priv, hw_plane, false);
+			return ret;
 		}
 	}
 
-	dss_plane_enable(priv, 0, true);
+	dss_plane_enable(priv, hw_plane, true);
 	dss_plane_init(priv);
 
 	/* video port address clocks and enable */
