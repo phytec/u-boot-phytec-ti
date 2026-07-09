@@ -11,6 +11,7 @@
 #include <cpu_func.h>
 #include <dm/uclass.h>
 #include <env.h>
+#include <fdt_simplefb.h>
 #include <fdt_support.h>
 #include <splash.h>
 #include <spl.h>
@@ -48,6 +49,23 @@ int board_init(void)
 {
 	return 0;
 }
+
+#if defined(CONFIG_OF_BOARD_SETUP)
+int ft_board_setup(void *blob, struct bd_info *bd)
+{
+	int ret = -1;
+
+	if (IS_ENABLED(CONFIG_FDT_SIMPLEFB))
+		ret = fdt_simplefb_enable_and_mem_rsv(blob);
+
+	if (IS_ENABLED(CONFIG_VIDEO) && IS_ENABLED(CONFIG_OF_LIBFDT)) {
+		if (ret && video_is_active())
+			return fdt_add_fb_mem_rsv(blob);
+	}
+
+	return 0;
+}
+#endif
 
 #if IS_ENABLED(CONFIG_BOARD_LATE_INIT)
 int board_late_init(void)
