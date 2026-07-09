@@ -99,3 +99,19 @@ config VIDEO_BRIDGE_SAMSUNG_CMC623
 	help
 	  Samsung CMC623 image converter chip driver.
 	  Found in several Samsung devices such as N1
+
+config VIDEO_BRIDGE_DP_CONNECTOR
+	bool "Support DisplayPort connector stub"
+	depends on VIDEO_BRIDGE
+	help
+	  Enable the dp-connector stub driver. Required when the eDP bridge
+	  driver needs to walk the OF graph to detect the connector type
+	  (DisplayPort vs eDP).
+
+config SPL_VIDEO_BRIDGE_DP_CONNECTOR
+	bool "Support DisplayPort connector stub in SPL"
+	depends on SPL_VIDEO_BRIDGE
+	help
+	  Enable the dp-connector stub driver in SPL. Required when the
+	  eDP bridge driver needs to walk the OF graph during SPL to
+	  detect the connector type (DisplayPort vs eDP).
