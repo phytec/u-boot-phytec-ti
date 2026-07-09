@@ -7,6 +7,14 @@ config VIDEO_BRIDGE
 	  requires LVDS, an eDP->LVDS bridge chip can be used to provide the
 	  necessary conversion. This option enables support for these devices.
 
+config SPL_VIDEO_BRIDGE
+	bool "Support video bridges in SPL"
+	depends on SPL_DM
+	help
+	  Enable video bridge support in SPL. This is needed when a video
+	  bridge (e.g. DSI-to-DPI) is required during SPL, such as for
+	  displaying a splash screen before the main U-Boot is loaded.
+
 config VIDEO_BRIDGE_PARADE_DP501
 	bool "Support Parade DP501 DP & DVI/HDMI dual mode transmitter"
 	depends on VIDEO_BRIDGE && PANEL && DM_GPIO
@@ -50,6 +58,23 @@ config VIDEO_BRIDGE_SOLOMON_SSD2825
 	select VIDEO_MIPI_DSI
 	help
 	  Solomon SSD2824 SPI RGB-DSI bridge driver.
+
+config VIDEO_BRIDGE_TOSHIBA_TC358762
+	bool "Support Toshiba TC358762 DSI/DPI bridge"
+	depends on VIDEO_BRIDGE && PANEL && DM_GPIO
+	select VIDEO_MIPI_DSI
+	help
+	  Toshiba TC358762 DSI-to-DPI bridge chip driver.
+	  Receives MIPI DSI input and outputs DPI to a downstream panel.
+	  Found on the Raspberry Pi 7-inch touchscreen display.
+
+config SPL_VIDEO_BRIDGE_TOSHIBA_TC358762
+	bool "Support Toshiba TC358762 DSI/DPI bridge in SPL"
+	depends on SPL_VIDEO_BRIDGE
+	select SPL_VIDEO_MIPI_DSI
+	help
+	  Enable the Toshiba TC358762 DSI-to-DPI bridge driver in SPL.
+	  Required for DSI splash screen display before main U-Boot.
 
 config VIDEO_BRIDGE_TOSHIBA_TC358768
 	bool "Support Toshiba TC358768 MIPI DSI bridge"
