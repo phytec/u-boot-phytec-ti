@@ -194,6 +194,21 @@ config DA8XX_GPIO
 	help
 	  This driver supports the DA8xx GPIO controller
 
+config RPI_ATTINY_GPIO
+	bool "Raspberry Pi 7-inch touchscreen panel ATtiny GPIO driver"
+	depends on DM_GPIO && DM_I2C
+	help
+	  GPIO driver for the ATtiny MCU on the Raspberry Pi 7-inch DSI
+	  touchscreen panel (I2C address 0x45). Powers on the panel during
+	  probe and exports reset GPIO lines for the DSI bridge and touchpad.
+
+config SPL_RPI_ATTINY_GPIO
+	bool "Raspberry Pi 7-inch touchscreen panel ATtiny GPIO driver (SPL)"
+	depends on SPL_DM_GPIO && SPL_DM_I2C
+	help
+	  SPL variant of the RPI_ATTINY_GPIO driver. Powers on the panel
+	  and exports reset GPIO lines for the DSI bridge and touchpad.
+
 config FXL6408_GPIO
 	bool "FXL6408 I2C GPIO expander driver"
 	depends on DM_GPIO && DM_I2C
