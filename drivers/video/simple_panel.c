@@ -6,6 +6,7 @@
 
 #include <backlight.h>
 #include <dm.h>
+#include <dm/device_compat.h>
 #include <edid.h>
 #include <i2c.h>
 #include <log.h>
@@ -27,6 +28,8 @@ static int simple_panel_enable_backlight(struct udevice *dev)
 	struct simple_panel_priv *priv = dev_get_priv(dev);
 	int ret;
 
+	if (!priv->backlight)
+		return -ENOSYS;
 	debug("%s: start, backlight = '%s'\n", __func__, priv->backlight->name);
 	dm_gpio_set_value(&priv->enable, 1);
 	ret = backlight_enable(priv->backlight);
@@ -42,6 +45,8 @@ static int simple_panel_set_backlight(struct udevice *dev, int percent)
 	struct simple_panel_priv *priv = dev_get_priv(dev);
 	int ret;
 
+	if (!priv->backlight)
+		return -ENOSYS;
 	debug("%s: start, backlight = '%s'\n", __func__, priv->backlight->name);
 	dm_gpio_set_value(&priv->enable, 1);
 	ret = backlight_set_brightness(priv->backlight, percent);
