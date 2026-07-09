@@ -1015,6 +1015,7 @@ static int tidss_drv_bind(struct udevice *dev)
 
 static const struct udevice_id tidss_drv_ids[] = {
 	{ .compatible = "ti,am625-dss" },
+	{ .compatible = "ti,am62p-dss" },
 	{ }
 };
 
