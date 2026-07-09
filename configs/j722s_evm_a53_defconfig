@@ -181,4 +181,5 @@ CONFIG_SPL_BOARD_INIT=y
 CONFIG_SPL_BUILD=y
 CONFIG_SPL_GZIP=y
 CONFIG_SPL_FS_LOADER=y
+CONFIG_SPL_GPIO_HOG=y
 #include <configs/am62x_a53_splashscreen.config>
