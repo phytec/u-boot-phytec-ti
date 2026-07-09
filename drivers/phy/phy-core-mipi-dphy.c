@@ -2,12 +2,14 @@
 /*
  * Copyright (C) 2013 NVIDIA Corporation
  * Copyright (C) 2018 Cadence Design Systems Inc.
+ * Copyright (C) 2026 Texas Instruments Incorporated - https://www.ti.com/
+ * Based on Linux kernel MIPI D-PHY core driver
+ * Ported to U-Boot by Rahul Sharma <rahul.sharma@ti.com>
  */
 
 #include <div64.h>
 #include <linux/kernel.h>
 #include <linux/time.h>
-
 #include <phy-mipi-dphy.h>
 
 /*

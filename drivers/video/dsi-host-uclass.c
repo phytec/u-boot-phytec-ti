@@ -10,6 +10,16 @@
 #include <dm.h>
 #include <dsi_host.h>
 
+int dsi_host_attach(struct udevice *dev, struct mipi_dsi_device *device)
+{
+	struct dsi_host_ops *ops = dsi_host_get_ops(dev);
+
+	if (!ops->attach)
+		return -ENOSYS;
+
+	return ops->attach(dev, device);
+}
+
 int dsi_host_init(struct udevice *dev,
 		  struct mipi_dsi_device *device,
 		  struct display_timing *timings,

@@ -381,6 +381,18 @@ int generic_phy_configure(struct phy *phy, void *params)
 	return ops->configure ? ops->configure(phy, params) : 0;
 }
 
+int generic_phy_validate(struct phy *phy, enum phy_mode mode, int submode,
+			 void *params)
+{
+	struct phy_ops const *ops;
+
+	if (!generic_phy_valid(phy))
+		return 0;
+	ops = phy_dev_ops(phy->dev);
+
+	return ops->validate ? ops->validate(phy, mode, submode, params) : 0;
+}
+
 int generic_phy_set_mode(struct phy *phy, enum phy_mode mode, int submode)
 {
 	struct phy_ops const *ops;

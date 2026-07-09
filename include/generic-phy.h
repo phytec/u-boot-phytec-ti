@@ -161,6 +161,23 @@ struct phy_ops {
 	int	(*configure)(struct phy *phy, void *params);
 
 	/**
+	 * validate - validate PHY configuration without applying it
+	 *
+	 * @phy:	PHY port to validate
+	 * @mode:	PHY mode
+	 * @submode:	PHY submode
+	 * @params:	PHY parameters; may be updated by the driver to reflect
+	 *		achievable values (e.g. rounded clock rates)
+	 *
+	 * Validate the requested configuration and optionally adjust params to
+	 * the nearest achievable values. No hardware state is changed.
+	 *
+	 * Return: 0 if the configuration is valid, or a negative error code
+	 */
+	int	(*validate)(struct phy *phy, enum phy_mode mode, int submode,
+			    void *params);
+
+	/**
 	 * set_mode - set PHY device mode
 	 *
 	 * @phy:	PHY port to be configured
@@ -254,6 +271,18 @@ int generic_phy_power_off(struct phy *phy);
  * Return: 0 if OK, or a negative error code
  */
 int generic_phy_configure(struct phy *phy, void *params);
+
+/**
+ * generic_phy_validate() - validate PHY configuration without applying it
+ *
+ * @phy:	PHY port to validate
+ * @mode:	PHY mode
+ * @submode:	PHY submode
+ * @params:	PHY parameters; may be updated to reflect achievable values
+ * Return: 0 if the configuration is valid, or a negative error code
+ */
+int generic_phy_validate(struct phy *phy, enum phy_mode mode, int submode,
+			 void *params);
 
 /**
  * generic_phy_set_mode() - set PHY device mode
@@ -460,6 +489,12 @@ static inline int generic_phy_power_off(struct phy *phy)
 }
 
 static inline int generic_phy_configure(struct phy *phy, void *params)
+{
+	return 0;
+}
+
+static inline int generic_phy_validate(struct phy *phy, enum phy_mode mode,
+				       int submode, void *params)
 {
 	return 0;
 }

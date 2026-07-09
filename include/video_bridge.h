@@ -34,6 +34,16 @@ struct video_bridge_ops {
 	int (*attach)(struct udevice *dev);
 
 	/**
+	 * pre_enable() - prepare a video bridge before the display pipeline starts
+	 *
+	 * Called before the display controller starts streaming pixel data.
+	 * This is optional.
+	 *
+	 * @return 0 if OK, -ve on error
+	 */
+	int (*pre_enable)(struct udevice *dev);
+
+	/**
 	 * enable() - enable a video bridge after the display pipeline is active
 	 *
 	 * Called after the display controller starts streaming pixel data.
@@ -99,6 +109,13 @@ struct video_bridge_ops {
 int video_bridge_attach(struct udevice *dev);
 
 /**
+ * video_bridge_pre_enable() - prepare a video bridge before display pipeline starts
+ *
+ * Return: 0 if OK, -ve on error
+ */
+int video_bridge_pre_enable(struct udevice *dev);
+
+/**
  * video_bridge_enable() - enable a video bridge after display pipeline is active
  *
  * Return: 0 if OK, -ve on error
@@ -148,6 +165,11 @@ int video_bridge_get_display_timing(struct udevice *dev,
 int video_bridge_read_edid(struct udevice *dev, u8 *buf, int buf_size);
 #else
 static inline int video_bridge_attach(struct udevice *dev)
+{
+	return -ENOSYS;
+}
+
+static inline int video_bridge_pre_enable(struct udevice *dev)
 {
 	return -ENOSYS;
 }

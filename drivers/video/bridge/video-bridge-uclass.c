@@ -33,6 +33,16 @@ int video_bridge_attach(struct udevice *dev)
 	return ops->attach(dev);
 }
 
+int video_bridge_pre_enable(struct udevice *dev)
+{
+	struct video_bridge_ops *ops = video_bridge_get_ops(dev);
+
+	if (!ops->pre_enable)
+		return 0;
+
+	return ops->pre_enable(dev);
+}
+
 int video_bridge_enable(struct udevice *dev)
 {
 	struct video_bridge_ops *ops = video_bridge_get_ops(dev);

@@ -12,6 +12,18 @@
 
 struct dsi_host_ops {
 	/**
+	 * attach() - Attach a DSI peripheral to this host
+	 *
+	 * Called once at probe time so the host knows which peripheral device
+	 * it is driving.  Mirrors mipi_dsi_host_ops.attach in Linux.
+	 *
+	 * @dev: dsi host device
+	 * @device: DSI peripheral to attach
+	 * @return 0 if OK, -ve on error
+	 */
+	int (*attach)(struct udevice *dev, struct mipi_dsi_device *device);
+
+	/**
 	 * init() - initialized the dsi_host
 	 *
 	 * @dev: dsi host device
@@ -56,6 +68,15 @@ struct dsi_host_ops {
 };
 
 #define dsi_host_get_ops(dev)	((struct dsi_host_ops *)(dev)->driver->ops)
+
+/**
+ * dsi_host_attach - Attach a DSI peripheral to this host
+ *
+ * @dev:    dsi host device
+ * @device: DSI peripheral to attach
+ * Return: 0 if OK, -ve on error
+ */
+int dsi_host_attach(struct udevice *dev, struct mipi_dsi_device *device);
 
 /**
  * dsi_host_init

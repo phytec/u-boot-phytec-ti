@@ -181,6 +181,12 @@ config VIDEO_MIPI_DSI
 	  The MIPI Display Serial Interface (MIPI DSI) defines a high-speed
 	  serial interface between a host processor and a display module.
 
+config SPL_VIDEO_MIPI_DSI
+	bool "Support MIPI DSI interface in SPL"
+	help
+	  Support MIPI DSI interface in SPL for driving a MIPI compatible
+	  device. Enables the DSI host uclass in SPL.
+
 config CONSOLE_NORMAL
 	bool "Support a simple text console"
 	default y
@@ -770,6 +776,13 @@ config I2C_EDID
 	bool "Enable EDID library"
 	help
 	   This enables library for accessing EDID data from an LCD panel.
+
+config SPL_I2C_EDID
+	bool "Enable EDID library in SPL"
+	depends on SPL
+	help
+	   This enables the EDID library in SPL, needed when a video bridge
+	   (e.g. DSI-to-eDP) reads EDID during SPL splash screen display.
 
 config I2C_EDID_STANDARD
 	bool "Enable standard timings EDID library expansion"

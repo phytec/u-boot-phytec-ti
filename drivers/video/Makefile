@@ -17,7 +17,7 @@ endif
 obj-$(CONFIG_CONSOLE_ROTATION) += console_core.o
 obj-$(CONFIG_CONSOLE_TRUETYPE) += console_truetype.o fonts/
 obj-$(CONFIG_DISPLAY) += display-uclass.o
-obj-$(CONFIG_VIDEO_MIPI_DSI) += dsi-host-uclass.o
+obj-$(CONFIG_$(PHASE_)VIDEO_MIPI_DSI) += dsi-host-uclass.o
 obj-$(CONFIG_$(PHASE_)VIDEO) += video-uclass.o vidconsole-uclass.o
 obj-$(CONFIG_$(PHASE_)VIDEO) += video_bmp.o
 obj-$(CONFIG_$(PHASE_)PANEL) += panel-uclass.o
@@ -80,7 +80,7 @@ obj-$(CONFIG_VIDEO_LCD_SONY_L4F00430T01) += sony-l4f00430t01.o
 obj-$(CONFIG_VIDEO_LCD_SAMSUNG_S6E63M0) += samsung-s6e63m0.o
 obj-$(CONFIG_VIDEO_MCDE_SIMPLE) += mcde_simple.o
 obj-${CONFIG_VIDEO_MESON} += meson/
-obj-${CONFIG_VIDEO_MIPI_DSI} += mipi_dsi.o
+obj-$(CONFIG_$(PHASE_)VIDEO_MIPI_DSI) += mipi_dsi.o
 obj-$(CONFIG_VIDEO_MVEBU) += mvebu_lcd.o
 obj-$(CONFIG_VIDEO_MXS) += mxsfb.o videomodes.o
 obj-$(CONFIG_VIDEO_NX) += nexell_display.o videomodes.o nexell/
