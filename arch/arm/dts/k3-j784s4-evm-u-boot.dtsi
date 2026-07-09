@@ -122,3 +122,20 @@
 &main_cpsw1 {
 	status = "disabled";
 };
+
+&usb0 {
+	dr_mode = "peripheral";
+	maximum-speed = "high-speed";
+	/delete-property/ phys;
+	/delete-property/ phy-names;
+};
+
+/*
+ * Using SERDES for USB during USB DFU boot requires clock configuration
+ * at the R5 SPL stage in the absence of DM firmware. This is not supported
+ * yet due to which USB cannot use SERDES during DFU boot.
+ * Hence, force USB 2.0 only mode which uses the USB 2.0 PHY.
+ */
+&usbss0 {
+	ti,usb2-only;
+};
