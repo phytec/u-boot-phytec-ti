@@ -1,0 +1,151 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Raspberry Pi 7-inch DSI panel U-Boot overlay for AM62L3 EVM
+ * Copyright (C) 2025 Texas Instruments Incorporated - https://www.ti.com/
+ */
+
+/ {
+	bridge_reg: bridge-regulator {
+		bootph-all;
+		compatible = "regulator-fixed";
+		regulator-name = "bridge-reg";
+		gpio = <&display_reg 0 0>;
+		enable-active-high;
+	};
+
+	rpi_dsi_panel: panel-dsi {
+		bootph-all;
+		compatible = "raspberrypi,7inch-dsi", "simple-panel";
+		status = "okay";
+
+		ports {
+			bootph-all;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				bootph-all;
+				reg = <0>;
+				panel_in_dsi: endpoint {
+					bootph-all;
+					remote-endpoint = <&tc358762_out>;
+				};
+			};
+		};
+
+		display-timings {
+			bootph-all;
+			timing0: timing@0 {
+				bootph-all;
+				clock-frequency = <28569>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <80>;
+				hfront-porch = <48>;
+				hsync-len = <32>;
+				vback-porch = <6>;
+				vfront-porch = <3>;
+				vsync-len = <7>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+			};
+		};
+	};
+};
+
+&i2c0 {
+	bootph-all;
+
+	display_reg: regulator@45 {
+		bootph-all;
+		compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
+		reg = <0x45>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+};
+
+&dss {
+	bootph-all;
+	status = "okay";
+	/delete-property/ pinctrl-names;
+	/delete-property/ pinctrl-0;
+};
+
+&dss_ports {
+	bootph-all;
+
+	port@0 {
+		bootph-all;
+		dpi_out: endpoint {
+			bootph-all;
+			remote-endpoint = <&dsi0_in>;
+		};
+	};
+};
+
+&sii9022 {
+	status = "disabled";
+};
+
+&dphy_tx0 {
+	bootph-all;
+	status = "okay";
+};
+
+&dsi0 {
+	bootph-all;
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	ports {
+		port@0 {
+			bootph-all;
+			dsi0_out: endpoint {
+				bootph-all;
+				remote-endpoint = <&tc358762_in>;
+			};
+		};
+
+		port@1 {
+			bootph-all;
+			dsi0_in: endpoint {
+				bootph-all;
+				remote-endpoint = <&dpi_out>;
+			};
+		};
+	};
+
+	tc358762_bridge: bridge@0 {
+		bootph-all;
+		compatible = "toshiba,tc358762";
+		reg = <0>;
+		vddc-supply = <&bridge_reg>;
+		led-gpios = <&display_reg 2 0>;
+
+		ports {
+			bootph-all;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				bootph-all;
+				reg = <0>;
+				tc358762_in: endpoint {
+					bootph-all;
+					remote-endpoint = <&dsi0_out>;
+				};
+			};
+
+			port@1 {
+				bootph-all;
+				reg = <1>;
+				tc358762_out: endpoint {
+					bootph-all;
+					remote-endpoint = <&panel_in_dsi>;
+				};
+			};
+		};
+	};
+};
