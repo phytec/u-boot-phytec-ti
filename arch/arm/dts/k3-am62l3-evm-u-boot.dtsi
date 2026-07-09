@@ -24,3 +24,11 @@
 		spi-max-frequency = <25000000>;
 	};
 };
+
+&cbass_main {
+	system-controller {
+		compatible = "ti,am62l-sci";
+		ti,host-id = <12>;
+		bootph-all;
+	};
+};
