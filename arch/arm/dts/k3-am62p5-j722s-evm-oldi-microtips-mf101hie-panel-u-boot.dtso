@@ -1,0 +1,175 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Microtips OLDI panel (MF-101HIEBCAF0) U-Boot overlay for J722S EVM
+ * Copyright (C) 2026 Texas Instruments Incorporated - https://www.ti.com/
+ */
+
+&{/} {
+	panel_lvds: panel-lvds {
+		bootph-all;
+		compatible = "simple-panel";
+		status = "okay";
+		width-mm = <217>;
+		height-mm = <136>;
+		data-mapping = "vesa-24";
+		panel-timing {
+			bootph-all;
+			clock-frequency = <150274>;
+			hactive = <1920>;
+			vactive = <1200>;
+			hback-porch = <32>;
+			hfront-porch = <52>;
+			vback-porch = <24>;
+			vfront-porch = <8>;
+			hsync-len = <24>;
+			vsync-len = <3>;
+			de-active = <1>;
+		};
+	};
+
+	microtips_mf101hie_panel: display {
+		bootph-all;
+		status = "okay";
+		compatible = "microtips,mf-101hiebcaf0", "panel-simple";
+
+		/*
+		* Note that the OLDI TX 0 transmits the odd set of pixels
+		* while the OLDI TX 1 transmits the even set. This is a
+		* fixed configuration in the IP integration and is not
+		* changeable. The properties, "dual-lvds-odd-pixels" and
+		* "dual-lvds-even-pixels" have been used to merely
+		* identify if a Dual Link configuration is required.
+		* Swapping them will cause an error in the dss oldi driver.
+		*/
+		ports {
+			bootph-all;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				bootph-all;
+				reg = <0>;
+				dual-lvds-odd-pixels;
+
+				lcd_in0: endpoint {
+					bootph-all;
+					remote-endpoint = <&oldi0_dss0_out>;
+				};
+			};
+
+			port@1 {
+				bootph-all;
+				reg = <1>;
+				dual-lvds-even-pixels;
+
+				lcd_in1: endpoint {
+					bootph-all;
+					remote-endpoint = <&oldi1_dss0_out>;
+				};
+			};
+		};
+	};
+};
+
+&oldi0_dss0 {
+	bootph-all;
+	status = "okay";
+	ti,companion-oldi = <&oldi1_dss0>;
+};
+
+&oldi1_dss0 {
+	bootph-all;
+	status = "okay";
+	ti,secondary-oldi;
+	ti,companion-oldi = <&oldi0_dss0>;
+};
+
+&oldi0_dss0_ports {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	bootph-all;
+
+	port@0 {
+		reg = <0>;
+
+		oldi0_dss0_in: endpoint {
+			bootph-all;
+			remote-endpoint = <&dss0_dpi0_out0>;
+		};
+	};
+
+	port@1 {
+		reg = <1>;
+
+		oldi0_dss0_out: endpoint {
+			bootph-all;
+			remote-endpoint = <&lcd_in0>;
+		};
+	};
+};
+
+&oldi1_dss0_ports {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	bootph-all;
+
+	port@0 {
+		reg = <0>;
+
+		oldi1_dss0_in: endpoint {
+			bootph-all;
+			status = "okay";
+			remote-endpoint = <&dss0_dpi0_out1>;
+		};
+	};
+
+	port@1 {
+		reg = <1>;
+
+		oldi1_dss0_out: endpoint {
+			bootph-all;
+			status = "okay";
+			remote-endpoint = <&lcd_in1>;
+		};
+	};
+};
+
+&dss0_ports {
+	bootph-all;
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	/* VP1: Output to OLDI */
+	port@0 {
+		bootph-all;
+		reg = <0>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		dss0_dpi0_out0: endpoint@0 {
+			bootph-all;
+			reg = <0>;
+			remote-endpoint = <&oldi0_dss0_in>;
+		};
+
+		dss0_dpi0_out1: endpoint@1 {
+			bootph-all;
+			reg = <1>;
+			remote-endpoint = <&oldi1_dss0_in>;
+		};
+	};
+};
+
+&dss0 {
+	bootph-all;
+	status = "okay";
+	clocks = <&k3_clks 186 6>,
+		 <&k3_clks 186 0>,
+		 <&k3_clks 186 2>;
+	ti,am65x-oldi-io-ctrl = <&dss_oldi_io_ctrl>;
+};
+
+&dss_oldi_io_ctrl {
+	bootph-all;
+	compatible = "ti,am625-dss-oldi-io-ctrl", "syscon";
+};
