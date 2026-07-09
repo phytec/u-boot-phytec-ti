@@ -442,13 +442,13 @@ void dss_vp_enable(struct tidss_drv_priv *priv, u32 hw_videoport, struct display
 		     FLD_VAL(vsw - 1, 7, 0) |
 		     FLD_VAL(vfp, 19, 8) | FLD_VAL(vbp, 31, 20));
 
-	ivs = !!(timing->flags & (1 << 3));
+	ivs = !!(timing->flags & DISPLAY_FLAGS_VSYNC_LOW);
 
-	ihs = !!(timing->flags & (1 << 1));
+	ihs = !!(timing->flags & DISPLAY_FLAGS_HSYNC_LOW);
 
 	ieo = 0;
 
-	ipc = 0;
+	ipc = !!(timing->flags & DISPLAY_FLAGS_PIXDATA_NEGEDGE);
 
 	/* always use the 'rf' setting */
 	onoff = true;
