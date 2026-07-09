@@ -181,7 +181,12 @@
 					compression = "none";
 					load = <CONFIG_TEXT_BASE>;
 
-					blob {
+					ti-secure {
+						content = <&u_boot_nodtb>;
+						keyfile = "custMpk.pem";
+					};
+
+					u_boot_nodtb: blob {
 						filename = "u-boot-nodtb.bin";
 					};
 
@@ -195,7 +200,10 @@
 					type = "flat_dt";
 					arch = "arm";
 					compression = "none";
-
+					ti-secure {
+						content = <&am62lx_evm_dtb>;
+						keyfile = "custMpk.pem";
+					};
 					am62lx_evm_dtb: blob-ext {
 						filename = "u-boot.dtb";
 					};
