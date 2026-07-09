@@ -46,6 +46,17 @@
 /* Backup Bootmode USB Config macros */
 #define MAIN_DEVSTAT_BACKUP_USB_MODE_MASK	0x01
 
+#define MCU_CTRL_MMR_DRVSTRNGTH_MASK		0xF
+#define MCU_CTRL_MMR_DRVSTRNGTH_MAX		0xF
+
+/* Horizontal IO Drive Strength registers */
+#define MCU_CTRL_MMR_CFG0_DRV_NOM0			(MCU_CTRL_MMR0_BASE + 0x40C0)
+#define MCU_CTRL_MMR_CFG0_DRV_FAST0			(MCU_CTRL_MMR0_BASE + 0x40C8)
+
+/* Vertical IO Drive Strength registers */
+#define MCU_CTRL_MMR_CFG0_DRV_NOM1			(MCU_CTRL_MMR0_BASE + 0x40D0)
+#define MCU_CTRL_MMR_CFG0_DRV_FAST1			(MCU_CTRL_MMR0_BASE + 0x40D8)
+
 /*
  * The CTRL_MMR0 memory space is divided into several equally-spaced
  * partitions, so defining the partition size allows us to determine

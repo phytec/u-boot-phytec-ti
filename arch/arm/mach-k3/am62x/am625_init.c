@@ -142,6 +142,37 @@ static __maybe_unused void rtc_erratumi2327_init(void)
 	writel(K3RTC_KICK1_UNLOCK_VALUE, REG_K3RTC_KICK1);
 }
 
+static void am62x_drive_strength_fix(void)
+{
+	uint32_t value_nominal, value_fast;
+
+	/* fix Horizontal IO drive strength */
+	value_fast = readl(MCU_CTRL_MMR_CFG0_DRV_FAST0) &
+		     MCU_CTRL_MMR_DRVSTRNGTH_MASK;
+	value_nominal = readl(MCU_CTRL_MMR_CFG0_DRV_NOM0) &
+			MCU_CTRL_MMR_DRVSTRNGTH_MASK;
+
+	if (value_fast < value_nominal + 2) {
+		writel((value_nominal + 2) > MCU_CTRL_MMR_DRVSTRNGTH_MAX ?
+			       MCU_CTRL_MMR_DRVSTRNGTH_MAX :
+			       value_nominal + 2,
+		       MCU_CTRL_MMR_CFG0_DRV_FAST0);
+	}
+
+	/* fix Vertical IO drive strength */
+	value_fast = readl(MCU_CTRL_MMR_CFG0_DRV_FAST1) &
+		     MCU_CTRL_MMR_DRVSTRNGTH_MASK;
+	value_nominal = readl(MCU_CTRL_MMR_CFG0_DRV_NOM1) &
+			MCU_CTRL_MMR_DRVSTRNGTH_MASK;
+
+	if (value_fast < value_nominal + 2) {
+		writel((value_nominal + 2) > MCU_CTRL_MMR_DRVSTRNGTH_MAX ?
+			       MCU_CTRL_MMR_DRVSTRNGTH_MAX :
+			       value_nominal + 2,
+		       MCU_CTRL_MMR_CFG0_DRV_FAST1);
+	}
+}
+
 void board_init_f(ulong dummy)
 {
 	struct udevice *dev;
@@ -262,6 +293,7 @@ void board_init_f(ulong dummy)
 	spl_enable_cache();
 
 	k3_fix_rproc_clock("/a53@0");
+	am62x_drive_strength_fix();
 }
 
 u32 spl_mmc_boot_mode(struct mmc *mmc, const u32 boot_device)
