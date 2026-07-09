@@ -18,6 +18,9 @@
 #include <fdt_support.h>
 #include <spl.h>
 #include <wait_bit.h>
+#include <splash.h>
+#include <video.h>
+#include <fdt_simplefb.h>
 #include <asm/arch/k3-ddr.h>
 #include <asm/arch/am62xx-j722s-lpm-hardware.h>
 #include "../common/fdt_ops.h"
@@ -26,6 +29,8 @@
 void spl_board_init(void)
 {
 	enable_caches();
+	if (IS_ENABLED(CONFIG_SPL_SPLASH_SCREEN) && IS_ENABLED(CONFIG_SPL_BMP))
+		splash_display();
 }
 #endif
 
@@ -39,6 +44,29 @@ ofnode cadence_qspi_get_subnode(struct udevice *dev)
 
 	return dev_read_first_subnode(dev);
 }
+
+#if CONFIG_IS_ENABLED(SPLASH_SCREEN)
+static struct splash_location default_splash_locations[] = {
+	{
+		.name = "sf",
+		.storage = SPLASH_STORAGE_SF,
+		.flags = SPLASH_STORAGE_RAW,
+		.offset = 0x700000,
+	},
+	{
+		.name		= "mmc",
+		.storage	= SPLASH_STORAGE_MMC,
+		.flags		= SPLASH_STORAGE_FS,
+		.devpart	= "1:1",
+	},
+};
+
+int splash_screen_prepare(void)
+{
+	return splash_source_load(default_splash_locations,
+				ARRAY_SIZE(default_splash_locations));
+}
+#endif
 
 /* Enables the spi-nand dts node, if onboard mux is set to spinand */
 static void __maybe_unused detect_enable_spinand(void *blob)
