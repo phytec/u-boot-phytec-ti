@@ -693,30 +693,34 @@ static int video_post_probe(struct udevice *dev)
 	 * TrueType does not support rotation at present so fall back to the
 	 * rotated console in that case.
 	 */
-	if (!priv->rot && IS_ENABLED(CONFIG_CONSOLE_TRUETYPE)) {
-		snprintf(name, sizeof(name), "%s.vidconsole_tt", dev->name);
-		strcpy(drv, "vidconsole_tt");
-	} else {
-		snprintf(name, sizeof(name), "%s.vidconsole%d", dev->name,
-			 priv->rot);
-		snprintf(drv, sizeof(drv), "vidconsole%d", priv->rot);
-	}
+	if (CONFIG_IS_ENABLED(CONSOLE_NORMAL)) {
+		if (!priv->rot && IS_ENABLED(CONFIG_CONSOLE_TRUETYPE)) {
+			snprintf(name, sizeof(name), "%s.vidconsole_tt", dev->name);
+			strcpy(drv, "vidconsole_tt");
+		} else {
+			snprintf(name, sizeof(name), "%s.vidconsole%d", dev->name,
+				 priv->rot);
+			snprintf(drv, sizeof(drv), "vidconsole%d", priv->rot);
+		}
 
-	str = strdup(name);
-	if (!str)
-		return -ENOMEM;
-	if (priv->vidconsole_drv_name)
-		drv_name = priv->vidconsole_drv_name;
-	ret = device_bind_driver(dev, drv_name, str, &cons);
-	if (ret) {
-		debug("%s: Cannot bind console driver\n", __func__);
-		return ret;
-	}
+		str = strdup(name);
+		if (!str)
+			return -ENOMEM;
+		if (priv->vidconsole_drv_name)
+			drv_name = priv->vidconsole_drv_name;
+		ret = device_bind_driver(dev, drv_name, str, &cons);
+		if (ret) {
+			debug("%s: Cannot bind console driver\n", __func__);
+			free(str);
+			return ret;
+		}
 
-	ret = device_probe(cons);
-	if (ret) {
-		debug("%s: Cannot probe console driver\n", __func__);
-		return ret;
+		ret = device_probe(cons);
+		if (ret) {
+			debug("%s: Cannot probe console driver\n", __func__);
+			free(str);
+			return ret;
+		}
 	}
 
 	if (CONFIG_IS_ENABLED(VIDEO_LOGO) &&
