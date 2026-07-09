@@ -151,6 +151,7 @@
 		tee: tee-os {
 		};
 
+#if IS_ENABLED(CONFIG_SPL_FIT_SIGNATURE)
 		spl: section {
 			u-boot-spl-nodtb {
 			};
@@ -161,6 +162,11 @@
 				key-name-hint = "custMpk";
 			};
 		};
+#else
+		spl: u-boot-spl {
+			no-expanded;
+		};
+#endif
 
 	};
 
@@ -170,7 +176,10 @@
 
 		fit {
 			description = "U-Boot fitImage for AM62Lx SK";
+
+#if IS_ENABLED(CONFIG_SPL_FIT_SIGNATURE)
 			fit,sign;
+#endif
 
 			images {
 				uboot {
@@ -223,11 +232,13 @@
 					loadables = "uboot";
 					fdt = "fdt-0";
 
+#if IS_ENABLED(CONFIG_SPL_FIT_SIGNATURE)
 					signature {
 						algo = "sha512,rsa4096";
 						key-name-hint = "custMpk";
 						sign-images = "firmware", "loadables", "fdt";
 					};
+#endif
 				};
 
 			};
