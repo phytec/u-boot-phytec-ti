@@ -10,10 +10,9 @@
  */
 
 #include <linux/io.h>
+#include <stdio.h>
 #include "cdns-dsi-j721e.h"
 
-#define DSI_WRAP_REVISION		0x0
-#define DSI_WRAP_DPI_CONTROL		0x4
 #define DSI_WRAP_DSC_CONTROL		0x8
 #define DSI_WRAP_DPI_SECURE		0xc
 #define DSI_WRAP_DSI_0_ASF_STATUS	0x10
@@ -34,9 +33,9 @@ static int cdns_dsi_j721e_init(struct cdns_dsi *dsi)
 static void cdns_dsi_j721e_enable(struct cdns_dsi *dsi)
 {
 	/*
-	 * Enable DPI0 as its input. DSS0 DPI2 is connected
-	 * to DSI DPI0. This is the only supported configuration on
-	 * J721E.
+	 * Enable DPI0 as its input. DSS VP2 DPI output is connected
+	 * to DSI DPI0 by default. Board-level mux (DSI_Mux_SEL_2 GPIO
+	 * on exp2) is configured via DT gpio-hog to steer the signal.
 	 */
 	writel(DSI_WRAP_DPI_0_EN, dsi->j721e_base + DSI_WRAP_DPI_CONTROL);
 }

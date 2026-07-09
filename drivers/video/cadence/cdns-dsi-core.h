@@ -84,6 +84,7 @@ struct cdns_dsi_host_priv {
 	struct display_timing *timings;
 	unsigned int max_data_lanes;
 	const struct mipi_dsi_phy_ops *phy_ops;
+	u32 rounded_pclk_khz;
 };
 
 #endif /* !__CDNS_DSI_H__ */

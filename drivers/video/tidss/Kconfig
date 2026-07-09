@@ -23,3 +23,4 @@ config SPL_VIDEO_TIDSS
 	help
 	  This options enables tidss driver in SPL stage. If
 	  you need to use tidss at SPL stage use this config.
+

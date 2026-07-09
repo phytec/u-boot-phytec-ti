@@ -718,13 +718,47 @@ static void dss_plane_init(struct tidss_drv_priv *priv)
 	}
 }
 
+static int tidss_find_dsi_bridge(ofnode bridge_node, struct udevice **bridge_devp)
+{
+	ofnode child, out_ep, ext;
+	int ret;
+
+	ret = uclass_get_device_by_ofnode(UCLASS_VIDEO_BRIDGE,
+					  bridge_node, bridge_devp);
+	if (!ret)
+		return 0;
+
+	ofnode_for_each_subnode(child, bridge_node) {
+		ret = uclass_get_device_by_ofnode(UCLASS_VIDEO_BRIDGE,
+						  child, bridge_devp);
+		if (!ret)
+			return 0;
+	}
+
+	out_ep = ofnode_graph_get_endpoint_by_regs(bridge_node, 0, -1);
+	if (!ofnode_valid(out_ep))
+		return -ENODEV;
+
+	ext = ofnode_graph_get_remote_port_parent(out_ep);
+	if (!ofnode_valid(ext))
+		return -ENODEV;
+
+	return uclass_get_device_by_ofnode(UCLASS_VIDEO_BRIDGE,
+					   ext, bridge_devp);
+}
+
 static void dss_vp_init(struct tidss_drv_priv *priv)
 {
 	unsigned int i;
 
-	/* Enable the gamma Shadow bit-field for all VPs*/
+	/* Enable the gamma Shadow bit-field for all VPs */
 	for (i = 0; i < priv->feat->num_vps; i++)
 		VP_REG_FLD_MOD(priv, i, DSS_VP_CONFIG, 1, 2, 2);
+}
+
+static void dss_vp_go(struct tidss_drv_priv *priv, u32 hw_videoport)
+{
+	VP_REG_FLD_MOD(priv, hw_videoport, DSS_VP_CONTROL, 1, 5, 5);
 }
 
 bool is_pipeline_components_enabled(ofnode endpoint, ofnode prev)
@@ -733,7 +767,7 @@ bool is_pipeline_components_enabled(ofnode endpoint, ofnode prev)
 	ofnode ports = ofnode_find_subnode(ports_parent, "ports");
 	ofnode port, local_endpoint, remote_endpoint;
 
-	if (!ofnode_valid(ports) || !ofnode_valid(ports_parent))
+	if (!ofnode_valid(ports_parent))
 		return false;
 
 	if (strstr(ofnode_get_name(ports_parent), "dss")) {
@@ -757,6 +791,8 @@ bool is_pipeline_components_enabled(ofnode endpoint, ofnode prev)
 			if (strncmp(ofnode_get_name(local_endpoint), "endpoint", 8))
 				continue;
 			remote_endpoint = ofnode_graph_get_remote_endpoint(local_endpoint);
+			if (!ofnode_valid(remote_endpoint))
+				return true;
 			if (prev.np == remote_endpoint.np)
 				continue;
 			return ofnode_is_enabled(remote_endpoint) &&
@@ -770,6 +806,9 @@ static bool is_bridge_and_panel_enabled(ofnode endpoint)
 {
 	ofnode remote_endpoint = ofnode_graph_get_remote_endpoint(endpoint);
 	ofnode prev_endpoint = endpoint;
+
+	if (!ofnode_valid(remote_endpoint))
+		return false;
 
 	return is_pipeline_components_enabled(remote_endpoint, prev_endpoint);
 }
@@ -789,6 +828,11 @@ static int tidss_enable_pipeline_components(struct tidss_drv_priv *priv)
 	int hw_videoport;
 	int active_pipelines = 0;
 	int ret;
+
+	if (!ofnode_valid(dss_ports)) {
+		dev_warn(priv->dev, "%s: dss_ports not found\n", __func__);
+		return -1;
+	}
 
 	ofnode_for_each_subnode(port, dss_ports) {
 		if (strncmp(ofnode_get_name(port), "port", 4))
@@ -827,12 +871,44 @@ static int tidss_enable_pipeline_components(struct tidss_drv_priv *priv)
 				 * initialize it only and then check for other videoports
 				 */
 				break;
+			} else if (strstr(ofnode_get_name(remote_port), "dsi") ||
+				   strstr(ofnode_get_name(remote_port), "dsi_host")) {
+				/* DSI bridge pipeline: find and attach the video bridge */
+				ofnode remote_endpoint, bridge_node;
+				struct udevice *bridge_dev;
+
+				remote_endpoint = ofnode_graph_get_remote_endpoint(local_endpoint);
+				if (!ofnode_valid(remote_endpoint)) {
+					dev_warn(priv->dev, "DSI: no remote endpoint\n");
+					break;
+				}
+
+				/*
+				 * The remote endpoint is dsi0_in inside dsi0.
+				 * We need to find the bridge (tc358762) which is a
+				 * child of dsi0 (UCLASS_VIDEO_BRIDGE under UCLASS_DSI_HOST).
+				 */
+				bridge_node = ofnode_graph_get_port_parent(remote_endpoint);
+				ret = tidss_find_dsi_bridge(bridge_node, &bridge_dev);
+				if (ret) {
+					dev_warn(priv->dev, "DSI: bridge not found: %d\n", ret);
+					break;
+				}
+
+				ret = video_bridge_attach(bridge_dev);
+				if (ret)
+					break;
+
+				priv->bridge_dev = bridge_dev;
+				priv->active_hw_vps[active_pipelines++] = hw_videoport;
+				break;
 			}
 		}
 	}
 	priv->active_pipelines = active_pipelines;
 	if (active_pipelines == 0)
 		return -1;
+
 	return 0;
 }
 
@@ -875,21 +951,31 @@ static int tidss_drv_probe(struct udevice *dev)
 	ret = uclass_first_device_err(UCLASS_PANEL, &panel);
 	if (ret) {
 		if (ret != -ENODEV)
-			dev_err(dev, "panel device error %d\n", ret);
-		return ret;
+			dev_warn(dev, "panel device error %d\n", ret);
+		panel = NULL;
 	}
 
-	ret = panel_get_display_timing(panel, &timings);
-	if (ret) {
-		ret = ofnode_decode_panel_timing(dev_ofnode(panel),
-						 &timings);
+	if (panel) {
+		ret = panel_get_display_timing(panel, &timings);
 		if (ret) {
-			dev_err(dev, "decode display timing error %d\n", ret);
+			ret = ofnode_decode_panel_timing(dev_ofnode(panel), &timings);
+			if (ret) {
+				dev_err(dev, "decode display timing error %d\n", ret);
+				return ret;
+			}
+		}
+	} else if (priv->bridge_dev) {
+		ret = video_bridge_get_display_timing(priv->bridge_dev, &timings);
+		if (ret) {
+			dev_err(dev, "bridge get_display_timing failed: %d\n", ret);
 			return ret;
 		}
+	} else {
+		dev_err(dev, "no panel and no bridge: cannot get display timing\n");
+		return -ENODEV;
 	}
 
-	mode = ofnode_read_string(dev_ofnode(panel), "data-mapping");
+	mode = panel ? ofnode_read_string(dev_ofnode(panel), "data-mapping") : NULL;
 
 	uc_priv->bpix = VIDEO_BPP32;
 
@@ -910,21 +996,38 @@ static int tidss_drv_probe(struct udevice *dev)
 
 	/* Common address */
 	priv->base_common = dev_remap_addr_name(dev, priv->feat->common);
-	if (!priv->base_common)
+	if (!priv->base_common) {
+		dev_err(dev, "remap '%s' failed\n", priv->feat->common);
 		return -EINVAL;
-
+	}
 	/* plane address setup and enable */
 	for (i = 0; i < priv->feat->num_planes; i++) {
 		priv->base_vid[i] = dev_remap_addr_name(dev, priv->feat->vid_name[i]);
-		if (!priv->base_vid[i])
+		if (!priv->base_vid[i]) {
+			dev_err(dev, "remap '%s' failed\n", priv->feat->vid_name[i]);
 			return -EINVAL;
+		}
 	}
 
-	dss_vid_write(priv, 0, DSS_VID_BA_0, uc_plat->base & 0xffffffff);
-	dss_vid_write(priv, 0, DSS_VID_BA_EXT_0, (u64)uc_plat->base >> 32);
-	dss_vid_write(priv, 0, DSS_VID_BA_1, uc_plat->base & 0xffffffff);
-	dss_vid_write(priv, 0, DSS_VID_BA_EXT_1, (u64)uc_plat->base >> 32);
+	/*
+	 * Select the hw_plane based on the active VP bus type:
+	 * - OLDI (VP0/vp1) uses vid (plane 1)
+	 * - DPI/DSI (VP1/vp2) uses vidl1 (plane 0)
+	 * Linux reference: OVR2 CHANNELIN=1 (vidl1) for DSI on am62p/j722s
+	 */
+	if (priv->feat->vp_bus_type[priv->active_hw_vps[0]] == DSS_VP_OLDI)
+		hw_plane = 1;
+	else
+		hw_plane = 0;
+	memset((void *)(uintptr_t)uc_plat->base, 0xff, uc_plat->size);
+	flush_dcache_range((ulong)uc_plat->base,
+			   ALIGN((ulong)uc_plat->base + uc_plat->size,
+				 CONFIG_SYS_CACHELINE_SIZE));
 
+	dss_vid_write(priv, hw_plane, DSS_VID_BA_0, uc_plat->base & 0xffffffff);
+	dss_vid_write(priv, hw_plane, DSS_VID_BA_EXT_0, (u64)uc_plat->base >> 32);
+	dss_vid_write(priv, hw_plane, DSS_VID_BA_1, uc_plat->base & 0xffffffff);
+	dss_vid_write(priv, hw_plane, DSS_VID_BA_EXT_1, (u64)uc_plat->base >> 32);
 	for (i = 0; i < priv->active_pipelines; i++) {
 		ret = dss_plane_setup(priv, hw_plane, priv->active_hw_vps[i],
 				      timings.hactive.typ, timings.vactive.typ);
@@ -939,37 +1042,31 @@ static int tidss_drv_probe(struct udevice *dev)
 
 	/* video port address clocks and enable */
 	for (i = 0; i < priv->feat->num_vps; i++) {
+		int idx_ovr, idx_vp;
+
+		idx_ovr = fdt_stringlist_search(gd->fdt_blob,
+						dev_of_offset(dev),
+						"reg-names",
+						priv->feat->ovr_name[i]);
+		idx_vp  = fdt_stringlist_search(gd->fdt_blob,
+						dev_of_offset(dev),
+						"reg-names",
+						priv->feat->vp_name[i]);
 		priv->base_ovr[i] = dev_remap_addr_name(dev, priv->feat->ovr_name[i]);
-		priv->base_vp[i] = dev_remap_addr_name(dev, priv->feat->vp_name[i]);
+		priv->base_vp[i]  = dev_remap_addr_name(dev, priv->feat->vp_name[i]);
+		if (!priv->base_ovr[i] || !priv->base_vp[i]) {
+			dev_err(dev, "vp%u: remap ovr/vp failed\n", i);
+			return -EINVAL;
+		}
 	}
 
 	uc_priv->xsize = timings.hactive.typ;
 	uc_priv->ysize = timings.vactive.typ;
 
-	for (i = 0; i < priv->active_pipelines; i++) {
-
-		ret = clk_get_by_name(dev,
-				      dss_am625_feats.vpclk_name[priv->active_hw_vps[i]],
-				      &priv->vp_clk[priv->active_hw_vps[i]]);
-		if (ret) {
-			dev_err(dev, "video port %d clock enable error %d\n", i, ret);
-			return ret;
-		}
-
-		dss_ovr_set_plane(priv, 1, priv->active_hw_vps[i], 0, 0, 0);
-		dss_ovr_enable_layer(priv, priv->active_hw_vps[i], 0, true);
-
-		/* Video Port cloks */
-		dss_vp_enable_clk(priv, priv->active_hw_vps[i]);
-
-		dss_vp_set_clk_rate(priv, priv->active_hw_vps[i], timings.pixelclock.typ * 1000);
-
-		dss_vp_prepare(priv, priv->active_hw_vps[i]);
-		dss_vp_enable(priv, priv->active_hw_vps[i], &timings);
-	}
-
-	dss_vp_init(priv);
-
+	/*
+	 * Enable DSS functional clock before VP and bridge init so DPI output
+	 * is live when the DSI VSG and eDP bridge are started.
+	 */
 	ret = clk_get_by_name(dev, "fck", &priv->fclk);
 	if (ret) {
 		dev_err(dev, "peripheral clock get error %d\n", ret);
@@ -982,13 +1079,77 @@ static int tidss_drv_probe(struct udevice *dev)
 		return ret;
 	}
 
-	if (IS_ERR(&priv->fclk)) {
-		dev_err(dev, "%s: Failed to get fclk: %ld\n",
-			__func__, PTR_ERR(&priv->fclk));
-		return PTR_ERR(&priv->fclk);
-	}
-
 	dev_dbg(dev, "DSS fclk %lu Hz\n", clk_get_rate(&priv->fclk));
+
+	for (i = 0; i < priv->active_pipelines; i++) {
+
+		ret = clk_get_by_name(dev,
+				      dss_am625_feats.vpclk_name[priv->active_hw_vps[i]],
+				      &priv->vp_clk[priv->active_hw_vps[i]]);
+		if (ret) {
+			dev_err(dev, "video port %d clock get error %d (clk_name=%s)\n",
+				i, ret,
+				dss_am625_feats.vpclk_name[priv->active_hw_vps[i]]);
+			return ret;
+		}
+		dss_ovr_set_plane(priv, hw_plane, priv->active_hw_vps[i], 0, 0, 0);
+		dss_ovr_enable_layer(priv, priv->active_hw_vps[i], 0, true);
+
+		/*
+		 * Arm the bridge (DSI VID_EN / CDN VSG) BEFORE the VP GO bit
+		 * fires.  Linux does the same: cdns_dsi pre_enable sets VID_EN
+		 * in the pre_enable hook, before the CRTC/VP starts.  If VID_EN
+		 * is set after the VP is already running the CDN DSI DPI
+		 * receiver sees a mid-frame stream and raises ERR_MISSING_HSYNC,
+		 * causing the video stream to never lock.
+		 */
+		udelay(1000);
+		if (priv->bridge_dev) {
+			ret = video_bridge_pre_enable(priv->bridge_dev);
+			if (ret)
+				dev_warn(dev, "vp%u: bridge pre_enable failed: %d\n",
+					 priv->active_hw_vps[i], ret);
+
+			/*
+			 * Re-fetch timings from bridge after pre_enable: the
+			 * DSI host rounds pixelclock to the nearest PLL-
+			 * achievable rate during pre_enable. Use that rounded
+			 * value for the VP pixel clock so tidss and the DPHY
+			 * run in sync.
+			 */
+			if (video_bridge_get_display_timing(priv->bridge_dev,
+							    &timings))
+				dev_warn(dev, "vp%u: failed to re-read bridge timings\n",
+					 priv->active_hw_vps[i]);
+		}
+
+		/* Video Port clocks - set rate before enabling */
+		dss_vp_enable_clk(priv, priv->active_hw_vps[i]);
+		dss_vp_set_clk_rate(priv, priv->active_hw_vps[i], timings.pixelclock.typ * 1000);
+		dss_vp_init(priv);
+		dss_vp_prepare(priv, priv->active_hw_vps[i]);
+
+		if (priv->bridge_dev) {
+			ret = video_bridge_enable(priv->bridge_dev);
+			if (ret)
+				dev_warn(dev, "vp%u: bridge enable failed: %d\n",
+					 priv->active_hw_vps[i], ret);
+
+			if (panel) {
+				ret = panel_enable_backlight(panel);
+				if (ret && ret != -ENOSYS)
+					dev_warn(dev, "vp%u: panel_enable_backlight: %d\n",
+						 priv->active_hw_vps[i], ret);
+			}
+		}
+		dss_vp_enable(priv, priv->active_hw_vps[i], &timings);
+
+		dss_write(priv, DSS_GLOBAL_OUTPUT_ENABLE,
+			  BIT(priv->active_hw_vps[i]));
+
+		dss_vp_go(priv, priv->active_hw_vps[i]);
+
+	}
 
 	video_set_flush_dcache(dev, true);
 	return 0;

@@ -12,6 +12,7 @@
 #include <clk.h>
 #include <dm.h>
 #include <div64.h>
+#include <linux/math64.h>
 #include <dsi_host.h>
 #include <generic-phy.h>
 #include <panel.h>
@@ -21,6 +22,7 @@
 #include <video_bridge.h>
 #include <dm/device_compat.h>
 #include <dm/lists.h>
+#include <linux/delay.h>
 #include <linux/iopoll.h>
 #include <linux/time.h>
 
@@ -77,13 +79,28 @@
 #define LPRX_TIMEOUT(x)			(x)
 
 #define MCTL_MAIN_STS			0x24
+#define HSTX_TIMEOUT_ERR		BIT(6)
+#define LPRX_TIMEOUT_ERR		BIT(7)
 #define CLK_LANE_RDY			BIT(1)
 #define DATA_LANE_RDY(l)		BIT(2 + (l))
 #define MCTL_MAIN_STS_CTL		0x130
 #define MCTL_MAIN_STS_CLR		0x150
 #define PLL_LOCKED			BIT(0)
 
+#define MCTL_DPHY_ERR			0x28
+#define ERR_CONT_LP(x, l)		BIT(18 + ((x) * 4) + (l))
+#define ERR_CONTROL(l)			BIT(14 + (l))
+#define ERR_SYNESC(l)			BIT(10 + (l))
+#define ERR_ESC(l)			BIT(6 + (l))
 #define MCTL_DPHY_ERR_CTL1		0x148
+
+#define MCTL_LANE_STS			0x2c
+#define PPI_C_TX_READY_HS		BIT(18)
+#define DPHY_PLL_LOCK			BIT(17)
+#define PPI_D_RX_ULPS_ESC(x)		(((x) & GENMASK(15, 12)) >> 12)
+#define DATA_LANE_STATE(l, val)		(((val) >> (2 + (l) * 3)) & GENMASK(2, 0))
+#define CLK_LANE_STATE_HS		2
+#define CLK_LANE_STATE(val)		((val) & GENMASK(1, 0))
 
 #define CMD_MODE_STS_CTL		0x134
 
@@ -115,6 +132,17 @@
 #define DIRECT_CMD_RD_STS_CTL		0x13c
 
 #define VID_MODE_STS			0xf0
+#define VSG_RUNNING			BIT(0)
+#define ERR_MISSING_DATA		BIT(1)
+#define ERR_MISSING_HSYNC		BIT(2)
+#define ERR_MISSING_VSYNC		BIT(3)
+#define ERR_SMALL_LEN			BIT(4)
+#define ERR_SMALL_HEIGHT		BIT(5)
+#define ERR_BURST_WRITE			BIT(6)
+#define ERR_LINE_WRITE			BIT(7)
+#define ERR_LONG_READ			BIT(8)
+#define ERR_VRS_WRONG_LEN		BIT(9)
+#define VSG_RECOVERY			BIT(10)
 #define VID_MODE_STS_CTL		0x140
 #define VID_MODE_STS_CLR		0x160
 
@@ -124,6 +152,8 @@
 #define VID_IGNORE_MISS_VSYNC		BIT(31)
 #define RECOVERY_MODE(x)		((x) << 25)
 #define RECOVERY_MODE_NEXT_HSYNC	0
+#define RECOVERY_MODE_NEXT_STOP_POINT	2
+#define RECOVERY_MODE_NEXT_VSYNC	3
 #define REG_BLKEOL_MODE(x)		((x) << 23)
 #define REG_BLKLINE_MODE(x)		((x) << 21)
 #define REG_BLK_MODE_BLANKING_PKT	1
@@ -267,15 +297,10 @@ static int cdns_dsi_check_conf(struct cdns_dsi *dsi,
 	return 0;
 }
 
-static int cdns_dsi_phy_init(void *priv_data)
+static int cdns_dsi_hs_init(void *priv_data)
 {
 	struct mipi_dsi_device *device = priv_data;
-	struct udevice *dev = device->dev->parent;
-	struct cdns_dsi_host_priv *priv = dev_get_priv(dev);
-	struct cdns_dsi *dsi = &priv->dsi;
-	struct cdns_dsi_output *output = &dsi->output;
-	u32 status;
-	int ret;
+	struct cdns_dsi *dsi = to_cdns_dsi(device->host);
 
 	if (dsi->phy_initialized)
 		return 0;
@@ -286,26 +311,7 @@ static int cdns_dsi_phy_init(void *priv_data)
 
 	generic_phy_init(&dsi->dphy);
 	generic_phy_set_mode(&dsi->dphy, PHY_MODE_MIPI_DPHY, 0);
-	generic_phy_configure(&dsi->dphy, &output->phy_opts);
-	generic_phy_power_on(&dsi->dphy);
 
-	/* Activate the PLL and wait until it's locked. */
-	writel(PLL_LOCKED, dsi->base + MCTL_MAIN_STS_CLR);
-	writel(DPHY_CMN_PSO | DPHY_ALL_D_PDN | DPHY_C_PDN | DPHY_CMN_PDN,
-	       dsi->base + MCTL_DPHY_CFG0);
-
-	ret = readl_poll_timeout(dsi->base + MCTL_MAIN_STS, status,
-				 status & PLL_LOCKED, 100);
-	if (ret) {
-		dev_err(dev, "%s: PLL lock timeout (MCTL_MAIN_STS=0x%08x)\n",
-			__func__, readl(dsi->base + MCTL_MAIN_STS));
-		return -ETIMEDOUT;
-	}
-
-	/* De-assert data and clock reset lines. */
-	writel(DPHY_CMN_PSO | DPHY_ALL_D_PDN | DPHY_C_PDN | DPHY_CMN_PDN |
-	       DPHY_D_RSTB(output->dev->lanes) | DPHY_C_RSTB,
-	       dsi->base + MCTL_DPHY_CFG0);
 	dsi->phy_initialized = true;
 
 	return 0;
@@ -315,20 +321,36 @@ static int cdns_dsi_get_lane_mbps(void *priv_data, struct display_timing *timing
 				  u32 lanes, u32 format, unsigned int *lane_mbps)
 {
 	struct mipi_dsi_device *device = priv_data;
-	struct udevice *dev = device->dev->parent;
-	struct cdns_dsi_host_priv *priv = dev_get_priv(dev);
-	struct cdns_dsi *dsi = &priv->dsi;
+	struct cdns_dsi *dsi = to_cdns_dsi(device->host);
+	struct cdns_dsi_host_priv *hpriv = container_of(dsi, struct cdns_dsi_host_priv, dsi);
 	struct phy_configure_opts_mipi_dphy *phy_cfg = &dsi->output.phy_opts;
+	unsigned long orig_pclk_hz = timings->pixelclock.typ * 1000UL;
+	unsigned long actual_pclk_hz;
 	int bpp, ret;
 
 	bpp = mipi_dsi_pixel_format_to_bpp(format);
 	if (bpp < 0)
 		return bpp;
 
-	ret = phy_mipi_dphy_get_default_config(timings->pixelclock.typ * 1000,
-					       bpp, lanes, phy_cfg);
+	ret = phy_mipi_dphy_get_default_config(orig_pclk_hz, bpp, lanes, phy_cfg);
 	if (ret) {
-		dev_err(dev, "%s: failed to get DPHY default config: %d\n", __func__, ret);
+		pr_err("%s: failed to get DPHY default config: %d\n", __func__, ret);
+		return ret;
+	}
+
+	ret = generic_phy_validate(&dsi->dphy, PHY_MODE_MIPI_DPHY, 0, phy_cfg);
+	if (ret) {
+		pr_err("%s: failed to validate DPHY config: %d\n", __func__, ret);
+		return ret;
+	}
+
+	actual_pclk_hz = (unsigned long)div_u64((u64)phy_cfg->hs_clk_rate * lanes, bpp);
+	timings->pixelclock.typ = actual_pclk_hz / 1000;
+	hpriv->rounded_pclk_khz = timings->pixelclock.typ;
+
+	ret = phy_mipi_dphy_get_default_config(actual_pclk_hz, bpp, lanes, phy_cfg);
+	if (ret) {
+		pr_err("%s: failed to recompute DPHY config for rounded pclk: %d\n", __func__, ret);
 		return ret;
 	}
 
@@ -338,7 +360,7 @@ static int cdns_dsi_get_lane_mbps(void *priv_data, struct display_timing *timing
 }
 
 static const struct mipi_dsi_phy_ops dsi_cdns_phy_ops = {
-	.init = cdns_dsi_phy_init,
+	.init = cdns_dsi_hs_init,
 	.get_lane_mbps = cdns_dsi_get_lane_mbps,
 };
 
@@ -372,15 +394,38 @@ static int cdns_dsi_init_link(struct cdns_dsi *dsi)
 	       dsi->base + MCTL_ULPOUT_TIME);
 
 	writel(LINK_EN, dsi->base + MCTL_MAIN_DATA_CTL);
-
 	val = CLK_LANE_EN | PLL_START;
 	for (i = 0; i < output->dev->lanes; i++)
 		val |= DATA_LANE_START(i);
 
 	writel(val, dsi->base + MCTL_MAIN_EN);
-
 	dsi->link_initialized = true;
+
 	return 0;
+}
+
+static int cdns_dsi_attach(struct mipi_dsi_host *host,
+			   struct mipi_dsi_device *dev)
+{
+	struct cdns_dsi *dsi = to_cdns_dsi(host);
+	struct cdns_dsi_output *output = &dsi->output;
+
+	if (output->dev)
+		return -EBUSY;
+
+	output->dev = dev;
+	dev->host = &dsi->host;
+
+	return 0;
+}
+
+static int cdns_dsi_host_attach(struct udevice *dev,
+				struct mipi_dsi_device *device)
+{
+	struct cdns_dsi_host_priv *priv = dev_get_priv(dev);
+	struct cdns_dsi *dsi = &priv->dsi;
+
+	return cdns_dsi_attach(&dsi->host, device);
 }
 
 static ssize_t cdns_dsi_transfer(struct mipi_dsi_host *host,
@@ -524,6 +569,20 @@ static int cdns_dsi_host_init(struct udevice *dev,
 	priv->timings = timings;
 	priv->device = device;
 
+	dsi->link_initialized = false;
+	dsi->phy_initialized = false;
+
+	writel(0, dsi->base + MCTL_MAIN_EN);
+	writel(0, dsi->base + MCTL_MAIN_DATA_CTL);
+	writel(0, dsi->base + MCTL_MAIN_PHY_CTL);
+	writel(DPHY_CMN_PDN | DPHY_C_PDN | DPHY_ALL_D_PDN |
+	       DPHY_PLL_PDN | DPHY_CMN_PSO | DPHY_PLL_PSO,
+	       dsi->base + MCTL_DPHY_CFG0);
+
+	/* CDN DSI DPI input only detects active-LOW HSYNC/VSYNC */
+	timings->flags &= ~(DISPLAY_FLAGS_HSYNC_HIGH | DISPLAY_FLAGS_VSYNC_HIGH);
+	timings->flags |= DISPLAY_FLAGS_HSYNC_LOW | DISPLAY_FLAGS_VSYNC_LOW;
+
 	dsi->output.dev = device;
 	device->host = &dsi->host;
 
@@ -546,9 +605,8 @@ static void cdns_dsi_setup_video_mode(struct cdns_dsi *dsi,
 	for (div = 0; div < nlanes; div++)
 		tmp |= DATA_LANE_RDY(div);
 	if (readl_poll_timeout(dsi->base + MCTL_MAIN_STS, status,
-			       (tmp == (status & tmp)), 100))
-		pr_warn("%s: DSI lanes not ready (MCTL_MAIN_STS=0x%08x)\n",
-			__func__, readl(dsi->base + MCTL_MAIN_STS));
+			       (tmp == (status & tmp)), 500000)) {
+	}
 
 	writel(HBP_LEN(dsi_cfg->hbp) | HSA_LEN(dsi_cfg->hsa),
 	       dsi->base + VID_HSIZE1);
@@ -649,27 +707,17 @@ static void cdns_dsi_setup_video_mode(struct cdns_dsi *dsi,
 	if (!(output->dev->mode_flags & MIPI_DSI_MODE_EOT_PACKET))
 		tmp |= HOST_EOT_GEN;
 	writel(tmp, dsi->base + MCTL_MAIN_DATA_CTL);
-
-	tmp = readl(dsi->base + MCTL_MAIN_EN) | IF_EN(dsi->input.id);
-	writel(tmp, dsi->base + MCTL_MAIN_EN);
 }
 
 static int cdns_dsi_host_start_video(struct udevice *dev)
 {
 	struct cdns_dsi_host_priv *priv = dev_get_priv(dev);
 	struct cdns_dsi *dsi = &priv->dsi;
-	struct cdns_dsi_output *output = &dsi->output;
-	u32 tmp;
 
-	if (!(output->dev->mode_flags & MIPI_DSI_MODE_VIDEO))
+	if (!(priv->device->mode_flags & MIPI_DSI_MODE_VIDEO))
 		return 0;
 
-	writel(0xff, dsi->base + VID_MODE_STS_CLR);
-
-	tmp = readl(dsi->base + MCTL_MAIN_DATA_CTL);
-	tmp &= ~(IF_VID_SELECT_MASK | IF_VID_MODE | VID_EN);
-	tmp |= IF_VID_MODE | IF_VID_SELECT(dsi->input.id) | VID_EN;
-	writel(tmp, dsi->base + MCTL_MAIN_DATA_CTL);
+	writel(0xFFFFFFFF, dsi->base + VID_MODE_STS_CLR);
 
 	return 0;
 }
@@ -678,37 +726,69 @@ static int cdns_dsi_host_enable(struct udevice *dev)
 {
 	struct cdns_dsi_host_priv *priv = dev_get_priv(dev);
 	struct cdns_dsi *dsi = &priv->dsi;
+	struct cdns_dsi_output *output = &dsi->output;
 	unsigned int lane_mbps;
+	u32 tmp, status;
 	int ret;
 
 	ret = cdns_dsi_init_link(dsi);
-	if (ret) {
-		dev_err(dev, "%s: init_link failed: %d\n", __func__, ret);
+	if (ret)
 		return ret;
-	}
 
 	ret = priv->phy_ops->init(priv->device);
-	if (ret) {
-		dev_err(dev, "%s: phy init failed: %d\n", __func__, ret);
+	if (ret)
 		return ret;
-	}
 
 	ret = priv->phy_ops->get_lane_mbps(priv->device, priv->timings, priv->device->lanes,
 					   priv->device->format, &lane_mbps);
-	if (ret) {
-		dev_err(dev, "%s: get_lane_mbps failed: %d\n", __func__, ret);
+	if (ret)
 		return ret;
+
+	ret = generic_phy_configure(&dsi->dphy, &dsi->output.phy_opts);
+	if (ret)
+		return ret;
+
+	ret = generic_phy_power_on(&dsi->dphy);
+	if (ret)
+		return ret;
+
+	/* Activate the PLL and wait until it's locked. */
+	writel(PLL_LOCKED, dsi->base + MCTL_MAIN_STS_CLR);
+	writel(DPHY_CMN_PSO | DPHY_ALL_D_PDN | DPHY_C_PDN | DPHY_CMN_PDN,
+	       dsi->base + MCTL_DPHY_CFG0);
+
+	ret = readl_poll_timeout(dsi->base + MCTL_MAIN_STS, status,
+				 status & PLL_LOCKED, 100000);
+	if (ret) {
+		pr_err("%s: PLL lock timeout (MCTL_MAIN_STS=0x%08x)\n",
+		       __func__, readl(dsi->base + MCTL_MAIN_STS));
+		return -ETIMEDOUT;
 	}
+
+	/* De-assert data and clock reset lines. */
+	writel(DPHY_CMN_PSO | DPHY_ALL_D_PDN | DPHY_C_PDN | DPHY_CMN_PDN |
+	       DPHY_D_RSTB(dsi->output.dev->lanes) | DPHY_C_RSTB,
+	       dsi->base + MCTL_DPHY_CFG0);
+
+	cdns_dsi_setup_video_mode(dsi, priv->timings);
 
 	if (dsi->platform_ops && dsi->platform_ops->enable)
 		dsi->platform_ops->enable(dsi);
 
-	cdns_dsi_setup_video_mode(dsi, priv->timings);
+	if (output->dev->mode_flags & MIPI_DSI_MODE_VIDEO) {
+		tmp = readl(dsi->base + MCTL_MAIN_DATA_CTL);
+		tmp |= IF_VID_MODE | IF_VID_SELECT(dsi->input.id) | VID_EN;
+		writel(tmp, dsi->base + MCTL_MAIN_DATA_CTL);
+	}
+
+	tmp = readl(dsi->base + MCTL_MAIN_EN) | IF_EN(dsi->input.id);
+	writel(tmp, dsi->base + MCTL_MAIN_EN);
 
 	return 0;
 }
 
 static struct dsi_host_ops cdns_dsi_ops = {
+	.attach = cdns_dsi_host_attach,
 	.init = cdns_dsi_host_init,
 	.enable = cdns_dsi_host_enable,
 	.start_video = cdns_dsi_host_start_video,
@@ -742,7 +822,7 @@ static int cdns_dsi_probe(struct udevice *dev)
 	}
 
 	ret = reset_get_by_name(dev, "dsi_p_rst", &dsi->dsi_p_rst);
-	if (ret && ret != -ENOENT && ret != -EOPNOTSUPP) {
+	if (ret && ret != -ENOENT && ret != -EOPNOTSUPP && ret != -ENOTSUPP) {
 		dev_err(dev, "%s: failed to get reset: %d\n", __func__, ret);
 		return ret;
 	}

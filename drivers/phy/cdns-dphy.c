@@ -255,10 +255,6 @@ static unsigned long cdns_dphy_j721e_get_wakeup_time_ns(struct cdns_dphy *dphy)
 static void cdns_dphy_j721e_set_pll_cfg(struct cdns_dphy *dphy,
 					const struct cdns_dphy_cfg *cfg)
 {
-	/*
-	 * set the PWM and PLL Byteclk divider settings to recommended values
-	 * which is same as that of in ref ops
-	 */
 	writel(DPHY_CMN_PWM_HIGH(6) | DPHY_CMN_PWM_LOW(0x101) |
 	       DPHY_CMN_PWM_DIV(0x8),
 	       dphy->regs + DPHY_CMN_PWM);
@@ -326,12 +322,16 @@ static int cdns_dphy_config_from_opts(struct phy *phy,
 	int ret;
 
 	ret = phy_mipi_dphy_config_validate(opts);
-	if (ret)
+	if (ret) {
+		pr_err("%s: config validate failed: %d\n", __func__, ret);
 		return ret;
+	}
 
 	ret = cdns_dphy_get_pll_cfg(dphy, cfg, opts);
-	if (ret)
+	if (ret) {
+		pr_err("%s: get_pll_cfg failed: %d\n", __func__, ret);
 		return ret;
+	}
 
 	opts->hs_clk_rate = cfg->hs_clk_rate;
 	opts->wakeup = cdns_dphy_get_wakeup_time_ns(dphy) / 1000;
@@ -355,6 +355,17 @@ static int cdns_dphy_tx_get_band_ctrl(unsigned long hs_clk_rate)
 	}
 
 	return -EOPNOTSUPP;
+}
+
+static int cdns_dphy_validate(struct phy *phy, enum phy_mode mode, int submode,
+			      void *params)
+{
+	struct cdns_dphy_cfg cfg = { 0 };
+
+	if (mode != PHY_MODE_MIPI_DPHY)
+		return -EINVAL;
+
+	return cdns_dphy_config_from_opts(phy, params, &cfg);
 }
 
 static int cdns_dphy_configure(struct phy *phy, void *params)
@@ -384,13 +395,12 @@ static int cdns_dphy_power_on(struct phy *phy)
 		return -EINVAL;
 	}
 
-	clk_prepare_enable(&dphy->psm_clk);
-	clk_prepare_enable(&dphy->pll_ref_clk);
-
 	/*
 	 * Configure the internal PSM clk divider so that the DPHY has a
 	 * 1MHz clk (or something close).
 	 */
+	clk_prepare_enable(&dphy->psm_clk);
+	clk_prepare_enable(&dphy->pll_ref_clk);
 	ret = cdns_dphy_setup_psm(dphy);
 	if (ret) {
 		dev_err(phy->dev, "Failed to setup PSM with error %d\n", ret);
@@ -406,7 +416,6 @@ static int cdns_dphy_power_on(struct phy *phy)
 	 */
 	cdns_dphy_set_clk_lane_cfg(dphy, DPHY_CLK_CFG_LEFT_DRIVES_LEFT);
 	cdns_dphy_set_pll_cfg(dphy, &dphy->cfg);
-
 	ret = cdns_dphy_tx_get_band_ctrl(dphy->cfg.hs_clk_rate);
 	if (ret < 0) {
 		dev_err(phy->dev, "Failed to get band control value with error %d\n", ret);
@@ -420,7 +429,6 @@ static int cdns_dphy_power_on(struct phy *phy)
 	reg = readl(dphy->regs + DPHY_CMN_SSM);
 	writel((reg & DPHY_CMN_SSM_CAL_WAIT_TIME) | DPHY_CMN_SSM_EN | DPHY_CMN_TX_MODE_EN,
 	       dphy->regs + DPHY_CMN_SSM);
-
 	ret = cdns_dphy_wait_for_pll_lock(dphy);
 	if (ret) {
 		dev_err(phy->dev, "%s: PLL lock failed: %d\n", __func__, ret);
@@ -462,6 +470,7 @@ static int cdns_dphy_power_off(struct phy *phy)
 }
 
 static const struct phy_ops cdns_dphy_ops = {
+	.validate	= cdns_dphy_validate,
 	.configure	= cdns_dphy_configure,
 	.power_on	= cdns_dphy_power_on,
 	.power_off	= cdns_dphy_power_off,
@@ -483,6 +492,7 @@ static int cdns_dphy_probe(struct udevice *dev)
 		dev_err(dev, "%s: failed to get base address\n", __func__);
 		return -EINVAL;
 	}
+
 	ret = clk_get_by_name(dev, "psm", &dphy->psm_clk);
 	if (ret) {
 		dev_err(dev, "%s: failed to get psm clock: %d\n", __func__, ret);
@@ -494,6 +504,7 @@ static int cdns_dphy_probe(struct udevice *dev)
 		dev_err(dev, "%s: failed to get pll_ref clock: %d\n", __func__, ret);
 		return ret;
 	}
+
 	if (dphy->ops->probe) {
 		ret = dphy->ops->probe(dphy);
 		if (ret)
