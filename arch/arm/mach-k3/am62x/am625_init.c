@@ -103,6 +103,9 @@ static void ctrl_mmr_unlock(void)
 
 static __maybe_unused void enable_mcu_esm_reset(void)
 {
+	/* CTRLMMR_MCU_RST registers are locked again on HS-SE devices */
+	mmr_unlock(MCU_CTRL_MMR0_BASE, 6);
+
 	/* Set CTRLMMR_MCU_RST_CTRL:MCU_ESM_ERROR_RST_EN_Z  to '0' (low active) */
 	u32 stat = readl(CTRLMMR_MCU_RST_CTRL);
 
