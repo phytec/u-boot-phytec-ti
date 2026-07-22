@@ -16,9 +16,17 @@ config TARGET_AM62L3_EVM
 	select OF_UPSTREAM
 	select OF_SYSTEM_SETUP
 
+config TARGET_PHYFLEX_AM62LX
+	bool "PHYTEC phyFLEX-AM62Lx"
+	select ARM64
+	select BINMAN
+	select OF_UPSTREAM
+	select OF_SYSTEM_SETUP
+
 endchoice
 
 source "board/beagle/beaglebadge/Kconfig"
 source "board/ti/am62lx/Kconfig"
+source "board/phytec/am62lx-phyflex-fpsc-g/Kconfig"
 
 endif
