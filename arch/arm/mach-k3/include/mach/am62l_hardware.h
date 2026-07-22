@@ -45,4 +45,17 @@
 
 static const u32 put_core_ids[] = {};
 
+/* Reset Reason Detection */
+#define CTRLMMR_WKUP_RST_SRC      (WKUP_CTRL_MMR0_BASE + 0x54010)
+
+#define RST_SRC_DDRSS_RST	BIT(11)
+#define RST_SRC_DEBUG_RST	BIT(10)
+#define RST_SRC_THERMAL_RST	BIT(9)
+#define RST_SRC_DM_WDT1_RST	BIT(5)
+#define RST_SRC_DM_WDT0_RST	BIT(4)
+#define RST_SRC_SMS_WARM_RST	BIT(3)
+#define RST_SRC_SMS_COLD_RST	BIT(2)
+#define RST_SRC_SW_WARM_RST	BIT(1)
+#define RST_SRC_RESET_PIN	BIT(0)
+
 #endif /* __ASM_ARCH_AM62L_HARDWARE_H */
