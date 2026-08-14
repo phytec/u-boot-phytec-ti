@@ -64,6 +64,10 @@
 	};
 };
 
+&mcu_i2c0 {
+	status = "okay";
+};
+
 &mcu_navss {
 	bootph-pre-ram;
 };
