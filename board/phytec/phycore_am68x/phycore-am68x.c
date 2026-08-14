@@ -21,6 +21,7 @@
 #include <dm.h>
 #include <dm/uclass-internal.h>
 #include <dm/root.h>
+#include <i2c.h>
 
 #include "../common/am68_som_detection.h"
 
@@ -31,12 +32,6 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define EEPROM_DATA *(struct phytec_eeprom_data *) \
 		     (CONFIG_SYS_K3_MCU_SCRATCHPAD_BASE)
-
-int board_init(void)
-{
-	return 0;
-}
-
 enum {
 	EEPROM_RAM_SIZE_1X512MB,
 	EEPROM_RAM_SIZE_1X1GB,
@@ -266,6 +261,46 @@ int board_late_init(void)
 			}
 		}
 	}
+
+	return 0;
+}
+
+#define TPS6594_I2C_WD_ADDR	0x12
+#define WD_THR_CFG_REG		0x09
+#define WD_EN			BIT(6)
+
+int tps6594_disable_watchdog(void)
+{
+	struct udevice *i2c_bus, *i2c_dev;
+	int ret;
+	u8 val;
+
+	ret = uclass_get_device_by_name(UCLASS_I2C, "i2c@40b00000", &i2c_bus);
+	if (ret)
+		return ret;
+
+	ret = dm_i2c_probe(i2c_bus, TPS6594_I2C_WD_ADDR, 0, &i2c_dev);
+	if (ret)
+		return ret;
+
+	ret = dm_i2c_reg_read(i2c_dev, WD_THR_CFG_REG);
+	if (ret < 0)
+		return ret;
+
+	val = (u8)ret;
+	val &= ~WD_EN;
+	ret = dm_i2c_reg_write(i2c_dev, WD_THR_CFG_REG, val);
+
+	return ret;
+}
+
+int board_init(void)
+{
+	int ret;
+
+	ret = tps6594_disable_watchdog();
+	if (ret)
+		printf("disabling TPS6594 watchdog failed: %d\n", ret);
 
 	return 0;
 }
