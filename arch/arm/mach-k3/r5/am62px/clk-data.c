@@ -144,6 +144,11 @@ static const char * const main_usart0_fclk_sel_out0_parents[] = {
 	"hsdiv4_16fft_main_1_hsdivout1_clk",
 };
 
+static const char * const main_usart1_fclk_sel_out0_parents[] = {
+	"usart_programmable_clock_divider_out0",
+	"hsdiv4_16fft_main_1_hsdivout1_clk",
+};
+
 static const struct clk_data clk_list[] = {
 	CLK_FIXED_RATE("osc_26_mhz", 26000000, 0),
 	CLK_FIXED_RATE("osc_25_mhz", 25000000, 0),
@@ -228,6 +233,7 @@ static const struct clk_data clk_list[] = {
 	CLK_MUX("wkup_clkout_sel_io_out0", wkup_clkout_sel_io_out0_parents, 2, 0x43008020, 24, 1, 0),
 	CLK_MUX("wkup_clksel_out0", wkup_clksel_out0_parents, 2, 0x43008010, 0, 1, 0),
 	CLK_MUX("main_usart0_fclk_sel_out0", main_usart0_fclk_sel_out0_parents, 2, 0x108280, 0, 1, 0),
+	CLK_MUX("main_usart1_fclk_sel_out0", main_usart1_fclk_sel_out0_parents, 2, 0x108284, 0, 1, 0),
 	CLK_DIV("sam62_pll_ctrl_wrap_main_0_chip_div24_clk_clk", "sam62_pll_ctrl_wrap_main_0_sysclkout_clk", 0x41011c, 0, 5, 0, 0),
 	CLK_DIV("sam62_pll_ctrl_wrap_mcu_0_chip_div24_clk_clk", "sam62_pll_ctrl_wrap_mcu_0_sysclkout_clk", 0x402011c, 0, 5, 0, 0),
 };
@@ -317,6 +323,10 @@ static const struct dev_clk soc_dev_clk_data[] = {
 	DEV_CLK(146, 1, "usart_programmable_clock_divider_out0"),
 	DEV_CLK(146, 2, "hsdiv4_16fft_main_1_hsdivout1_clk"),
 	DEV_CLK(146, 5, "sam62_pll_ctrl_wrap_main_0_chip_div1_clk_clk"),
+	DEV_CLK(152, 0, "main_usart1_fclk_sel_out0"),
+	DEV_CLK(152, 1, "usart_programmable_clock_divider_out0"),
+	DEV_CLK(152, 2, "hsdiv4_16fft_main_1_hsdivout1_clk"),
+	DEV_CLK(152, 5, "sam62_pll_ctrl_wrap_main_0_chip_div1_clk_clk"),
 	DEV_CLK(157, 36, "clkout0_ctrl_out0"),
 	DEV_CLK(157, 37, "hsdiv4_16fft_main_2_hsdivout1_clk"),
 	DEV_CLK(157, 38, "hsdiv4_16fft_main_2_hsdivout1_clk10"),
