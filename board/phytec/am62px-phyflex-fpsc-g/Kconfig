@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: GPL-2.0+
+#
+# Copyright (C) 2026 PHYTEC America LLC - https://www.phytec.com/
+#
+
+if TARGET_PHYFLEX_AM62PX_R5 || TARGET_PHYFLEX_AM62PX_A53
+
+config SYS_BOARD
+       default "am62px-phyflex-fpsc-g"
+
+config SYS_VENDOR
+       default "phytec"
+
+config SYS_CONFIG_NAME
+       default "am62px-phyflex-fpsc-g"
+
+source "board/phytec/common/Kconfig"
+
+endif
+
+if TARGET_PHYFLEX_AM62PX_R5
+
+config SPL_LDSCRIPT
+	default "arch/arm/mach-omap2/u-boot-spl.lds"
+
+endif
