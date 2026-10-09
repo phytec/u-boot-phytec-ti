@@ -212,5 +212,6 @@
 };
 
 &main_sdhci1 {
+	no-1-8-v;
 	bootph-pre-ram;
 };
