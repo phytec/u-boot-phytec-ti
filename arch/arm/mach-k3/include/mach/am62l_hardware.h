@@ -40,6 +40,23 @@
 /* Backup Bootmode USB Config macros */
 #define MAIN_DEVSTAT_BACKUP_USB_MODE_MASK	BIT(0)
 
+#define CTRLMMR_WKUP_JTAG_USER_ID		(WKUP_CTRL_MMR0_BASE + 0x18)
+#define AM62L_JTAG_USER_ID_SHIFT		13
+#define AM62L_JTAG_USER_ID_MASK			GENMASK(31, 13)
+#define AM62L_JTAG_USER_ID_AM62L32		0x391A7		/* Dual-core A53 */
+#define AM62L_JTAG_USER_ID_AM62L31		0x39187		/* Single-core A53 */
+#define AM62L_JTAG_USER_ID_DUAL_CORE_BIT	18
+#define AM62L_MAX_CORE_NR			2
+
+#ifndef __ASSEMBLY__
+
+static inline int k3_get_core_nr(void)
+{
+	return ((readl(CTRLMMR_WKUP_JTAG_USER_ID) >> AM62L_JTAG_USER_ID_DUAL_CORE_BIT) & 0x1) + 1;
+}
+
+#endif /* !__ASSEMBLY__ */
+
 /* address boot rom leaves its boot structure */
 #define K3_BOOT_PARAM_TABLE_INDEX_OCRAM		0x70816e70
 
