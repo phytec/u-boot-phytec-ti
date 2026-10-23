@@ -60,6 +60,9 @@ void spl_perform_board_fixups(struct spl_image_info *spl_image)
 	ram_size = dram_get_size();
 
 	switch (ram_size) {
+	case EEPROM_RAM_SIZE_512MB:
+		size = 0x20000000;
+		break;
 	case EEPROM_RAM_SIZE_1GB:
 		size = 0x40000000;
 		break;
